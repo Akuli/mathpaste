@@ -28,6 +28,11 @@
 
             var savedMath;
             if (window.location.hash.startsWith("#fullmath:")) {
+                /*
+                this is for backwards compat
+                in older versions of mathpaste, all of the math was compressed in the url
+                in this version of mathpaste, loading those urls is still supported
+                */
                 const encodedMath = window.location.hash.substr("#fullmath:".length);
                 savedMath = LZString.decompressFromEncodedURIComponent(encodedMath);
             } else if (window.location.hash.startsWith("#saved:")) {
@@ -44,10 +49,6 @@
             console.timeEnd("loadMath");
 
             renderLines();
-        };
-
-        const saveMath = () => {
-            window.location.hash = "fullmath:" + LZString.compressToEncodedURIComponent(editor.getValue());
         };
 
         let oldLines = [];
@@ -78,6 +79,13 @@
             oldLines = lines;
         };
 
+        // this is for mathpaste-gtk
+        window.mathpaste = {
+            getMath() {
+                return editor.getValue();
+            }
+        };
+
         let editor = ace.edit("editor", {
             mode: "ace/mode/asciimath",
             theme: "ace/theme/tomorrow_night_eighties",
@@ -88,10 +96,7 @@
         });
         editor.setAutoScrollEditorIntoView(true);
 
-        editor.session.on("change", () => {
-            saveMath();
-            renderLines();
-        });
+        editor.session.on("change", renderLines);
 
         const $infoButton = document.getElementById("info-button");
         const $infoBox = document.getElementById("info-box");
@@ -114,6 +119,7 @@
           $shareBox.classList.add("shown");
           const mathId = await firebase.post(editor.getValue());
           $shareBoxInput.value = window.location.origin + window.location.pathname + "#saved:" + mathId;
+          window.location.hash = "#saved:" + mathId;
         });
 
         $settingsButton.addEventListener("click", function() {
