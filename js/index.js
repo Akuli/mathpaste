@@ -83,6 +83,9 @@
         window.mathpaste = {
             getMath() {
                 return editor.getValue();
+            },
+            setMath(math) {
+                editor.session.setValue(math);
             }
         };
 
