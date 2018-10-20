@@ -99,7 +99,12 @@
         });
         editor.setAutoScrollEditorIntoView(true);
 
-        editor.session.on("change", renderLines);
+        editor.session.on("change", () => {
+            renderLines();
+
+            // because the math is no longer the same math as what was saved
+            window.location.hash = "";
+        });
 
         const $infoButton = document.getElementById("info-button");
         const $infoBox = document.getElementById("info-box");
