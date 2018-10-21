@@ -102,8 +102,12 @@
         editor.session.on("change", () => {
             renderLines();
 
-            // because the math is no longer the same math as what was saved
-            window.location.hash = "";
+            // location.hash should be rest when the math is no longer the same
+            // math as what was saved to firebase, but that must not happen
+            // while loadMath is running
+            if (!editor.getReadOnly()) {
+                window.location.hash = "";
+            }
         });
 
         const $infoButton = document.getElementById("info-button");
