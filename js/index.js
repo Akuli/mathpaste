@@ -34,19 +34,26 @@
                 in this version of mathpaste, loading those urls is still supported
                 */
                 const encodedMath = window.location.hash.substr("#fullmath:".length);
-                savedMath = LZString.decompressFromEncodedURIComponent(encodedMath);
+                savedMath = { math: LZString.decompressFromEncodedURIComponent(encodedMath), imageString: '' };
             } else if (window.location.hash.startsWith("#saved:")) {
                 const mathId = window.location.hash.substr("#saved:".length);
                 savedMath = await firebase.get(mathId);
-                console.log(savedMath);
             } else {
-                savedMath = "";
+                savedMath = { math: '', imageString: '' };
             };
 
-            editor.session.setValue(savedMath || "");
-            editor.setReadOnly(false);
+            console.log(savedMath);
+            editor.session.setValue(savedMath.math);
+            draw.setImageString(savedMath.imageString);
 
+            editor.setReadOnly(false);
             renderLines();
+        };
+
+        const saveMath = async () => {
+            const mathId = await firebase.post(editor.getValue(), draw.getImageString());
+            $shareBoxInput.value = window.location.origin + window.location.pathname + "#saved:" + mathId;
+            window.location.hash = "#saved:" + mathId;
         };
 
         let oldLines = [];
@@ -142,12 +149,10 @@
           $drawBox.classList.add("shown");
         });
 
-        $shareButton.addEventListener("click", async function() {
-          boxes.forEach(box => box.classList.remove("shown"));
-          $shareBox.classList.add("shown");
-          const mathId = await firebase.post(editor.getValue());
-          $shareBoxInput.value = window.location.origin + window.location.pathname + "#saved:" + mathId;
-          window.location.hash = "#saved:" + mathId;
+        $shareButton.addEventListener("click", function() {
+            boxes.forEach(box => box.classList.remove("shown"));
+            $shareBox.classList.add("shown");
+            saveMath();
         });
 
         $settingsButton.addEventListener("click", function() {

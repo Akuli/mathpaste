@@ -90,15 +90,20 @@ define(["./lz-string.min.js"], function(LZString) {
         getImageString() {
             // each line is like x1,y1;x2,y2;... and the lines are separated by |
             const lineString = drawnLines.map(line => line.map(xy => xy.join(',')).join(';')).join('|');
-            return LZString.compress(lineString);
+            return LZString.compressToUTF16(lineString);
         },
         setImageString(compressed) {
-            const lineString = LZString.decompress(compressed);
-            if (lineString.length == 0) {
-                // special case: ''.split('|') is [''], which screws up everything
+            // special case to make everything easier
+            if (compressed === "") {
                 drawnLines = [];
             } else {
-                drawnLines = lineString.split('|').map(line => line.split(';').map(xy => xy.split(',').map(value => +value)));
+                const lineString = LZString.decompressFromUTF16(compressed);
+                if (lineString.length == 0) {
+                    // special case: ''.split('|') is [''], which screws up everything
+                    drawnLines = [];
+                } else {
+                    drawnLines = lineString.split('|').map(line => line.split(';').map(xy => xy.split(',').map(value => +value)));
+                }
             }
             redrawEverything();
         },
