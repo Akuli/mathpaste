@@ -12,14 +12,15 @@ on the canvas and with lots of stuff drawn
 // https://github.com/requirejs/example-multipage/blob/master/www/js/app/controller/c1.js
 define(["./lz-string.min.js"], function(LZString) {
 
+    const isCanvasShowing = () => {
+        // relying on classes and stuff here feels wrong
+        return document.getElementById("draw-box").classList.contains("shown");
+    };
+
     // contains arrays of lines
     // each line is an array of 1 or more points that are connected to form the line
     // each point is an [x,y] array
-    const drawnLines = [];
-
-    // undo is done with a window event listener because it works, but that
-    // must do nothing when the drawing area is not showing
-    let undoEnabled = false;
+    let drawnLines = [];
 
     const canvas = document.getElementById('draw-canvas');
     const context = canvas.getContext('2d');
@@ -57,39 +58,42 @@ define(["./lz-string.min.js"], function(LZString) {
         currentlyDrawingALine = false;
     });
 
-    const redrawEverything = theContext => {
-        theContext.clearRect(0, 0, theContext.canvas.width, theContext.canvas.height);
-        theContext.beginPath();
+    const redrawEverything = () => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.beginPath();
         for (let line of drawnLines) {
-            theContext.moveTo(...( line[0] ));
+            context.moveTo(...( line[0] ));
             for (let xy of line.slice(1)) {
-                theContext.lineTo(...xy);
+                context.lineTo(...xy);
             }
         }
-        theContext.stroke();
+        context.stroke();
     };
 
     // https://stackoverflow.com/a/16006607
     // adding the event listener to the canvas doesn't work
     document.addEventListener('keydown', event => {
-        if (event.key == 'z' && event.ctrlKey && !currentlyDrawingALine && undoEnabled) {
+        if (event.key == 'z' && event.ctrlKey && !currentlyDrawingALine && isCanvasShowing() && drawnLines.length !== 0) {
             drawnLines.pop();
-            redrawEverything(context);
+            redrawEverything();
         }
     });
 
     return {
-        setUndoEnabled(value) {
-            undoEnabled = value;
-        },
         getImageString() {
             // each line is like x1,y1;x2,y2;... and the lines are separated by |
             const lineString = drawnLines.map(line => line.map(xy => xy.join(',')).join(';')).join('|');
             return LZString.compress(lineString);
         },
         setImageString(compressed) {
-            const lineString = LZString.decompress(lineString);
-            console.log(lineString);
+            const lineString = LZString.decompress(compressed);
+            if (lineString.length == 0) {
+                // special case: ''.split('|') is [''], which screws up everything
+                drawnLines = [];
+            } else {
+                drawnLines = lineString.split('|').map(line => line.split(';').map(xy => xy.split(',').map(value => +value)));
+            }
+            redrawEverything();
         }
     };
 });

@@ -128,6 +128,7 @@
           $infoBox.classList.add("shown");
         });
 
+        // refactoring note: draw.js uses $drawBox to check when the canvas is visible
         $drawButton.addEventListener("click", function() {
           boxes.forEach(box => box.classList.remove("shown"));
           $drawBox.classList.add("shown");
