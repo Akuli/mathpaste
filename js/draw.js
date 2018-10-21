@@ -40,7 +40,6 @@ define(["./lz-string.min.js"], function(LZString) {
 
     canvas.addEventListener('mousedown', event => {
         currentlyDrawingALine = true;
-        context.beginPath();
         drawnLines.push([ xyFromEvent(event) ]);
         for (let cb of drawCallbacks) { cb(); }
     });
