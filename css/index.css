@@ -41,6 +41,12 @@ button:hover {
     display: none;
     transition: display 0.25s, opacity 0.25s;
     opacity: 0;
+
+    /*
+    to make the boxes display above ace scrollbar
+    ace's scrollbar z-index is 6, anything bigger than that seems to work
+    */
+    z-index: 10;
 }
 
 #info-box {
