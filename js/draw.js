@@ -29,7 +29,7 @@ define(["./lz-string.min.js"], function(LZString) {
     const context = canvas.getContext('2d');
     let currentlyDrawingALine = false;
 
-    const xyFromEvent = mouseEvent => {
+    const xyFromEvent = event => {
         // there are two properties that give correct values, one is
         // "experimental" and the other is "non-standard", so i chose the
         // experimental property
