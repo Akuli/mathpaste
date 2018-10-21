@@ -86,6 +86,12 @@
             },
             setMath(math) {
                 editor.session.setValue(math);
+            },
+            getImageString() {
+                return draw.getImageString();
+            },
+            setImageString(imageString) {
+                draw.setImageString(imageString);
             }
         };
 
