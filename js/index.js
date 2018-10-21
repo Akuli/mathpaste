@@ -112,18 +112,25 @@
 
         const $infoButton = document.getElementById("info-button");
         const $infoBox = document.getElementById("info-box");
+        const $drawButton = document.getElementById("draw-button");
+        const $drawBox = document.getElementById("draw-box");
         const $shareButton = document.getElementById("share-button");
         const $shareBox = document.getElementById("share-box");
         const $shareBoxInput = document.getElementById("share-url");
         const $settingsButton = document.getElementById("settings-button");
         const $settingsBox = document.getElementById("settings-box");
-        const boxes = [$infoBox, $shareBox, $settingsBox];
-        const shouldNotCloseBoxes = [$infoBox, $shareBox, $settingsBox, $infoButton, $shareButton, $settingsButton];
+        const boxes = [$infoBox, $drawBox, $shareBox, $settingsBox];
+        const shouldNotCloseBoxes = [$infoBox, $drawBox, $shareBox, $settingsBox, $infoButton, $drawButton, $shareButton, $settingsButton];
 
 
         $infoButton.addEventListener("click", function() {
           boxes.forEach(box => box.classList.remove("shown"));
           $infoBox.classList.add("shown");
+        });
+
+        $drawButton.addEventListener("click", function() {
+          boxes.forEach(box => box.classList.remove("shown"));
+          $drawBox.classList.add("shown");
         });
 
         $shareButton.addEventListener("click", async function() {
