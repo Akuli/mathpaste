@@ -42,10 +42,7 @@ define(["./lz-string.min.js"], function(LZString) {
         currentlyDrawingALine = true;
         context.beginPath();
         drawnLines.push([ xyFromEvent(event) ]);
-
-        for (let cb of drawCallbacks) {
-            cb();
-        }
+        for (let cb of drawCallbacks) { cb(); }
     });
 
     canvas.addEventListener('mousemove', event => {
@@ -75,6 +72,7 @@ define(["./lz-string.min.js"], function(LZString) {
             }
         }
         context.stroke();
+        for (let cb of drawCallbacks) { cb(); }
     };
 
     // https://stackoverflow.com/a/16006607
