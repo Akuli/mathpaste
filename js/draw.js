@@ -43,9 +43,9 @@ define(["./lz-string.min.js"], function(LZString) {
 
     canvas.addEventListener('mousemove', event => {
         if (currentlyDrawingALine) {
-            context.beginPath();
             const line = drawnLines[drawnLines.length - 1];
             const xyNew = xyFromEvent(event);
+            context.beginPath();
             context.moveTo(...(line[line.length - 1]));
             context.lineTo(...xyNew);
             context.stroke();
