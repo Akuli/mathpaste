@@ -22,6 +22,9 @@ define(["./lz-string.min.js"], function(LZString) {
     // each point is an [x,y] array
     let drawnLines = [];
 
+    // these callbacks run when the user starts drawing a line
+    const drawCallbacks = [];
+
     const canvas = document.getElementById('draw-canvas');
     const context = canvas.getContext('2d');
     let currentlyDrawingALine = false;
@@ -39,6 +42,10 @@ define(["./lz-string.min.js"], function(LZString) {
         currentlyDrawingALine = true;
         context.beginPath();
         drawnLines.push([ xyFromEvent(event) ]);
+
+        for (let cb of drawCallbacks) {
+            cb();
+        }
     });
 
     canvas.addEventListener('mousemove', event => {
@@ -94,6 +101,9 @@ define(["./lz-string.min.js"], function(LZString) {
                 drawnLines = lineString.split('|').map(line => line.split(';').map(xy => xy.split(',').map(value => +value)));
             }
             redrawEverything();
+        },
+        addDrawingCallback(cb) {
+            drawCallbacks.push(cb);
         }
     };
 });

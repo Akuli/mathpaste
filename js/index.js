@@ -43,10 +43,8 @@
                 savedMath = "";
             };
 
-            console.time("loadMath");
             editor.session.setValue(savedMath || "");
             editor.setReadOnly(false);
-            console.timeEnd("loadMath");
 
             renderLines();
         };
@@ -105,16 +103,20 @@
         });
         editor.setAutoScrollEditorIntoView(true);
 
-        editor.session.on("change", () => {
-            renderLines();
-
-            // location.hash should be rest when the math is no longer the same
-            // math as what was saved to firebase, but that must not happen
+        const onSomethingChanged = () => {
+            // location.hash should be rest when the math or the drawing no
+            // longer matches what's in firebase, but that must not happen
             // while loadMath is running
             if (!editor.getReadOnly()) {
                 window.location.hash = "";
             }
+        };
+
+        editor.session.on("change", () => {
+            onSomethingChanged();
+            renderLines();
         });
+        draw.addDrawingCallback(onSomethingChanged);
 
         const $infoButton = document.getElementById("info-button");
         const $infoBox = document.getElementById("info-box");
