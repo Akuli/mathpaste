@@ -143,7 +143,6 @@
           $infoBox.classList.add("shown");
         });
 
-        // refactoring note: draw.js uses $drawBox to check when the canvas is visible
         $drawButton.addEventListener("click", function() {
           boxes.forEach(box => box.classList.remove("shown"));
           $drawBox.classList.add("shown");
@@ -172,6 +171,18 @@
           console.info(reachesABox);
 
           if (!reachesABox) boxes.forEach(box => box.classList.remove("shown"));
+        });
+
+        // undoing that does the right thing with ace and the draw area
+        delete editor.keyBinding.$defaultHandler.commandKeyBinding["ctrl-z"];
+        document.addEventListener('keydown', event => {
+            if (event.key == 'z' && event.ctrlKey) {
+                if ($drawBox.classList.contains("shown")) {
+                    draw.undo();
+                } else {
+                    editor.undo();
+                }
+            }
         });
 
         MathJax.Hub.Register.StartupHook("End", function() {
