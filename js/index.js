@@ -22,6 +22,8 @@
         const $renderedLines = document.getElementById(RENDERED_LINES_ID);
         let lineElements = [];
 
+        let mathToLoadByDefault = { math: '', imageString: '' };
+
         const loadMath = async () => {
             //editor.session.setValue("Loading math from URL...");
             editor.setReadOnly(true);
@@ -38,6 +40,9 @@
             } else if (window.location.hash.startsWith("#saved:")) {
                 const mathId = window.location.hash.substr("#saved:".length);
                 savedMath = await firebase.get(mathId);
+            } else if (mathToLoadByDefault !== null) {
+                savedMath = mathToLoadByDefault;
+                mathToLoadByDefault = null;   // this shouldn't be used anymore after this
             } else {
                 savedMath = { math: '', imageString: '' };
             };
@@ -90,7 +95,12 @@
                 return editor.getValue();
             },
             setMath(math) {
-                editor.session.setValue(math);
+                if (mathToLoadByDefault === null) {
+                    // loadMath has ran already
+                    editor.session.setValue(math);
+                } else {
+                    mathToLoadByDefault.math = math;
+                }
             },
             getImageString() {
                 return draw.getImageString();
@@ -187,7 +197,6 @@
 
         MathJax.Hub.Register.StartupHook("End", function() {
             MathJax.Hub.processSectionDelay = 0;
-
             loadMath();
         });
         MathJax.Hub.Configured();
