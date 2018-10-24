@@ -91,10 +91,14 @@
 
         // this is for mathpaste-gtk
         window.mathpaste = {
-            getMathAndImageString() {
-                return { math: editor.getValue(), imageString: draw.getImageString() };
+            getMathAndImage() {
+                return {
+                    math: editor.getValue(),
+                    imageString: draw.getImageString(),
+                    imageDataUrl: draw.getDataUrl()
+                };
             },
-            setMathAndImageString(math, imageString) {
+            setMathAndImage(math, imageString) {
                 if (toBeLoadedByDefault === null) {
                     // loadMath has ran already
                     editor.session.setValue(math);

@@ -82,6 +82,9 @@ define([], function() {
             }
             redrawEverything();
         },
+        getDataUrl() {
+            return canvas.toDataURL();
+        },
         addDrawingCallback(cb) {
             drawCallbacks.push(cb);
         },
