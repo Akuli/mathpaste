@@ -22,7 +22,7 @@
         const $renderedLines = document.getElementById(RENDERED_LINES_ID);
         let lineElements = [];
 
-        let mathToLoadByDefault = { math: '', imageString: '' };
+        let toBeLoadedByDefault = { math: '', imageString: '' };
 
         const loadMath = async () => {
             //editor.session.setValue("Loading math from URL...");
@@ -40,9 +40,9 @@
             } else if (window.location.hash.startsWith("#saved:")) {
                 const mathId = window.location.hash.substr("#saved:".length);
                 savedMath = await firebase.get(mathId);
-            } else if (mathToLoadByDefault !== null) {
-                savedMath = mathToLoadByDefault;
-                mathToLoadByDefault = null;   // this shouldn't be used anymore after this
+            } else if (toBeLoadedByDefault !== null) {
+                savedMath = toBeLoadedByDefault;
+                toBeLoadedByDefault = null;   // this shouldn't be used anymore after this
             } else {
                 savedMath = { math: '', imageString: '' };
             };
@@ -91,22 +91,18 @@
 
         // this is for mathpaste-gtk
         window.mathpaste = {
-            getMath() {
-                return editor.getValue();
+            getMathAndImageString() {
+                return { math: editor.getValue(), imageString: draw.getImageString() };
             },
-            setMath(math) {
-                if (mathToLoadByDefault === null) {
+            setMathAndImageString(math, imageString) {
+                if (toBeLoadedByDefault === null) {
                     // loadMath has ran already
                     editor.session.setValue(math);
+                    draw.setImageString(imageString);
                 } else {
-                    mathToLoadByDefault.math = math;
+                    toBeLoadedByDefault.math = math;
+                    toBeLoadedByDefault.imageString = imageString;
                 }
-            },
-            getImageString() {
-                return draw.getImageString();
-            },
-            setImageString(imageString) {
-                draw.setImageString(imageString);
             }
         };
 

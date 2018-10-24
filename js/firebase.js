@@ -25,12 +25,16 @@ TODO: validate image datas?
 TODO: delete old maths regularly?
 */
 
-(function() {
+define(["./lz-string.min.js"], function(LZString) {
     // 'await post("asd", imageString)' puts math to firebase and returns an ID string
     async function post(math, imageString) {
         // ref represents the object that represents the math in firebase
         const ref = await firebase.database().ref("maths").push();
-        ref.set({ content: math, timestamp: (new Date()).valueOf(), image: imageString });
+        ref.set({
+            content: math,
+            timestamp: (new Date()).valueOf(),
+            image: LZString.compressToUTF16(imageString)
+        });
         return ref.key;
     }
 
@@ -38,13 +42,22 @@ TODO: delete old maths regularly?
     // TODO: handle errors
     async function get(pasteId) {
         const value = (await firebase.database().ref(`maths/${pasteId}`).once("value")).val();
-        // value.image may be missing because backwards compat with older mathpastes
-        return { math: value.content, imageString: value.image || "" };
+        const result = { math: value.content };
+
+        // value.image may be missing or empty because backwards compat with older mathpastes
+        // but the empty string is not valid LZString utf16 compressed stuff
+        const compressedImageString = value.image || "";
+        if (compressedImageString === "") {
+            result.imageString = "";
+        } else {
+            result.imageString = LZString.decompressFromUTF16(compressedImageString);
+        }
+
+        return result;
     }
 
-    // for require.js
-    define({
+    return {
         post: post,
         get: get
-    });
-}());
+    };
+});
