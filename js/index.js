@@ -142,10 +142,8 @@
         const $shareButton = document.getElementById("share-button");
         const $shareBox = document.getElementById("share-box");
         const $shareBoxInput = document.getElementById("share-url");
-        const $settingsButton = document.getElementById("settings-button");
-        const $settingsBox = document.getElementById("settings-box");
-        const boxes = [$infoBox, $drawBox, $shareBox, $settingsBox];
-        const shouldNotCloseBoxes = [$infoBox, $drawBox, $shareBox, $settingsBox, $infoButton, $drawButton, $shareButton, $settingsButton];
+        const boxes = [$infoBox, $drawBox, $shareBox];
+        const shouldNotCloseBoxes = [$infoBox, $drawBox, $shareBox, $infoButton, $drawButton, $shareButton];
 
 
         $infoButton.addEventListener("click", function() {
@@ -162,11 +160,6 @@
             boxes.forEach(box => box.classList.remove("shown"));
             $shareBox.classList.add("shown");
             saveMath();
-        });
-
-        $settingsButton.addEventListener("click", function() {
-          boxes.forEach(box => box.classList.remove("shown"));
-          $settingsBox.classList.add("shown");
         });
 
         document.addEventListener("click", function(e) {

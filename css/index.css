@@ -2,7 +2,7 @@ body {
     background-color: #000;
 }
 
-button {
+.corner-button {
     font-size: 0.9em;
     text-align: center;
 
@@ -15,9 +15,12 @@ button {
     user-select: none;
 
     cursor: pointer;
+
+    width: 20px;
+    height: 20px;
 }
 
-button:hover {
+.corner-button:hover {
     opacity: 1;
 }
 
