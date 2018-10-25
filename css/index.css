@@ -6,15 +6,14 @@ body {
     font-size: 0.9em;
     text-align: center;
 
-    border: 1px solid white;
+    /* prevent the pictures from touching the button's edges */
+    border: 1px solid transparent;
+    outline: 1px solid white;
+
     background-color: #e1e1e1;
 
     opacity: 0.5;
     transition: opacity 0.25s;
-
-    user-select: none;
-
-    cursor: pointer;
 
     width: 20px;
     height: 20px;
