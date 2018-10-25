@@ -26,6 +26,8 @@ TODO: delete old maths regularly?
 */
 
 define(["./lz-string.min.js"], function(LZString) {
+    "use strict";
+
     // 'await post("asd", imageString)' puts math to firebase and returns an ID string
     async function post(math, imageString) {
         // ref represents the object that represents the math in firebase
@@ -56,8 +58,5 @@ define(["./lz-string.min.js"], function(LZString) {
         return result;
     }
 
-    return {
-        post: post,
-        get: get
-    };
+    return { post: post, get: get };
 });

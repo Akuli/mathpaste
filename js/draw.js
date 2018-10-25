@@ -10,6 +10,7 @@ on the canvas and with lots of stuff drawn
 */
 
 define([], function() {
+    "use strict";
 
     // contains arrays of lines
     // each line is an array of 1 or more points that are connected to form the line
@@ -74,7 +75,7 @@ define([], function() {
             return drawnLines.map(line => line.map(xy => xy.join(',')).join(';')).join('|');
         },
         setImageString(imageString) {
-            if (imageString.length == 0) {
+            if (imageString.length === 0) {
                 // special case: ''.split('|') is [''], which screws up everything
                 drawnLines = [];
             } else {

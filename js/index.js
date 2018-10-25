@@ -3,11 +3,6 @@
 (function() {
     "use strict";
 
-    const RENDERED_LINES_ID = "renderedLines";
-    const LINE_CLASS = "line";
-
-    const LINE_DELIMITER = "\n\n";
-
     require.config({
         paths: {
             ace: "./ace/lib/ace",
@@ -18,9 +13,17 @@
     // under RequireJs, but it still just defines its stuff under
     // `window.MathJax`, not with a `requirejs.define`.  ¯\_(ツ)_/¯
     const MATHJAX_URL = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=AM_HTMLorMML&delayStartupUntil=configured";
-    require([MATHJAX_URL, "./js/lz-string.min.js", "./js/firebase.js", "./js/draw.js", "ace/ace"], function(_, LZString, firebase, draw, ace) {
-        const $renderedLines = document.getElementById(RENDERED_LINES_ID);
-        let lineElements = [];
+    require([MATHJAX_URL, "./js/lz-string.min.js", "./js/firebase.js", "./js/draw.js", "ace/ace"], (_, LZString, firebase, draw, ace) => {
+        const editor = ace.edit("editor", {
+            mode: "ace/mode/asciimath",
+            theme: "ace/theme/tomorrow_night_eighties",
+            selectionStyle: "text",
+            showLineNumbers: false,
+            showGutter: false,
+            wrap: true,
+        });
+        editor.setAutoScrollEditorIntoView(true);
+        const lineElements = [];
 
         let toBeLoadedByDefault = { math: '', imageString: '' };
 
@@ -28,7 +31,7 @@
             //editor.session.setValue("Loading math from URL...");
             editor.setReadOnly(true);
 
-            var savedMath;
+            let savedMath;
             if (window.location.hash.startsWith("#fullmath:")) {
                 /*
                 this is for backwards compat
@@ -45,7 +48,7 @@
                 toBeLoadedByDefault = null;   // this shouldn't be used anymore after this
             } else {
                 savedMath = { math: '', imageString: '' };
-            };
+            }
 
             console.log(savedMath);
             editor.session.setValue(savedMath.math);
@@ -56,14 +59,16 @@
         };
 
         const saveMath = async () => {
+            const $saveBoxInput = document.getElementById("save-url");
             const mathId = await firebase.post(editor.getValue(), draw.getImageString());
             $saveBoxInput.value = window.location.origin + window.location.pathname + "#saved:" + mathId;
             window.location.hash = "#saved:" + mathId;
         };
 
+        const $renderedLines = document.getElementById("renderedLines");
         let oldLines = [];
         const renderLines = () => {
-            const lines = editor.getValue().split(LINE_DELIMITER);
+            const lines = editor.getValue().split("\n\n");
 
             for (let i = 0; i < lines.length; ++i) {
                 if (oldLines[i] === lines[i]) {
@@ -72,7 +77,7 @@
 
                 if (lineElements.length <= i) {
                     const $line = document.createElement("div");
-                    $line.classList.add(LINE_CLASS);
+                    $line.classList.add("line");
                     lineElements.push($line);
                     $renderedLines.append($line);
                 }
@@ -81,13 +86,27 @@
                 MathJax.Hub.Queue(["Typeset", MathJax.Hub, lineElements[i]]);
             }
 
-            const extraLines = lineElements.length - lines.length;
-            for (let i = lineElements.length - extraLines; i < lineElements.length; ++i) {
+            for (let i = lines.length; i < lineElements.length; ++i) {
                 lineElements[i].textContent = "";
             }
 
             oldLines = lines;
         };
+
+        const onSomethingChanged = () => {
+            // location.hash should be rest when the math or the drawing no
+            // longer matches what's in firebase, but that must not happen
+            // while loadMath is running
+            if (!editor.getReadOnly()) {
+                window.location.hash = "";
+            }
+        };
+
+        editor.session.on("change", () => {
+            onSomethingChanged();
+            renderLines();
+        });
+        draw.addDrawingCallback(onSomethingChanged);
 
         // this is for mathpaste-gtk
         window.mathpaste = {
@@ -110,76 +129,54 @@
             }
         };
 
-        let editor = ace.edit("editor", {
-            mode: "ace/mode/asciimath",
-            theme: "ace/theme/tomorrow_night_eighties",
-            selectionStyle: "text",
-            showLineNumbers: false,
-            showGutter: false,
-            wrap: true,
-        });
-        editor.setAutoScrollEditorIntoView(true);
+        const $infoButton = document.getElementById("info-button");
+        const $drawButton = document.getElementById("draw-button");
+        const $saveButton = document.getElementById("save-button");
+        const $infoBox = document.getElementById("info-box");
+        const $drawBox = document.getElementById("draw-box");
+        const $saveBox = document.getElementById("save-box");
 
-        const onSomethingChanged = () => {
-            // location.hash should be rest when the math or the drawing no
-            // longer matches what's in firebase, but that must not happen
-            // while loadMath is running
-            if (!editor.getReadOnly()) {
-                window.location.hash = "";
-            }
+        const boxes = [$infoBox, $drawBox, $saveBox];
+        const buttons = [$infoButton, $drawButton, $saveButton];
+
+        const showBox = box => {
+          for (let otherBox of boxes) {
+            otherBox.classList.remove("shown");
+          }
+
+          // TODO: toggle if the same button is clicked many times
+          box.classList.add("shown");
         };
 
-        editor.session.on("change", () => {
-            onSomethingChanged();
-            renderLines();
-        });
-        draw.addDrawingCallback(onSomethingChanged);
-
-        const $infoButton = document.getElementById("info-button");
-        const $infoBox = document.getElementById("info-box");
-        const $drawButton = document.getElementById("draw-button");
-        const $drawBox = document.getElementById("draw-box");
-        const $saveButton = document.getElementById("save-button");
-        const $saveBox = document.getElementById("save-box");
-        const $saveBoxInput = document.getElementById("save-url");
-        const boxes = [$infoBox, $drawBox, $saveBox];
-        const shouldNotCloseBoxes = [$infoBox, $drawBox, $saveBox, $infoButton, $drawButton, $saveButton];
-
-
-        $infoButton.addEventListener("click", function() {
-          boxes.forEach(box => box.classList.remove("shown"));
-          $infoBox.classList.add("shown");
+        $infoButton.addEventListener("click", () => showBox($infoBox));
+        $drawButton.addEventListener("click", () => showBox($drawBox));
+        $saveButton.addEventListener("click", () => {
+          showBox($saveBox);
+          saveMath();
         });
 
-        $drawButton.addEventListener("click", function() {
-          boxes.forEach(box => box.classList.remove("shown"));
-          $drawBox.classList.add("shown");
-        });
-
-        $saveButton.addEventListener("click", function() {
-            boxes.forEach(box => box.classList.remove("shown"));
-            $saveBox.classList.add("shown");
-            saveMath();
-        });
-
-        document.addEventListener("click", function(e) {
+        document.addEventListener("click", e => {
           let element = e.target;
           let reachesABox = false;
 
           while (element) {
-            if (!shouldNotCloseBoxes.every(el => el != element) ) { reachesABox = true; break; }
+            if (boxes.concat(buttons).includes(element)) {
+              reachesABox = true;
+              break;
+            }
             element = element.parentElement;
           }
-
-          console.info(reachesABox);
-
-          if (!reachesABox) boxes.forEach(box => box.classList.remove("shown"));
+          if (!reachesABox) {
+            for (let box of boxes) {
+              box.classList.remove("shown");
+            }
+          }
         });
 
         // undoing that does the right thing with ace and the draw area
         delete editor.keyBinding.$defaultHandler.commandKeyBinding["ctrl-z"];
         document.addEventListener('keydown', event => {
-            if (event.key == 'z' && event.ctrlKey) {
+            if (event.key === 'z' && event.ctrlKey) {
                 if ($drawBox.classList.contains("shown")) {
                     draw.undo();
                 } else {
@@ -188,7 +185,7 @@
             }
         });
 
-        MathJax.Hub.Register.StartupHook("End", function() {
+        MathJax.Hub.Register.StartupHook("End", () => {
             MathJax.Hub.processSectionDelay = 0;
             loadMath();
         });
