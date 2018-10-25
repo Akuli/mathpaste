@@ -45,6 +45,18 @@ math, click the pencil button and draw something.
 - MathPaste is based on the "interactive renderer" on [asciimath.org][asciimath].
 - The area that the math is typed to is implemented with [ace].
 
+
+## Developing MathPaste
+
+    $ git clone https://github.com/Akuli/mathpaste
+    $ cd mathpaste
+    $ git submodule init
+    $ git submodule update
+    $ python3 -m http.server
+
+Now mathpaste should be running in `http://localhost:8000`.
+
+
 [mathb.in]: http://mathb.in/
 [asciimath]: http://asciimath.org/
 
