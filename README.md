@@ -48,7 +48,7 @@ math, click the pencil button and draw something.
 [mathb.in]: http://mathb.in/
 [asciimath]: http://asciimath.org/
 
-[open a new issue on GitHub]: https://github.com/PurpleMyst/mathpaste/issues/new
+[open a new issue on GitHub]: https://github.com/Akuli/mathpaste/issues/new
 [MathPaste GTK]: https://github.com/Akuli/mathpaste-gtk
 [MathJax]: https://mathjax.org/
 [PurpleMyst]: https://github.com/PurpleMyst/
