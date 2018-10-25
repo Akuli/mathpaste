@@ -57,7 +57,7 @@
 
         const saveMath = async () => {
             const mathId = await firebase.post(editor.getValue(), draw.getImageString());
-            $shareBoxInput.value = window.location.origin + window.location.pathname + "#saved:" + mathId;
+            $saveBoxInput.value = window.location.origin + window.location.pathname + "#saved:" + mathId;
             window.location.hash = "#saved:" + mathId;
         };
 
@@ -139,11 +139,11 @@
         const $infoBox = document.getElementById("info-box");
         const $drawButton = document.getElementById("draw-button");
         const $drawBox = document.getElementById("draw-box");
-        const $shareButton = document.getElementById("share-button");
-        const $shareBox = document.getElementById("share-box");
-        const $shareBoxInput = document.getElementById("share-url");
-        const boxes = [$infoBox, $drawBox, $shareBox];
-        const shouldNotCloseBoxes = [$infoBox, $drawBox, $shareBox, $infoButton, $drawButton, $shareButton];
+        const $saveButton = document.getElementById("save-button");
+        const $saveBox = document.getElementById("save-box");
+        const $saveBoxInput = document.getElementById("save-url");
+        const boxes = [$infoBox, $drawBox, $saveBox];
+        const shouldNotCloseBoxes = [$infoBox, $drawBox, $saveBox, $infoButton, $drawButton, $saveButton];
 
 
         $infoButton.addEventListener("click", function() {
@@ -156,9 +156,9 @@
           $drawBox.classList.add("shown");
         });
 
-        $shareButton.addEventListener("click", function() {
+        $saveButton.addEventListener("click", function() {
             boxes.forEach(box => box.classList.remove("shown"));
-            $shareBox.classList.add("shown");
+            $saveBox.classList.add("shown");
             saveMath();
         });
 
