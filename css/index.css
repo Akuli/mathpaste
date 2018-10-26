@@ -62,6 +62,10 @@ body {
     padding: 10px;
 }
 
+#save-url {
+    width: 50ch;
+}
+
 .shown {
     display: block;
     opacity: 1;
