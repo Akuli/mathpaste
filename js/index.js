@@ -93,12 +93,17 @@
             oldLines = lines;
         };
 
+        const changeCallbacks = [];
         const onSomethingChanged = () => {
             // location.hash should be rest when the math or the drawing no
             // longer matches what's in firebase, but that must not happen
             // while loadMath is running
             if (!editor.getReadOnly()) {
                 window.location.hash = "";
+
+                for (let cb of changeCallbacks) {
+                    cb();
+                }
             }
         };
 
@@ -118,6 +123,7 @@
                 };
             },
             setMathAndImage(math, imageString) {
+                editor.setReadOnly(true);
                 if (toBeLoadedByDefault === null) {
                     // loadMath has ran already
                     editor.session.setValue(math);
@@ -126,6 +132,10 @@
                     toBeLoadedByDefault.math = math;
                     toBeLoadedByDefault.imageString = imageString;
                 }
+                editor.setReadOnly(false);
+            },
+            addChangeCallback(cb) {
+                changeCallbacks.push(cb);
             }
         };
 
