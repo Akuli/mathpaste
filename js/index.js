@@ -134,6 +134,10 @@
                 }
                 editor.setReadOnly(false);
             },
+            loadMathFromWindowDotLocationDotHash() {
+                toBeLoadedByDefault = null;
+                loadMath();
+            },
             addChangeCallback(cb) {
                 changeCallbacks.push(cb);
             }
