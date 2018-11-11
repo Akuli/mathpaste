@@ -37,6 +37,7 @@ define([], function() {
         currentlyDrawingALine = true;
         drawnLines.push([ xyFromEvent(event) ]);
         for (let cb of drawCallbacks) { cb(); }
+        event.preventDefault();   // prevent e.g. selecting some text, that's annoying
     });
 
     canvas.addEventListener('mousemove', event => {
