@@ -17,8 +17,9 @@ define([], function() {
 
     const penButton = document.getElementById('draw-pen-button');
     const circleButton = document.getElementById('draw-circle-button');
+    const lineButton = document.getElementById('draw-line-button');
+    const allButtons = [ penButton, circleButton, lineButton ];
 
-    const allButtons = [ penButton, circleButton ];
     for (const button of allButtons) {
       button.addEventListener('click', event => {
         for (const otherButton of allButtons) {
@@ -71,6 +72,38 @@ define([], function() {
       }
     }
 
+    class TwoPointLine extends Line {
+      constructor(_point) {
+        super([ _point ]);
+        this._mouseMoveImageData = null;
+      }
+
+      onMouseMove(xy) {
+        // there seems to be no easy way to delete an already drawn circle from
+        // the canvas, so image data tricks are the best i can do
+        if (this._mouseMoveImageData === null) {
+          this._mouseMoveImageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        } else {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.putImageData(this._mouseMoveImageData, 0, 0);
+        }
+
+        if (this.points.length === 1) {
+          this.points.push(xy);
+        } else if (this.points.length === 2) {
+          this.points[1] = xy;
+        } else {
+          throw new Error("the TwoPointLine is in an inconsistent state");
+        }
+        this.draw();
+      }
+
+      onMouseUp() {
+        super.onMouseUp();
+        this._mouseMoveImageData = null;    // to avoid memory leaking
+      }
+    }
+
     class Circle {
       constructor(center, radius, filled) {
         this.center = center;
@@ -91,8 +124,6 @@ define([], function() {
       }
 
       onMouseMove(xy) {
-        // there seems to be no easy way to delete an already drawn circle from
-        // the canvas, so image data tricks are the best i can do
         if (this._mouseMoveImageData === null) {
           this._mouseMoveImageData = context.getImageData(0, 0, canvas.width, canvas.height);
         } else {
@@ -105,7 +136,7 @@ define([], function() {
       }
 
       onMouseUp() {
-        this._mouseMoveImageData = null;    // to avoid memory leaking
+        this._mouseMoveImageData = null;
       }
 
       // 'circle;x;y;r;1' is a filled circle centered at (x,y) with radius r
@@ -154,6 +185,8 @@ define([], function() {
         currentlyDrawnObject = new Line([ xyFromEvent(event) ]);
       } else if (circleButton.classList.contains('selected')) {
         currentlyDrawnObject = new Circle(xyFromEvent(event), 0, false);
+      } else if (lineButton.classList.contains('selected')) {
+        currentlyDrawnObject = new TwoPointLine(xyFromEvent(event));
       } else {
         throw new Error("buttons are in an inconsistent state");
       }
