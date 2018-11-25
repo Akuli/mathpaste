@@ -13,9 +13,9 @@
     </div>
 
     <div id="button-holder">
-        <input type="image" title="Info" class="corner-button" id="info-button" src="pics/info.png" />
-        <input type="image" title="Draw" class="corner-button" id="draw-button" src="pics/draw.png" />
-        <input type="image" title="Save" class="corner-button" id="save-button" src="pics/save.png" />
+        <input type="image" title="Info" class="pic-button" id="info-button" src="pics/info.png" />
+        <input type="image" title="Draw" class="pic-button" id="draw-button" src="pics/pen.png" />
+        <input type="image" title="Save" class="pic-button" id="save-button" src="pics/save.png" />
     </div>
 
     <div id="popup-holder">
@@ -71,6 +71,10 @@
         </div>
 
         <div class="popup-box" id="draw-box">
+            <div>
+                <input type="image" title="Pen" class="pic-button selected" id="draw-pen-button" src="pics/pen.png" />
+                <input type="image" title="Circle" class="pic-button" id="draw-circle-button" src="pics/circle.png" />
+            </div>
             <canvas width="600" height="400" id="draw-canvas"></canvas>
         </div>
 

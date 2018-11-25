@@ -2,7 +2,7 @@ body {
     background-color: #000;
 }
 
-.corner-button {
+.pic-button {
     font-size: 0.9em;
     text-align: center;
 
@@ -19,7 +19,11 @@ body {
     height: 20px;
 }
 
-.corner-button:hover {
+.pic-button.selected {
+    opacity: 0.8;
+}
+
+.pic-button:hover {
     opacity: 1;
 }
 
@@ -66,9 +70,22 @@ body {
     width: 50ch;
 }
 
+#draw-canvas {
+    flex: 1;
+}
+
+#draw-box div {
+    display: flex;
+    flex-direction: column;
+}
+
 .shown {
     display: block;
     opacity: 1;
+}
+
+#draw-box.shown {
+    display: flex;
 }
 
 

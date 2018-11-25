@@ -15,6 +15,19 @@ define([], function() {
     const canvas = document.getElementById('draw-canvas');
     const context = canvas.getContext('2d');
 
+    const penButton = document.getElementById('draw-pen-button');
+    const circleButton = document.getElementById('draw-circle-button');
+
+    const allButtons = [ penButton, circleButton ];
+    for (const button of allButtons) {
+      button.addEventListener('click', event => {
+        for (const otherButton of allButtons) {
+          otherButton.classList.remove('selected');
+        }
+        event.target.classList.add('selected');
+      });
+    }
+
     class Line {
       constructor(pointArray) {
         if (pointArray.length === 0) {
@@ -23,7 +36,6 @@ define([], function() {
         this.points = pointArray;   // array of [x,y] integer arrays
       }
 
-      // be sure to run drawCallbacks when needed! this doesn't do that for you
       draw() {
         if (this.points.length >= 2) {
           context.beginPath();
@@ -35,8 +47,8 @@ define([], function() {
         }
       }
 
-      addPointAndDraw(newXY) {
-        this.points.push(newXY);
+      onMouseMove(xy) {
+        this.points.push(xy);
 
         // draw the new component without redrawing everything else
         context.beginPath();
@@ -46,6 +58,8 @@ define([], function() {
 
         for (const cb of drawCallbacks) { cb(); }
       }
+
+      onMouseUp() { }
 
       // like 'x1,y1;x2,y2;...' where xs and ys are integers
       toStringPart() {
@@ -62,9 +76,9 @@ define([], function() {
         this.center = center;
         this.radius = radius;
         this.filled = filled;
+        this._mouseMoveImageData = null;
       }
 
-      // be sure to run drawCallbacks when needed! this doesn't do that for you
       draw() {
         context.beginPath();
         const [ centerX, centerY ] = this.center;
@@ -74,6 +88,24 @@ define([], function() {
         } else {
           context.stroke();
         }
+      }
+
+      onMouseMove(xy) {
+        // there seems to be no easy way to delete an already drawn circle from
+        // the canvas, so image data tricks are the best i can do
+        if (this._mouseMoveImageData === null) {
+          this._mouseMoveImageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        } else {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.putImageData(this._mouseMoveImageData, 0, 0);
+        }
+
+        this.radius = Math.round(Math.hypot(this.center[0] - xy[0], this.center[1] - xy[1]));
+        this.draw();
+      }
+
+      onMouseUp() {
+        this._mouseMoveImageData = null;    // to avoid memory leaking
       }
 
       // 'circle;x;y;r;1' is a filled circle centered at (x,y) with radius r
@@ -92,9 +124,9 @@ define([], function() {
       }
     }
 
-    let drawnObjects = [];    // contains Circles and Lines
-    const drawCallbacks = [];   // run with no arguments when canvas content changes
-    let currentlyDrawingALine = false;
+    let drawnObjects = [];            // contains Circles and Lines that show on canvas
+    const drawCallbacks = [];         // run with no arguments when canvas content changes
+    let currentlyDrawnObject = null;  // this is what the user is currently drawing
 
     const xyFromEvent = event => {
         // there are two properties that give correct values, one is
@@ -113,30 +145,45 @@ define([], function() {
       for (const cb of drawCallbacks) { cb(); }
     }
 
+    let mouseWasDragged;
+
     canvas.addEventListener('mousedown', event => {
-        currentlyDrawingALine = true;
-        drawnObjects.push(new Line([ xyFromEvent(event) ]));
-        for (const cb of drawCallbacks) { cb(); }
-        event.preventDefault();   // prevent e.g. selecting some text, that's annoying
+      mouseWasDragged = false;
+
+      if (penButton.classList.contains('selected')) {
+        currentlyDrawnObject = new Line([ xyFromEvent(event) ]);
+      } else if (circleButton.classList.contains('selected')) {
+        currentlyDrawnObject = new Circle(xyFromEvent(event), 0, false);
+      } else {
+        throw new Error("buttons are in an inconsistent state");
+      }
+
+      for (const cb of drawCallbacks) { cb(); }
+      event.preventDefault();   // prevent e.g. selecting some text, that's annoying
     });
 
     canvas.addEventListener('mousemove', event => {
-        if (currentlyDrawingALine) {
-          drawnObjects[drawnObjects.length - 1].addPointAndDraw(xyFromEvent(event));
-        }
+      if (currentlyDrawnObject !== null) {
+        mouseWasDragged = true;
+        currentlyDrawnObject.onMouseMove(xyFromEvent(event));
+      }
     });
 
     // document because mouse up outside canvas must also stop drawing
     document.addEventListener('mouseup', event => {
-        if (currentlyDrawingALine && drawnObjects[drawnObjects.length - 1].points.length === 1) {
-          // canvas was clicked without dragging the mouse at all, draw small circle here
+      if (currentlyDrawnObject !== null) {
+        currentlyDrawnObject.onMouseUp();
+
+        if (mouseWasDragged) {
+          drawnObjects.push(currentlyDrawnObject);
+        } else {
           const circle = new Circle(xyFromEvent(event), 3, true);
-          drawnObjects.pop();
-          drawnObjects.push(circle);
           circle.draw();
+          drawnObjects.push(circle);
           for (const cb of drawCallbacks) { cb(); }
         }
-        currentlyDrawingALine = false;
+        currentlyDrawnObject = null;
+      }
     });
 
     return {
@@ -168,7 +215,7 @@ define([], function() {
             drawCallbacks.push(cb);
         },
         undo() {
-          if (drawnObjects.length !== 0 && !currentlyDrawingALine) {
+          if (drawnObjects.length !== 0 && currentlyDrawnObject === null) {
             drawnObjects.pop();
             redrawEverything();
           }
