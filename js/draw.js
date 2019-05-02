@@ -213,9 +213,10 @@ define([], function() {
           const circle = new Circle(xyFromEvent(event), 3, true);
           circle.draw();
           drawnObjects.push(circle);
-          for (const cb of drawCallbacks) { cb(); }
         }
         currentlyDrawnObject = null;
+
+        for (const cb of drawCallbacks) { cb(); }
       }
     });
 

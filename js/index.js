@@ -13,7 +13,7 @@
     // under RequireJs, but it still just defines its stuff under
     // `window.MathJax`, not with a `requirejs.define`.  ¯\_(ツ)_/¯
     const MATHJAX_URL = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=AM_HTMLorMML&delayStartupUntil=configured";
-    require([MATHJAX_URL, "./js/lz-string.min.js", "./js/firebase.js", "./js/draw.js", "ace/ace"], (_, LZString, firebase, draw, ace) => {
+    require([MATHJAX_URL, "./js/lz-string.min.js", "./js/firebase.js", "./js/draw.js", "./js/storage.js", "ace/ace"], (_, LZString, firebase, draw, storageManager, ace) => {
         const editor = ace.edit("editor", {
             mode: "ace/mode/asciimath",
             theme: "ace/theme/tomorrow_night_eighties",
@@ -43,11 +43,16 @@
             } else if (window.location.hash.startsWith("#saved:")) {
                 const mathId = window.location.hash.substr("#saved:".length);
                 savedMath = await firebase.get(mathId);
-            } else if (toBeLoadedByDefault !== null) {
-                savedMath = toBeLoadedByDefault;
-                toBeLoadedByDefault = null;   // this shouldn't be used anymore after this
             } else {
-                savedMath = { math: '', imageString: '' };
+              const storagedMath = storageManager.get();
+              if (storagedMath !== null) {
+                savedMath = storagedMath;
+              } else if (toBeLoadedByDefault !== null) {
+                  savedMath = toBeLoadedByDefault;
+                  toBeLoadedByDefault = null;   // this shouldn't be used anymore after this
+              } else {
+                  savedMath = { math: '', imageString: '' };
+              }
             }
 
             console.log(savedMath);
@@ -94,8 +99,9 @@
         };
 
         const changeCallbacks = [];
+        let useLocalStorage = true;
         const onSomethingChanged = () => {
-            // location.hash should be rest when the math or the drawing no
+            // location.hash should be reset when the math or the drawing no
             // longer matches what's in firebase, but that must not happen
             // while loadMath is running
             if (!editor.getReadOnly()) {
@@ -103,6 +109,9 @@
 
                 for (let cb of changeCallbacks) {
                     cb();
+                }
+                if (useLocalStorage) {
+                  storageManager.set(editor.getValue(), draw.getImageString());
                 }
             }
         };
@@ -140,6 +149,9 @@
             },
             addChangeCallback(cb) {
                 changeCallbacks.push(cb);
+            },
+            setUseLocalStorage(bool) {
+                useLocalStorage = !!bool;
             }
         };
 
