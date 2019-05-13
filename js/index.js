@@ -71,6 +71,14 @@
         };
 
         const $renderedLines = document.getElementById("renderedLines");
+
+        function addLineElement() {
+          const $line = document.createElement("div");
+          $line.classList.add("line");
+          lineElements.push($line);
+          $renderedLines.append($line);
+        }
+
         let oldLines = [];
         const renderLines = () => {
             const lines = editor.getValue().split("\n\n");
@@ -81,10 +89,7 @@
                 }
 
                 if (lineElements.length <= i) {
-                    const $line = document.createElement("div");
-                    $line.classList.add("line");
-                    lineElements.push($line);
-                    $renderedLines.append($line);
+                  addLineElement();
                 }
 
                 lineElements[i].textContent = "`" + lines[i] + "`";
@@ -121,6 +126,25 @@
             renderLines();
         });
         draw.addDrawingCallback(onSomethingChanged);
+
+        editor.selection.on('changeCursor', () => {
+          const cursorLine = editor.getCursorPosition().row;   // 0 means first row
+          const linesAboveOrAtCursor = editor.getValue().split('\n').slice(0, cursorLine+1);
+          const howManyDoubleNewlinesBeforeCursor = linesAboveOrAtCursor.join('\n').split('\n\n').length - 1;
+          const lineElementToShow = lineElements[howManyDoubleNewlinesBeforeCursor];
+          if (lineElementToShow !== undefined) {   // I don't know when this would happen
+            const scrollOptions = { scrollMode: 'if-needed' };
+            if (navigator.userAgent.toLowerCase().indexOf('firefox') === -1) {
+              // this causes annoying and weird behaviour in firefox
+              // try adding 1/2+3/4+5/6 and backspacing it away
+              scrollOptions.behavior = 'smooth';
+            }
+
+            // https://www.npmjs.com/package/scroll-into-view-if-needed
+            // there's a script tag that loads this in index.html
+            window.scrollIntoView(lineElementToShow, scrollOptions);
+          }
+        });
 
         // this is for mathpaste-gtk
         window.mathpaste = {
