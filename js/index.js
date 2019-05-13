@@ -128,10 +128,15 @@
         draw.addDrawingCallback(onSomethingChanged);
 
         editor.selection.on('changeCursor', () => {
+          for (const elem of lineElements) {
+            elem.classList.remove('selected');
+          }
+
           const cursorLine = editor.getCursorPosition().row;   // 0 means first row
           const linesAboveOrAtCursor = editor.getValue().split('\n').slice(0, cursorLine+1);
           const howManyDoubleNewlinesBeforeCursor = linesAboveOrAtCursor.join('\n').split('\n\n').length - 1;
           const lineElementToShow = lineElements[howManyDoubleNewlinesBeforeCursor];
+
           if (lineElementToShow !== undefined) {   // I don't know when this would happen
             const scrollOptions = { scrollMode: 'if-needed' };
             if (navigator.userAgent.toLowerCase().indexOf('firefox') === -1) {
@@ -143,6 +148,8 @@
             // https://www.npmjs.com/package/scroll-into-view-if-needed
             // there's a script tag that loads this in index.html
             window.scrollIntoView(lineElementToShow, scrollOptions);
+
+            lineElementToShow.classList.add('selected');
           }
         });
 

@@ -156,3 +156,7 @@ code {
     padding-top: 1em;
     padding-left: 1em;
 }
+
+#renderedLines > .line.selected {
+    background-color: #ccf;
+}
