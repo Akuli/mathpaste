@@ -1,31 +1,19 @@
-define([], function() {
-  "use strict";
+/* jshint browser: true, esversion: 8, module: true */
 
-  // everything wrapped in try,except because nothing goes badly wrong
-  function set(math, imageString) {
-    try {
-      window.localStorage.setItem('mathpaste-math', math);
-      window.localStorage.setItem('mathpaste-image-string', imageString);
-    } catch(e) {
-      console.log(e);
-    }
+export function get() {
+  const result = {
+      math: localStorage.getItem("mathpaste-math"),
+      imageString: localStorage.getItem("mathpaste-image-string"),
+  };
+
+  if (result.math === null || result.imageString === null) {
+    return null;
   }
 
-  function get() {
-    try {
-      const result = {
-        math: window.localStorage.getItem('mathpaste-math'),
-        imageString: window.localStorage.getItem('mathpaste-image-string'),
-      };
-      if (result.math === null || result.imageString === null) {
-        return null;
-      }
-      return result;
-    } catch(e) {
-      console.log(e);
-      return null;
-    }
-  }
+  return result;
+}
 
-  return { set: set, get: get };
-});
+export function set(math, imageString) {
+  localStorage.setItem("mathpaste-math", math);
+  localStorage.setItem("mathpaste-image-string", imageString);
+}
