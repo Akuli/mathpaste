@@ -6,6 +6,7 @@ import "brace/theme/tomorrow_night_eighties";
 import { initializeApp as initializeFirebase } from "firebase/app";
 import "firebase/database";
 import LZString from "lz-string";
+import scrollIntoView from "scroll-into-view-if-needed";
 
 import * as storageManager from "./storage";
 import * as draw from "./draw";
@@ -166,9 +167,7 @@ editor.selection.on('changeCursor', () => {
             scrollOptions.behavior = 'smooth';
         }
 
-        // https://www.npmjs.com/package/scroll-into-view-if-needed
-        // there's a script tag that loads this in index.html
-        if (window.scrollIntoView) window.scrollIntoView(lineElementToShow, scrollOptions);
+        scrollIntoView(lineElementToShow, scrollOptions);
 
         lineElementToShow.classList.add('selected');
     }

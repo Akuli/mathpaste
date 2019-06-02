@@ -27,6 +27,6 @@
     "brace": "^0.11.1",
     "firebase": "^6.1.0",
     "lz-string": "^1.4.4",
-    "mathjax": "^2.7.5"
+    "scroll-into-view-if-needed": "^2.2.20"
   }
 }
