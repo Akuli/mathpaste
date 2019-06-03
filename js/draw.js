@@ -274,6 +274,8 @@ export default class CanvasManager extends EventEmitter {
   setImageString(imageString) {
     this.objects = [];
 
+    if (!imageString) return;
+
     if (imageString.length !== 0) { // ''.split('|') is [''], which screws up everything
       for (const stringPart of imageString.split('|')) {
         if (stringPart.startsWith('circle;')) {

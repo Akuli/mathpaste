@@ -1,30 +1,19 @@
 /* jshint browser: true, unused: true, module: true, esversion: 8 */
 /* globals MathJax */
 
-import { initializeApp as initializeFirebase } from "firebase/app";
-import "firebase/database";
-
 import * as storageManager from "./storage";
 import CanvasManager from "./draw";
 import Editor from "./editor";
 import Renderer from "./renderer";
-import * as pasteManager from "./pasteManager";
+import PasteManager from "./pasteManager";
 
 // files included in the output
 import "../index.html";
 import "../css/index.css";
 
-initializeFirebase({
-  apiKey: "AIzaSyD3O2tMBXqz8Go4-xCz9P-HXBH7WNrX9N4",
-  authDomain: "mathpaste-8cc8e.firebaseapp.com",
-  databaseURL: "https://mathpaste-8cc8e.firebaseio.com",
-  projectId: "mathpaste-8cc8e",
-  storageBucket: "",
-  messagingSenderId: "204735746640"
-});
-
 const editor = new Editor();
 const cm = new CanvasManager();
+const pm = new PasteManager();
 const render = new Renderer(editor);
 
 cm.on("change", () => {
@@ -66,7 +55,7 @@ window.mathpaste = {
   },
 
   async loadMathFromWindowDotLocationDotHash() {
-    const { math, imageString } = await pasteManager.loadPaste();
+    const { math, imageString } = await pm.loadPaste();
     editor.setContents(math);
     cm.setImageString(imageString);
   },
@@ -105,7 +94,7 @@ const createBox = (type) => {
 createBox("info");
 createBox("draw");
 createBox("save").buttonElement.addEventListener("click", async () => {
-  const pasteId = pasteManager.uploadPaste(editor.getContents(), cm.getImageString());
+  const pasteId = await pm.uploadPaste(editor.getContents(), cm.getImageString());
   const $saveBoxInput = document.getElementById("save-url");
   $saveBoxInput.value = window.location.origin + window.location.pathname + "#saved:" + pasteId;
   window.location.hash = "#saved:" + pasteId;
@@ -118,7 +107,7 @@ document.addEventListener("click", () => {
 MathJax.Hub.Register.StartupHook("End", async () => {
   MathJax.Hub.processSectionDelay = 0;
 
-  const { math, imageString } = await pasteManager.loadPaste();
+  const { math, imageString } = await pm.loadPaste();
   editor.setContents(math);
   cm.setImageString(imageString);
 });
