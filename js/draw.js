@@ -11,252 +11,289 @@ that was still true after compressing with lzstring, with almost nothing drawn
 on the canvas and with lots of stuff drawn
 */
 
-const canvas = document.getElementById('draw-canvas');
-const context = canvas.getContext('2d');
+import EventEmitter from "events";
 
-const penButton = document.getElementById('draw-pen-button');
-const circleButton = document.getElementById('draw-circle-button');
-const lineButton = document.getElementById('draw-line-button');
-const allButtons = [penButton, circleButton, lineButton];
+const xyFromEvent = event => {
+  // there are two properties that give correct values, one is
+  // "experimental" and the other is "non-standard", so i chose the
+  // experimental property
+  // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/offsetX
+  // https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/layerX
+  return [event.offsetX, event.offsetY];
+};
 
-for (const button of allButtons) {
-    button.addEventListener('click', event => {
-        for (const otherButton of allButtons) {
-            otherButton.classList.remove('selected');
-        }
-        event.target.classList.add('selected');
-    });
+class DrawObject {
+  constructor(parent) {
+    this.parent = parent;
+  }
+
+  draw() {}
+
+  onMouseMove() {}
+
+  onMouseUp() {}
+
+  toStringPart() {}
+
+  static fromStringPart(parent, stringPart) {}
 }
 
-class Line {
-    constructor(pointArray) {
-        if (pointArray.length === 0) {
-            throw new Error("cannot create a line of 0 points");
-        }
-        this.points = pointArray; // array of [x,y] integer arrays
+class Line extends DrawObject {
+  constructor(parent, points) {
+    super(parent);
+
+    if (!Array.isArray(points) || points.length === 0) throw new Error("invalid line input");
+
+    // points: [[x, y]]
+    if (Array.isArray(points[0])) {
+      this.points = points;
+    // startPoint: [x, y]
+    } else {
+      this.points = [points];
     }
+  }
 
-    draw() {
-        if (this.points.length >= 2) {
-            context.beginPath();
-            context.moveTo(...(this.points[0]));
-            for (const xy of this.points.slice(1)) {
-                context.lineTo(...xy);
-            }
-            context.stroke();
-        }
+  draw() {
+    if (this.points.length >= 2) {
+      this.parent.ctx.beginPath();
+      this.parent.ctx.moveTo(...(this.points[0]));
+      for (const xy of this.points.slice(1)) {
+        this.parent.ctx.lineTo(...xy);
+      }
+      this.parent.ctx.stroke();
     }
+  }
 
-    onMouseMove(xy) {
-        this.points.push(xy);
+  onMouseMove(xy) {
+    this.points.push(xy);
 
-        // draw the new component without redrawing everything else
-        context.beginPath();
-        context.moveTo(...(this.points[this.points.length - 2]));
-        context.lineTo(...(this.points[this.points.length - 1]));
-        context.stroke();
+    // draw the new component without redrawing everything else
+    this.parent.ctx.beginPath();
+    this.parent.ctx.moveTo(...(this.points[this.points.length - 2]));
+    this.parent.ctx.lineTo(...(this.points[this.points.length - 1]));
+    this.parent.ctx.stroke();
 
-        for (const cb of drawCallbacks) {
-            cb();
-        }
-    }
+    this.parent.emit("change");
+  }
 
-    onMouseUp() {}
+  // like 'x1,y1;x2,y2;...' where xs and ys are integers
+  toStringPart() {
+    return this.points.map(xy => xy.join(',')).join(';');
+  }
 
-    // like 'x1,y1;x2,y2;...' where xs and ys are integers
-    toStringPart() {
-        return this.points.map(xy => xy.join(',')).join(';');
-    }
-
-    static fromStringPart(stringPart) {
-        return new Line(stringPart.split(';').map(xy => xy.split(',').map(value => +value)));
-    }
+  static fromStringPart(parent, stringPart) {
+    return new Line(parent, stringPart.split(';').map(xy => xy.split(',').map(value => +value)));
+  }
 }
 
 class TwoPointLine extends Line {
-    constructor(_point) {
-        super([_point]);
-        this._mouseMoveImageData = null;
-    }
+  constructor(parent, point) {
+    super(parent, [point]);
+    this._mouseMoveImageData = null;
+  }
 
-    onMouseMove(xy) {
-        // there seems to be no easy way to delete an already drawn circle from
-        // the canvas, so image data tricks are the best i can do
-        if (this._mouseMoveImageData === null) {
-            this._mouseMoveImageData = context.getImageData(0, 0, canvas.width, canvas.height);
-        } else {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            context.putImageData(this._mouseMoveImageData, 0, 0);
-        }
-
-        if (this.points.length === 1) {
-            this.points.push(xy);
-        } else if (this.points.length === 2) {
-            this.points[1] = xy;
-        } else {
-            throw new Error("the TwoPointLine is in an inconsistent state");
-        }
-        this.draw();
-    }
-
-    onMouseUp() {
-        super.onMouseUp();
-        this._mouseMoveImageData = null; // to avoid memory leaking
-    }
-}
-
-class Circle {
-    constructor(center, radius, filled) {
-        this.center = center;
-        this.radius = radius;
-        this.filled = filled;
-        this._mouseMoveImageData = null;
-    }
-
-    draw() {
-        context.beginPath();
-        const [centerX, centerY] = this.center;
-        context.arc(centerX, centerY, this.radius, 0, 2 * Math.PI);
-        if (this.filled) {
-            context.fill();
-        } else {
-            context.stroke();
-        }
-    }
-
-    onMouseMove(xy) {
-        if (this._mouseMoveImageData === null) {
-            this._mouseMoveImageData = context.getImageData(0, 0, canvas.width, canvas.height);
-        } else {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            context.putImageData(this._mouseMoveImageData, 0, 0);
-        }
-
-        this.radius = Math.round(Math.hypot(this.center[0] - xy[0], this.center[1] - xy[1]));
-        this.draw();
-    }
-
-    onMouseUp() {
-        this._mouseMoveImageData = null;
-    }
-
-    // 'circle;x;y;r;1' is a filled circle centered at (x,y) with radius r
-    // 'circle;x;y;r;0' is an open circle centered at (x,y) with radius r
-    // x, y and r are integers
-    toStringPart() {
-        return 'circle;' + this.center.join(';') + ';' + this.radius + ';' + (+!!this.filled);
-    }
-
-    static fromStringPart(stringPart) {
-        const [circleString, centerX, centerY, radius, isFilled] = stringPart.split(';');
-        if (circleString !== 'circle') {
-            throw new Error("does not look like a circle string part: " + stringPart);
-        }
-        return new Circle([+centerX, +centerY], +radius, !!+isFilled);
-    }
-}
-
-let drawnObjects = []; // contains Circles and Lines that show on canvas
-const drawCallbacks = []; // run with no arguments when canvas content changes
-let currentlyDrawnObject = null; // this is what the user is currently drawing
-
-const xyFromEvent = event => {
-    // there are two properties that give correct values, one is
-    // "experimental" and the other is "non-standard", so i chose the
-    // experimental property
-    // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/offsetX
-    // https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/layerX
-    return [event.offsetX, event.offsetY];
-};
-
-function redrawEverything() {
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    for (const object of drawnObjects) {
-        object.draw();
-    }
-    for (const cb of drawCallbacks) {
-        cb();
-    }
-}
-
-let mouseWasDragged;
-
-canvas.addEventListener('mousedown', event => {
-    mouseWasDragged = false;
-
-    if (penButton.classList.contains('selected')) {
-        currentlyDrawnObject = new Line([xyFromEvent(event)]);
-    } else if (circleButton.classList.contains('selected')) {
-        currentlyDrawnObject = new Circle(xyFromEvent(event), 0, false);
-    } else if (lineButton.classList.contains('selected')) {
-        currentlyDrawnObject = new TwoPointLine(xyFromEvent(event));
+  onMouseMove(xy) {
+    // there seems to be no easy way to delete an already drawn circle from
+    // the canvas, so image data tricks are the best i can do
+    if (this._mouseMoveImageData === null) {
+      this._mouseMoveImageData = this.parent.ctx.getImageData(0, 0, this.parent.canvas.width, this.parent.canvas.height);
     } else {
-        throw new Error("buttons are in an inconsistent state");
+      this.parent.ctx.clearRect(0, 0, this.parent.canvas.width, this.parent.canvas.height);
+      this.parent.ctx.putImageData(this._mouseMoveImageData, 0, 0);
     }
 
-    for (const cb of drawCallbacks) {
-        cb();
+    if (this.points.length === 1) {
+      this.points.push(xy);
+    } else if (this.points.length === 2) {
+      this.points[1] = xy;
+    } else {
+      throw new Error("the TwoPointLine is in an inconsistent state");
     }
-    event.preventDefault(); // prevent e.g. selecting some text, that's annoying
-});
 
-canvas.addEventListener('mousemove', event => {
-    if (currentlyDrawnObject !== null) {
-        mouseWasDragged = true;
-        currentlyDrawnObject.onMouseMove(xyFromEvent(event));
+    this.draw();
+  }
+
+  onMouseUp() {
+    super.onMouseUp();
+    this._mouseMoveImageData = null; // to avoid memory leaking
+  }
+}
+
+class Circle extends DrawObject {
+  constructor(parent, center, radius, filled) {
+    super(parent);
+
+    this.center = center;
+    this.radius = radius || 0;
+    this.filled = filled || false;
+    this._mouseMoveImageData = null;
+  }
+
+  draw() {
+    this.parent.ctx.beginPath();
+    this.parent.ctx.arc(...this.center, this.radius, 0, 2 * Math.PI);
+    if (this.filled) {
+      this.parent.ctx.fill();
+    } else {
+      this.parent.ctx.stroke();
     }
-});
+    this.parent.emit("change");
+  }
 
-// document because mouse up outside canvas must also stop drawing
-document.addEventListener('mouseup', event => {
-    if (currentlyDrawnObject !== null) {
-        currentlyDrawnObject.onMouseUp();
-
-        if (mouseWasDragged) {
-            drawnObjects.push(currentlyDrawnObject);
-        } else {
-            const circle = new Circle(xyFromEvent(event), 3, true);
-            circle.draw();
-            drawnObjects.push(circle);
-        }
-        currentlyDrawnObject = null;
-
-        for (const cb of drawCallbacks) {
-            cb();
-        }
+  onMouseMove(xy) {
+    if (this._mouseMoveImageData === null) {
+      this._mouseMoveImageData = this.parent.ctx.getImageData(0, 0, this.parent.canvas.width, this.parent.canvas.height);
+    } else {
+      this.parent.ctx.clearRect(0, 0, this.parent.ctx.width, this.parent.canvas.height);
+      this.parent.ctx.putImageData(this._mouseMoveImageData, 0, 0);
     }
-});
 
-export function getImageString() {
+    this.radius = Math.round(Math.hypot(this.center[0] - xy[0], this.center[1] - xy[1]));
+    this.draw();
+  }
+
+  onMouseUp() {
+    this._mouseMoveImageData = null;
+  }
+
+  // 'circle;x;y;r;1' is a filled circle centered at (x,y) with radius r
+  // 'circle;x;y;r;0' is an open circle centered at (x,y) with radius r
+  // x, y and r are integers
+  toStringPart() {
+    return 'circle;' + this.center.join(';') + ';' + this.radius + ';' + (+!!this.filled);
+  }
+
+  static fromStringPart(parent, stringPart) {
+    const [circleString, centerX, centerY, radius, isFilled] = stringPart.split(';');
+    if (circleString !== 'circle') {
+      throw new Error("does not look like a circle string part: " + stringPart);
+    }
+    return new Circle(parent, [+centerX, +centerY], +radius, !!(+isFilled));
+  }
+}
+
+export default class CanvasManager extends EventEmitter {
+  constructor() {
+    super();
+
+    this.canvas = document.getElementById("draw-canvas");
+    this.ctx = this.canvas.getContext("2d");
+
+    this.objects = [];
+    this.currentDrawObject = null;
+    this.currentlyDrawing = null;
+
+    this._createButtons({
+      "pen": Line,
+      "circle": Circle,
+      "line": TwoPointLine,
+    });
+
+    this._registerEventHandlers();
+  }
+
+  _registerEventHandlers() {
+    let mouseIsBeingDragged = false;
+
+    this.canvas.addEventListener("mousedown", event => {
+      if (!this.currentDrawObject) return;
+
+      mouseIsBeingDragged = false;
+
+      let clickPoint = xyFromEvent(event);
+
+      this.currentlyDrawing = new this.currentDrawObject(this, clickPoint);
+
+      this.emit("change");
+
+      event.preventDefault(); // prevent e.g. selecting some text, that's annoying
+    });
+
+    this.canvas.addEventListener('mousemove', event => {
+      if (this.currentlyDrawing === null) return;
+      mouseIsBeingDragged = true;
+      this.currentlyDrawing.onMouseMove(xyFromEvent(event));
+    });
+
+    // document because mouse up outside canvas must also stop drawing
+    document.addEventListener('mouseup', event => {
+      if (this.currentlyDrawing === null) return;
+      this.currentlyDrawing.onMouseUp();
+
+      // XXX: what is this code doing ..?
+      if (mouseIsBeingDragged) {
+        this.objects.push(this.currentlyDrawing);
+      } else {
+        const circle = new Circle(xyFromEvent(event), 3, true);
+        circle.draw();
+        this.objects.push(circle);
+      }
+      this.currentlyDrawing = null;
+
+      this.emit("change");
+    });
+
+  }
+
+  _createButtons(types) {
+    const buttons = [];
+
+    for (const [type, cls] of Object.entries(types)) {
+      const elementId = `draw-${type}-button`;
+      const element = document.getElementById(elementId);
+
+      element.addEventListener("click", () => {
+        buttons.forEach(element => element.classList.remove("selected"));
+      });
+
+      element.addEventListener("click", () => {
+        element.classList.add("selected");
+        this.currentDrawObject = cls;
+      });
+
+      buttons.push(element);
+    }
+  }
+
+  redraw() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    for (const object of this.objects) {
+      object.draw();
+    }
+    this.emit("change");
+  }
+
+  getImageString() {
     const stringParts = [];
-    for (const object of drawnObjects) {
-        stringParts.push(object.toStringPart());
+    for (const object of this.objects) {
+      stringParts.push(object.toStringPart());
     }
     return stringParts.join('|');
-}
-export function setImageString(imageString) {
-    drawnObjects = [];
+  }
+
+  setImageString(imageString) {
+    this.objects = [];
 
     if (imageString.length !== 0) { // ''.split('|') is [''], which screws up everything
-        for (const stringPart of imageString.split('|')) {
-            if (stringPart.startsWith('circle;')) {
-                drawnObjects.push(Circle.fromStringPart(stringPart));
-            } else {
-                drawnObjects.push(Line.fromStringPart(stringPart));
-            }
+      for (const stringPart of imageString.split('|')) {
+        if (stringPart.startsWith('circle;')) {
+          this.objects.push(Circle.fromStringPart(this, stringPart));
+        } else {
+          this.objects.push(Line.fromStringPart(this, stringPart));
         }
+      }
     }
-    redrawEverything();
-}
-export function getDataUrl() {
-    return canvas.toDataURL();
-}
-export function addDrawingCallback(cb) {
-    drawCallbacks.push(cb);
-}
-export function undo() {
-    if (drawnObjects.length !== 0 && currentlyDrawnObject === null) {
-        drawnObjects.pop();
-        redrawEverything();
+    this.redraw();
+  }
+
+  getDataUrl() {
+    return this.canvas.toDataURL();
+  }
+
+  undo() {
+    if (this.objects.length !== 0 && this.currentlyDrawing === null) {
+      this.objects.pop();
+      this.redraw();
     }
+  }
 }
