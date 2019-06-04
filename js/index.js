@@ -98,13 +98,14 @@ document.addEventListener("click", () => void shownBoxManager.removeClass());
 MathJax.Hub.Register.StartupHook("End", async () => {
   MathJax.Hub.processSectionDelay = 0;
 
-  // TODO: Set the draw area as "read only" as well.
   editor.readOnly = true;
+  cm.readOnly = true;
 
   const { math, imageString } = await pm.loadPaste();
   editor.setContents(math);
   cm.setImageString(imageString);
 
   editor.readOnly = false;
+  cm.readOnly = false;
 });
 MathJax.Hub.Configured();

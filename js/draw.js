@@ -171,10 +171,13 @@ export default class CanvasManager extends EventEmitter {
     this.ctx = this.canvas.getContext("2d");
 
     this.objects = [];
+
     this.currentDrawObject = null;
     this.currentlyDrawing = null;
 
     this.selectedManager = new RadioClassManager("selected");
+
+    this.readOnly = false;
 
     this._createButtons({
       "pen": Line,
@@ -189,6 +192,7 @@ export default class CanvasManager extends EventEmitter {
     let mouseIsBeingDragged = false;
 
     this.canvas.addEventListener("mousedown", event => {
+      if (this.readOnly) return;
       if (!this.currentDrawObject) return;
 
       mouseIsBeingDragged = false;
@@ -202,14 +206,14 @@ export default class CanvasManager extends EventEmitter {
       event.preventDefault(); // prevent e.g. selecting some text, that's annoying
     });
 
-    this.canvas.addEventListener('mousemove', event => {
+    this.canvas.addEventListener("mousemove", event => {
       if (this.currentlyDrawing === null) return;
       mouseIsBeingDragged = true;
       this.currentlyDrawing.onMouseMove(xyFromEvent(event));
     });
 
     // document because mouse up outside canvas must also stop drawing
-    document.addEventListener('mouseup', event => {
+    document.addEventListener("mouseup", event => {
       if (this.currentlyDrawing === null) return;
       this.currentlyDrawing.onMouseUp();
 
