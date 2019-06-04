@@ -84,7 +84,11 @@ const createBox = (type) => {
 };
 
 createBox("info");
-createBox("draw");
+createBox("draw").boxElement.addEventListener("keydown", event => {
+  if (event.key === "z" && event.ctrlKey) {
+    cm.undo();
+  }
+});
 createBox("save").buttonElement.addEventListener("click", async () => {
   const pasteId = await pm.uploadPaste(editor.getContents(), cm.getImageString());
   const $saveBoxInput = document.getElementById("save-url");

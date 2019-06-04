@@ -26,13 +26,6 @@ export default class Editor extends EventEmitter {
 
     session.on("change", () => void this.emit("change", this.getContents(), true));
 
-    // FIXME: handle ctrl-z in the draw area itself by using `stopPropagation`;
-    delete this._editor.keyBinding.$defaultHandler.commandKeyBinding["ctrl-z"];
-    document.addEventListener("keydown", event => {
-      if (event.key === "z" && event.ctrlKey) {
-        this._editor.undo();
-      }
-    });
     session.selection.on("changeCursor", () => void this.emit("cursorMoved", this._editor.getCursorPosition(), this.getContents()));
   }
 
