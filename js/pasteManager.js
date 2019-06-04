@@ -1,6 +1,3 @@
-/* jshint browser: true, module: true, esversion: 8 */
-/* globals MathJax */
-
 /*
 select "Database" at left in Firebase, go to the "Rules" tab
 these are the rules i use:

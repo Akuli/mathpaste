@@ -1,6 +1,3 @@
-/* jshint browser: true, unused: true, module: true, esversion: 8 */
-/* globals MathJax */
-
 import * as storageManager from "./storage";
 import CanvasManager from "./draw";
 import Editor from "./editor";
@@ -16,9 +13,7 @@ const cm = new CanvasManager();
 const pm = new PasteManager();
 const render = new Renderer(editor);
 
-cm.on("change", () => {
-  storageManager.setImageString(cm.getImageString());
-});
+cm.on("change", () => void storageManager.setImageString(cm.getImageString()));
 
 editor.on("change", (_, isUserInput) => {
   if (isUserInput) window.location.hash = "";
@@ -30,13 +25,9 @@ editor.on("change", (newMath, isUserInput) => {
   storageManager.setMath(newMath);
 });
 
-editor.on("change", () => {
-  render.render();
-});
+editor.on("change", () => void render.render());
 
-editor.on("cursorMoved", () => {
-  render.selectLine(editor.getActualLineIndex());
-});
+editor.on("cursorMoved", () => void render.selectLine(editor.getActualLineIndex()));
 
 // this is for mathpaste-gtk
 window.mathpaste = {

@@ -1,6 +1,3 @@
-/* jshint browser: true, module: true, esversion: 8 */
-/* globals MathJax */
-
 import ace from "brace";
 import "brace/theme/tomorrow_night_eighties";
 import EventEmitter from "events";

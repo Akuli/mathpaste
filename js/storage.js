@@ -1,5 +1,3 @@
-/* jshint browser: true, esversion: 8, module: true */
-
 export function getMath() {
   return localStorage.getItem("mathpaste-math");
 }

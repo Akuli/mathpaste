@@ -1,6 +1,3 @@
-/* jshint browser: true, module: true, esversion: 8 */
-/* globals MathJax */
-
 import scrollIntoView from "scroll-into-view-if-needed";
 
 export default class Renderer {

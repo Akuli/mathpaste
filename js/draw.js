@@ -1,5 +1,3 @@
-/* jshint browser: true, module: true, esversion: 8 */
-
 /*
 i experimented with different ways to convert the image data to a string:
 
@@ -27,15 +25,15 @@ class DrawObject {
     this.parent = parent;
   }
 
-  draw() {}
+  draw() { throw new Error("UNIMPLEMENTED"); }
 
   onMouseMove() {}
 
   onMouseUp() {}
 
-  toStringPart() {}
+  toStringPart() { throw new Error("UNIMPLEMENTED"); }
 
-  static fromStringPart(parent, stringPart) {}
+  static fromStringPart() { throw new Error("UNIMPLEMENTED"); }
 }
 
 class Line extends DrawObject {
@@ -44,11 +42,11 @@ class Line extends DrawObject {
 
     if (!Array.isArray(points) || points.length === 0) throw new Error("invalid line input");
 
-    // points: [[x, y]]
     if (Array.isArray(points[0])) {
+      // points: [[x, y]]
       this.points = points;
-    // startPoint: [x, y]
     } else {
+      // startPoint: [x, y]
       this.points = [points];
     }
   }
@@ -125,7 +123,7 @@ class Circle extends DrawObject {
 
     this.center = center;
     this.radius = radius || 0;
-    this.filled = filled || false;
+    this.filled = !!filled || false;
     this._mouseMoveImageData = null;
   }
 
@@ -168,7 +166,7 @@ class Circle extends DrawObject {
     if (circleString !== 'circle') {
       throw new Error("does not look like a circle string part: " + stringPart);
     }
-    return new Circle(parent, [+centerX, +centerY], +radius, !!(+isFilled));
+    return new Circle(parent, [+centerX, +centerY], +radius, +isFilled);
   }
 }
 
