@@ -14,7 +14,7 @@ export default class Editor extends EventEmitter {
     this._editor.setOption("showGutter", false);
     this._editor.setOption("wrap", true);
     this._editor.setTheme("ace/theme/tomorrow_night_eighties");
-    this._editor.getSession().setMode("ace/mode/asciimath"); // NOTE: The mode must be set here and not in `ace.edit` for some reason.
+    this._editor.getSession().setMode("ace/mode/asciimath");
     this._editor.setAutoScrollEditorIntoView(true);
     this._registerEventHandlers();
   }
