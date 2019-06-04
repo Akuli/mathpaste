@@ -8,6 +8,7 @@ export default class Editor extends EventEmitter {
   constructor() {
     super();
 
+    // FIXME: none of these settings given here in the argument are actually set! :D
     this._editor = ace.edit("editor", {
       selectionStyle: "text",
       showLineNumbers: false,
@@ -23,13 +24,7 @@ export default class Editor extends EventEmitter {
   _registerEventHandlers() {
     const session = this._editor.getSession();
 
-    session.on("change", () => {
-      this.emit("change", this.getContents(), true);
-    });
-
-    session.selection.on("changeCursor", () => {
-      this.emit("cursorMoved", this._editor.getCursorPosition(), this.getContents());
-    });
+    session.on("change", () => void this.emit("change", this.getContents(), true));
 
     // FIXME: handle ctrl-z in the draw area itself by using `stopPropagation`;
     delete this._editor.keyBinding.$defaultHandler.commandKeyBinding["ctrl-z"];
@@ -38,17 +33,20 @@ export default class Editor extends EventEmitter {
         this._editor.undo();
       }
     });
+    session.selection.on("changeCursor", () => void this.emit("cursorMoved", this._editor.getCursorPosition(), this.getContents()));
   }
 
   getContents() {
     return this._editor.getValue();
   }
 
-  async setContents(newContents) {
-    this._editor.setReadOnly(true);
+  setContents(newContents) {
     this._editor.getSession().setValue(newContents || "");
     this.emit("change", this.getContents(), false);
-    this._editor.setReadOnly(false);
+  }
+
+  setReadOnly(value) {
+    this._editor.setReadOnly(value);
   }
 
   /**
@@ -57,8 +55,8 @@ export default class Editor extends EventEmitter {
    * that are joined together in the output.
    */
   getActualLineIndex() {
-    const { row: cursorLine } = this._editor.getCursorPosition();
-    const linesAboveOrAtCursor = this.getContents().split("\n").slice(0, cursorLine + 1);
+    const { row } = this._editor.getCursorPosition();
+    const linesAboveOrAtCursor = this.getContents().split("\n").slice(0, row + 1);
     return linesAboveOrAtCursor.join('\n').split('\n\n').length - 1;
   }
 }
