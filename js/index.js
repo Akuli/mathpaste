@@ -67,7 +67,6 @@ window.mathpaste = {
 };
 
 const shownBoxManager = new RadioClassManager("shown");
-const boxes = [];
 const createBox = (type) => {
   const boxElement = document.getElementById(`${type}-box`);
   const buttonElement = document.getElementById(`${type}-button`);
@@ -77,8 +76,6 @@ const createBox = (type) => {
   buttonElement.addEventListener("click", e => void e.stopPropagation());
 
   buttonElement.addEventListener("click", () => void shownBoxManager.toggleClass(boxElement));
-
-  boxes.push(boxElement);
 
   return { boxElement, buttonElement };
 };
