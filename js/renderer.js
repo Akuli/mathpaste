@@ -1,15 +1,14 @@
 import scrollIntoView from "scroll-into-view-if-needed";
 
 export default class Renderer {
-  constructor(editor) {
-    this.editor = editor;
+  constructor() {
     this._oldLines = [];
     this._elements = [];
     this._linesOutput = document.getElementById("renderedLines");
   }
 
-  render() {
-    const lines = this.editor.getContents().split("\n\n");
+  render(contents) {
+    const lines = contents.split("\n\n");
 
     for (let i = 0; i < lines.length; ++i) {
       if (this._oldLines[i] === lines[i]) {

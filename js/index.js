@@ -16,7 +16,7 @@ import "../pics/save.png";
 const editor = new Editor();
 const cm = new CanvasManager();
 const pm = new PasteManager();
-const render = new Renderer(editor);
+const render = new Renderer();
 
 cm.on("change", () => void storageManager.setImageString(cm.getImageString()));
 
@@ -30,7 +30,7 @@ editor.on("change", (newMath, isUserInput) => {
   storageManager.setMath(newMath);
 });
 
-editor.on("change", () => void render.render());
+editor.on("change", () => void render.render(editor.getContents()));
 
 editor.on("cursorMoved", () => void render.selectLine(editor.getActualLineIndex()));
 

@@ -25,7 +25,6 @@ TODO: validate image datas?
 TODO: delete old maths regularly?
 */
 
-
 import LZString from "lz-string";
 
 import * as storageManager from "./storage";
