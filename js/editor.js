@@ -36,7 +36,11 @@ export default class Editor extends EventEmitter {
     this.emit("change", this.getContents(), false);
   }
 
-  setReadOnly(value) {
+  get readOnly() {
+    return this._editor.getReadOnly();
+  }
+
+  set readOnly(value) {
     this._editor.setReadOnly(value);
   }
 
