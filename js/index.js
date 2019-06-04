@@ -7,6 +7,11 @@ import PasteManager from "./pasteManager";
 // files included in the output
 import "../index.html";
 import "../css/index.css";
+import "../pics/circle.png";
+import "../pics/info.png";
+import "../pics/line.png";
+import "../pics/pen.png";
+import "../pics/save.png";
 
 const editor = new Editor();
 const cm = new CanvasManager();

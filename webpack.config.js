@@ -13,7 +13,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(html|css)$/,
+        test: /\.(html|css|png)$/,
         use: [{loader: "file-loader", options: { name: "[path][name].[ext]"}}]
       }
     ]
