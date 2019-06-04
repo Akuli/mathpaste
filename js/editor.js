@@ -8,13 +8,11 @@ export default class Editor extends EventEmitter {
   constructor() {
     super();
 
-    // FIXME: none of these settings given here in the argument are actually set! :D
-    this._editor = ace.edit("editor", {
-      selectionStyle: "text",
-      showLineNumbers: false,
-      showGutter: false,
-      wrap: true,
-    });
+    this._editor = ace.edit("editor");
+    this._editor.setOption("selectionStyle", "text");
+    this._editor.setOption("showLineNumbers", false);
+    this._editor.setOption("showGutter", false);
+    this._editor.setOption("wrap", true);
     this._editor.setTheme("ace/theme/tomorrow_night_eighties");
     this._editor.getSession().setMode("ace/mode/asciimath"); // NOTE: The mode must be set here and not in `ace.edit` for some reason.
     this._editor.setAutoScrollEditorIntoView(true);
