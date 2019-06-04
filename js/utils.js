@@ -11,7 +11,6 @@ export class RadioClassManager {
   }
 
   addClass(element) {
-    console.info(`Adding class ${this.className} to ${element}`);
     this.removeClass();
     element.classList.add(this.className);
     this._currentElement = element;
@@ -25,9 +24,15 @@ export class RadioClassManager {
 
   removeClass() {
     if (this._currentElement !== null) {
-      console.info(`Removing class ${this.className} from ${this._currentElement}`);
       this._currentElement.classList.remove(this.className);
       this._currentElement = null;
     }
   }
 }
+
+// there are two properties that give correct values, one is
+// "experimental" and the other is "non-standard", so i chose the
+// experimental property
+// https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/offsetX
+// https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/layerX
+export const xyFromEvent = event => [event.offsetX, event.offsetY];

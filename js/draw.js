@@ -11,16 +11,7 @@ on the canvas and with lots of stuff drawn
 
 import EventEmitter from "events";
 
-import { RadioClassManager } from "./utils";
-
-const xyFromEvent = event => {
-  // there are two properties that give correct values, one is
-  // "experimental" and the other is "non-standard", so i chose the
-  // experimental property
-  // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/offsetX
-  // https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/layerX
-  return [event.offsetX, event.offsetY];
-};
+import { RadioClassManager, xyFromEvent } from "./utils";
 
 class DrawObject {
   constructor(parent) {

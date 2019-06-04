@@ -45,6 +45,8 @@ export default class Renderer {
     const scrollOptions = { scrollMode: "if-needed" };
 
     // FIXME: detect the feature not the user agent
+    // XXX: I'm not sure what Akuli meant with this comment. Behavior seems
+    // reasonable to me on the latest friefox.
     if (navigator.userAgent.toLowerCase().indexOf("firefox") === -1) {
       // this causes annoying and weird behaviour in firefox
       // try adding 1/2+3/4+5/6 and backspacing it away
