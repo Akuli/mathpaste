@@ -1,10 +1,13 @@
 import scrollIntoView from "scroll-into-view-if-needed";
 
+import { RadioClassManager } from "./utils";
+
 export default class Renderer {
   constructor() {
     this._oldLines = [];
     this._elements = [];
     this._linesOutput = document.getElementById("renderedLines");
+    this._selectedManager = new RadioClassManager("selected");
   }
 
   render(contents) {
@@ -34,8 +37,6 @@ export default class Renderer {
   }
 
   selectLine(index) {
-    this._elements.forEach(element => element.classList.remove("selected"));
-
     const lineElementToShow = this._elements[index];
 
     // I don't know when this would happen
@@ -52,6 +53,6 @@ export default class Renderer {
 
     scrollIntoView(lineElementToShow, scrollOptions);
 
-    lineElementToShow.classList.add("selected");
+    this._selectedManager.addClass(lineElementToShow);
   }
 }

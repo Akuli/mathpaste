@@ -11,6 +11,8 @@ on the canvas and with lots of stuff drawn
 
 import EventEmitter from "events";
 
+import { RadioClassManager } from "./utils";
+
 const xyFromEvent = event => {
   // there are two properties that give correct values, one is
   // "experimental" and the other is "non-standard", so i chose the
@@ -181,6 +183,8 @@ export default class CanvasManager extends EventEmitter {
     this.currentDrawObject = null;
     this.currentlyDrawing = null;
 
+    this.selectedManager = new RadioClassManager("selected");
+
     this._createButtons({
       "pen": Line,
       "circle": Circle,
@@ -241,11 +245,7 @@ export default class CanvasManager extends EventEmitter {
       const element = document.getElementById(elementId);
 
       element.addEventListener("click", () => {
-        buttons.forEach(element => element.classList.remove("selected"));
-      });
-
-      element.addEventListener("click", () => {
-        element.classList.add("selected");
+        this.selectedManager.addClass(element);
         this.currentDrawObject = cls;
       });
 

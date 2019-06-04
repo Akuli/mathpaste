@@ -3,6 +3,7 @@ import CanvasManager from "./draw";
 import Editor from "./editor";
 import Renderer from "./renderer";
 import PasteManager from "./pasteManager";
+import { RadioClassManager } from "./utils";
 
 // files included in the output
 import "../index.html";
@@ -65,6 +66,7 @@ window.mathpaste = {
   }
 };
 
+const shownBoxManager = new RadioClassManager("shown");
 const boxes = [];
 const createBox = (type) => {
   const boxElement = document.getElementById(`${type}-box`);
@@ -74,14 +76,8 @@ const createBox = (type) => {
   boxElement.addEventListener("click", e => void e.stopPropagation());
   buttonElement.addEventListener("click", e => void e.stopPropagation());
 
-  buttonElement.addEventListener("click", () => {
-    for (let otherBox of boxes) {
-      otherBox.classList.remove("shown");
-    }
+  buttonElement.addEventListener("click", () => void shownBoxManager.toggleClass(boxElement));
 
-    // TODO: toggle if the same button is clicked many times
-    boxElement.classList.add("shown");
-  });
   boxes.push(boxElement);
 
   return { boxElement, buttonElement };
@@ -96,9 +92,7 @@ createBox("save").buttonElement.addEventListener("click", async () => {
   window.location.hash = "#saved:" + pasteId;
 });
 
-document.addEventListener("click", () => {
-  boxes.forEach(box => box.classList.remove("shown"));
-});
+document.addEventListener("click", () => void shownBoxManager.removeClass());
 
 MathJax.Hub.Register.StartupHook("End", async () => {
   MathJax.Hub.processSectionDelay = 0;
