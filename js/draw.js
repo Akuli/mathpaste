@@ -18,6 +18,9 @@ class DrawObject {
     this.parent = parent;
   }
 
+  get canvas() { return this.parent.canvas; }
+  get ctx() { return this.parent.ctx; }
+
   draw() { throw new Error("UNIMPLEMENTED"); }
 
   onMouseMove() {}
@@ -46,12 +49,12 @@ class Line extends DrawObject {
 
   draw() {
     if (this.points.length >= 2) {
-      this.parent.ctx.beginPath();
-      this.parent.ctx.moveTo(...(this.points[0]));
+      this.ctx.beginPath();
+      this.ctx.moveTo(...(this.points[0]));
       for (const xy of this.points.slice(1)) {
-        this.parent.ctx.lineTo(...xy);
+        this.ctx.lineTo(...xy);
       }
-      this.parent.ctx.stroke();
+      this.ctx.stroke();
     }
   }
 
@@ -59,10 +62,10 @@ class Line extends DrawObject {
     this.points.push(xy);
 
     // draw the new component without redrawing everything else
-    this.parent.ctx.beginPath();
-    this.parent.ctx.moveTo(...(this.points[this.points.length - 2]));
-    this.parent.ctx.lineTo(...(this.points[this.points.length - 1]));
-    this.parent.ctx.stroke();
+    this.ctx.beginPath();
+    this.ctx.moveTo(...(this.points[this.points.length - 2]));
+    this.ctx.lineTo(...(this.points[this.points.length - 1]));
+    this.ctx.stroke();
 
     this.parent.emit("change");
   }
@@ -87,10 +90,10 @@ class TwoPointLine extends Line {
     // there seems to be no easy way to delete an already drawn circle from
     // the canvas, so image data tricks are the best i can do
     if (this._mouseMoveImageData === null) {
-      this._mouseMoveImageData = this.parent.ctx.getImageData(0, 0, this.parent.canvas.width, this.parent.canvas.height);
+      this._mouseMoveImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
     } else {
-      this.parent.ctx.clearRect(0, 0, this.parent.canvas.width, this.parent.canvas.height);
-      this.parent.ctx.putImageData(this._mouseMoveImageData, 0, 0);
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.putImageData(this._mouseMoveImageData, 0, 0);
     }
 
     if (this.points.length === 1) {
@@ -121,22 +124,22 @@ class Circle extends DrawObject {
   }
 
   draw() {
-    this.parent.ctx.beginPath();
-    this.parent.ctx.arc(...this.center, this.radius, 0, 2 * Math.PI);
+    this.ctx.beginPath();
+    this.ctx.arc(...this.center, this.radius, 0, 2 * Math.PI);
     if (this.filled) {
-      this.parent.ctx.fill();
+      this.ctx.fill();
     } else {
-      this.parent.ctx.stroke();
+      this.ctx.stroke();
     }
     this.parent.emit("change");
   }
 
   onMouseMove(xy) {
     if (this._mouseMoveImageData === null) {
-      this._mouseMoveImageData = this.parent.ctx.getImageData(0, 0, this.parent.canvas.width, this.parent.canvas.height);
+      this._mouseMoveImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
     } else {
-      this.parent.ctx.clearRect(0, 0, this.parent.ctx.width, this.parent.canvas.height);
-      this.parent.ctx.putImageData(this._mouseMoveImageData, 0, 0);
+      this.ctx.clearRect(0, 0, this.ctx.width, this.canvas.height);
+      this.ctx.putImageData(this._mouseMoveImageData, 0, 0);
     }
 
     this.radius = Math.round(Math.hypot(this.center[0] - xy[0], this.center[1] - xy[1]));
