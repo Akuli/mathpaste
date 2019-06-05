@@ -192,13 +192,9 @@ export default class CanvasManager extends EventEmitter {
   }
 
   _registerEventHandlers() {
-    let mouseIsBeingDragged = false;
-
     this.canvas.addEventListener("mousedown", event => {
       if (this.readOnly) return;
       if (!this.currentDrawObject) return;
-
-      mouseIsBeingDragged = false;
 
       let clickPoint = xyFromEvent(event);
 
@@ -211,23 +207,15 @@ export default class CanvasManager extends EventEmitter {
 
     this.canvas.addEventListener("mousemove", event => {
       if (this.currentlyDrawing === null) return;
-      mouseIsBeingDragged = true;
       this.currentlyDrawing.onMouseMove(xyFromEvent(event));
     });
 
     // document because mouse up outside canvas must also stop drawing
-    document.addEventListener("mouseup", event => {
+    document.addEventListener("mouseup", () => {
       if (this.currentlyDrawing === null) return;
       this.currentlyDrawing.onMouseUp();
 
-      // XXX: what is this code doing ..?
-      if (mouseIsBeingDragged) {
-        this.objects.push(this.currentlyDrawing);
-      } else {
-        const circle = new Circle(xyFromEvent(event), 3, true);
-        circle.draw();
-        this.objects.push(circle);
-      }
+      this.objects.push(this.currentlyDrawing);
       this.currentlyDrawing = null;
 
       this.emit("change");
