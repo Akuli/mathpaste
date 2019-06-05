@@ -236,8 +236,6 @@ export default class CanvasManager extends EventEmitter {
   }
 
   _createButtons(types) {
-    const buttons = [];
-
     for (const [type, cls] of Object.entries(types)) {
       const elementId = `draw-${type}-button`;
       const element = document.getElementById(elementId);
@@ -246,41 +244,30 @@ export default class CanvasManager extends EventEmitter {
         this.selectedManager.addClass(element);
         this.currentDrawObject = cls;
       });
-
-      buttons.push(element);
     }
   }
 
   redraw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    for (const object of this.objects) {
-      object.draw();
-    }
+    this.objects.forEach(object => object.draw());
     this.emit("change");
   }
 
   getImageString() {
-    const stringParts = [];
-    for (const object of this.objects) {
-      stringParts.push(object.toStringPart());
-    }
-    return stringParts.join('|');
+    return this.objects.map(object => object.toStringPart()).join("|");
   }
 
   setImageString(imageString) {
-    this.objects = [];
-
     if (!imageString) return;
 
-    if (imageString.length !== 0) { // ''.split('|') is [''], which screws up everything
-      for (const stringPart of imageString.split('|')) {
-        if (stringPart.startsWith('circle;')) {
-          this.objects.push(Circle.fromStringPart(this, stringPart));
-        } else {
-          this.objects.push(Line.fromStringPart(this, stringPart));
-        }
+    this.objects = imageString.split("|").map(stringPart => {
+      if (stringPart.startsWith('circle;')) {
+        return Circle.fromStringPart(this, stringPart);
+      } else {
+        return Line.fromStringPart(this, stringPart);
       }
-    }
+    });
+
     this.redraw();
   }
 
@@ -289,9 +276,10 @@ export default class CanvasManager extends EventEmitter {
   }
 
   undo() {
-    if (this.objects.length !== 0 && this.currentlyDrawing === null) {
-      this.objects.pop();
-      this.redraw();
-    }
+    if (this.objects.length === 0) return;
+    if (this.currentlyDrawing !== null) return;
+
+    this.objects.pop();
+    this.redraw();
   }
 }
