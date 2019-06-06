@@ -67,6 +67,12 @@ If you want to distribute this somewhere, you must run
 Then, `dist/` will contain the "compiled" webapp which you can put on your
 server or deploy to gh-pages with `deploy.sh`.
 
+Types are not checked by `npm run build` or `npm run start`. You can check
+types either by utilizing a language server in your editor, which is out of
+the scope of this README, or by running
+
+    $ npm run check-types
+
 [mathb.in]: http://mathb.in/
 [asciimath]: http://asciimath.org/
 
