@@ -14,10 +14,10 @@ import "../pics/line.png";
 import "../pics/pen.png";
 import "../pics/save.png";
 
-const editor = new Editor();
-const cm = new CanvasManager();
+const editor = new Editor("editor");
+const cm = new CanvasManager("draw-canvas");
 const pm = new PasteManager();
-const render = new Renderer();
+const render = new Renderer("renderedLines");
 
 cm.on("change", () => storageManager.setImageString(cm.getImageString()));
 

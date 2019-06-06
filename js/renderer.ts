@@ -6,9 +6,13 @@ export default class Renderer {
   private oldLines: string[] = [];
 
   private elements: HTMLElement[] = [];
-  private lineContainer: HTMLElement = document.getElementById("renderedLines")!;
+  private lineContainer: HTMLElement;
 
   private selectedManager: RadioClassManager = new RadioClassManager("selected");
+
+  constructor(lineContainerId: string) {
+    this.lineContainer = document.getElementById(lineContainerId)!;
+  }
 
   render(contents: string) {
     const lines = contents.split("\n\n");

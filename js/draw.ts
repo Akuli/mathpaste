@@ -194,10 +194,10 @@ export default class CanvasManager extends EventEmitter {
   private currentDrawObject: DrawObjectFactory | null;
   private selectedManager: RadioClassManager;
 
-  constructor() {
+  constructor(canvasId: string) {
     super();
 
-    this.canvas = document.getElementById("draw-canvas")! as HTMLCanvasElement;
+    this.canvas = document.getElementById(canvasId)! as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d")!;
 
     this.objects = [];

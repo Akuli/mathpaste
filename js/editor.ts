@@ -7,10 +7,10 @@ import "./asciimath_acemode.ts";
 export default class Editor extends EventEmitter {
   private editor: ace.Editor;
 
-  constructor() {
+  constructor(editorId: string) {
     super();
 
-    this.editor = ace.edit("editor");
+    this.editor = ace.edit(editorId);
     this.editor.setOption("selectionStyle", "text");
     this.editor.setOption("showLineNumbers", false);
     this.editor.setOption("showGutter", false);
