@@ -7,6 +7,19 @@ import "./asciimath_acemode.ts";
 export default class Editor extends EventEmitter {
   private editor: ace.Editor;
 
+  private _literatePrefix: string | null = null;
+
+  get literatePrefix() {
+    return this._literatePrefix;
+  }
+
+  set literatePrefix(literatePrefix) {
+    this._literatePrefix = literatePrefix;
+
+    /// @ts-ignore
+    this.editor.getSession().setMode({ path: "ace/mode/literate_asciimath", literatePrefix });
+  }
+
   constructor(editorId: string) {
     super();
 

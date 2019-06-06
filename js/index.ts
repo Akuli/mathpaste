@@ -96,6 +96,7 @@ document.addEventListener("click", () => shownBoxManager.removeClass());
 
 if (window.location.search === "?literate") {
   render.literatePrefix = "> ";
+  editor.literatePrefix = render.literatePrefix;
 }
 
 MathJax.Hub.Register.StartupHook("End", async () => {

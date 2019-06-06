@@ -2,21 +2,13 @@
 
 import * as ace from "brace";
 
-// Ace uses a state machine for highlighting. The next three type definitions
-// are a bit of arcane magic to make sure that we can only put states that
-// actually exist in "next" and that we define every state we nominate.
-
-type HighlightStateTransition<S extends "start" | string = "start"> = {
+type HighlightStateTransition = {
   token: string;
   regex: RegExp,
-  next?: S,
+  next?: string,
 };
-
-type HighlightState<S extends "start" | string = "start"> = HighlightStateTransition<S>[];
-
-type HighlightRules<KS extends "start" | string = "start"> = { [K in KS]: HighlightState<KS> }
-
-type HighlightRulesFactory<KS extends "start" | string = "start"> = (opts: Record<any, any> | undefined) => HighlightRules<KS>;
+type HighlightState = HighlightStateTransition[];
+type HighlightRules = Record<string, HighlightState>;
 
 const asciimathState: HighlightState = [
   {
@@ -49,8 +41,18 @@ const asciimathState: HighlightState = [
   },
 ];
 
-function defineMode<KS extends "start" | string>(name: string, highlightRules: HighlightRulesFactory<KS>) {
-  (ace as any).define(
+const literateModeState: HighlightState = [
+  {
+    token: "comment.block",
+    regex: /^> /,
+    next: "asciimath",
+  }
+];
+
+function defineMode(name: string, highlightRules: HighlightRules) {
+  const define = (ace as any).define;
+
+  define(
     `ace/mode/${name}`,
     ["require", "exports", "ace/mode/text", `ace/mode/${name}_highlight_rules`],
     (acequire: any, exports: any) => {
@@ -63,23 +65,35 @@ function defineMode<KS extends "start" | string>(name: string, highlightRules: H
     },
   );
 
-  (ace as any).define(
+  define(
     `ace/mode/${name}_highlight_rules`,
-    ["require", "exports", "ace/mode/text_highlight_rules"],
+    ["require", "exports", "ace/lib/oop", "ace/mode/text_highlight_rules"],
     (acequire: any, exports: any): void => {
       const TextHighlightRules = acequire("ace/mode/text_highlight_rules").TextHighlightRules;
 
       exports.HighlightRules = class extends TextHighlightRules {
-        $rules: HighlightRules<KS>;
-
-        constructor(opts: Record<any, any> | undefined) {
-          super();
-
-          this.$rules = highlightRules(opts);
-        }
+        $rules: HighlightRules = highlightRules;
       };
     }
   );
 }
 
-defineMode("asciimath", () => ({ start: asciimathState }));
+defineMode("asciimath",
+  {
+    start: asciimathState,
+  }
+);
+
+defineMode("literate_asciimath",
+  {
+    start: literateModeState,
+    asciimath: [
+      ...asciimathState,
+      {
+        token: "",
+        regex: /$/,
+        next: "start",
+      },
+    ],
+  }
+);
