@@ -250,7 +250,6 @@ export default class CanvasManager extends EventEmitter {
           !(this.currentlyDrawing instanceof Line && this.currentlyDrawing.points.length === 0)) {
         this.currentlyDrawing.onMouseUp();
         this.objects.push(this.currentlyDrawing);
-        this.currentlyDrawing = null;
       } else {
         const point = new Circle(this, xyFromEvent(event));
         point.filled = true;
@@ -258,6 +257,8 @@ export default class CanvasManager extends EventEmitter {
         point.draw();
         this.objects.push(point);
       }
+
+      this.currentlyDrawing = null;
 
       this.emit("change");
     });
