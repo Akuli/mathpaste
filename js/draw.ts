@@ -13,11 +13,7 @@ import { EventEmitter } from "events";
 
 import { RadioClassManager, xyFromEvent } from "./utils";
 
-let POINT_DISTANCE_THRESHOLD: number = 2;
-Object.defineProperty(window, "distThreshold", {
-  get: () => POINT_DISTANCE_THRESHOLD,
-  set: (value) => POINT_DISTANCE_THRESHOLD = value,
-});
+const POINT_DISTANCE_THRESHOLD: number = 2;
 
 type Point = [number, number];
 
