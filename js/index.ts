@@ -94,6 +94,10 @@ createBox("save").buttonElement.addEventListener("click", async () => {
 
 document.addEventListener("click", () => shownBoxManager.removeClass());
 
+if (window.location.search === "?literate") {
+  render.literatePrefix = "> ";
+}
+
 MathJax.Hub.Register.StartupHook("End", async () => {
   MathJax.Hub.processSectionDelay = 0;
 

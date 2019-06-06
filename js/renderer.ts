@@ -4,10 +4,9 @@ import { RadioClassManager } from "./utils";
 
 import { Marked } from "marked-ts";
 
-const LITERATE_MATH_PREFIX: string = "> ";
-
 export default class Renderer {
-  private literate: boolean = window.location.search === "?literate";
+  // FIXME: We should clear the `oldLines` cache when this is set.
+  public literatePrefix: string | null = null;
 
   private oldLines: string[] = [];
 
@@ -21,11 +20,11 @@ export default class Renderer {
   }
 
   getMathLine(line: string): string | null {
-    if (!this.literate) return line;
+    if (this.literatePrefix === null) return line;
 
-    if (!line.startsWith(LITERATE_MATH_PREFIX)) return null;
+    if (!line.startsWith(this.literatePrefix)) return null;
 
-    return line.substr(LITERATE_MATH_PREFIX.length);
+    return line.substr(this.literatePrefix.length);
   }
 
   render(contents: string) {
