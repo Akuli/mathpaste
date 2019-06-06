@@ -30,7 +30,6 @@ import * as LZString  from "lz-string";
 import * as storageManager from "./storage";
 
 import * as firebase from "firebase/app";
-import App = firebase.app.App;
 
 type Paste = {
     math: string | null,
@@ -38,9 +37,9 @@ type Paste = {
 }
 
 export default class PasteManager {
-  private maybeFirebaseApp: App | null = null;
+  private maybeFirebaseApp: firebase.app.App | null = null;
 
-  private async getFirebaseApp(): Promise<App> {
+  private async getFirebaseApp(): Promise<firebase.app.App> {
     if (!this.maybeFirebaseApp) {
       await import(/* webpackChunkName: "firebaseDatabase" */ "firebase/database");
 
