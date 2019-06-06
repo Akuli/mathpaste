@@ -2,7 +2,13 @@ import { default as scrollIntoView, Options } from "scroll-into-view-if-needed";
 
 import { RadioClassManager } from "./utils";
 
+import { Marked } from "marked-ts";
+
+const LITERATE_MATH_PREFIX: string = "> ";
+
 export default class Renderer {
+  private literate: boolean = window.location.search === "?literate";
+
   private oldLines: string[] = [];
 
   private elements: HTMLElement[] = [];
@@ -12,6 +18,14 @@ export default class Renderer {
 
   constructor(lineContainerId: string) {
     this.lineContainer = document.getElementById(lineContainerId)!;
+  }
+
+  getMathLine(line: string): string | null {
+    if (!this.literate) return line;
+
+    if (!line.startsWith(LITERATE_MATH_PREFIX)) return null;
+
+    return line.substr(LITERATE_MATH_PREFIX.length);
   }
 
   render(contents: string) {
@@ -29,8 +43,13 @@ export default class Renderer {
         this.lineContainer.append($line);
       }
 
-      this.elements[i].textContent = "`" + lines[i] + "`";
-      MathJax.Hub.Queue(["Typeset", MathJax.Hub, this.elements[i]]);
+      const mathLine = this.getMathLine(lines[i]);
+      if (mathLine !== null) {
+        this.elements[i].textContent = "`" + mathLine + "`";
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub, this.elements[i]]);
+      } else {
+        this.elements[i].innerHTML = Marked.parse(lines[i]);
+      }
     }
 
     for (let i = lines.length; i < this.elements.length; ++i) {
