@@ -219,31 +219,40 @@ export default class CanvasManager extends EventEmitter {
   }
 
   private registerEventHandlers() {
+    let mouseMoved = false;
+
     this.canvas.addEventListener("mousedown", event => {
-      if (this.readOnly) return;
-      if (this.currentDrawObject === null) return;
-
-      const clickPoint = xyFromEvent(event);
-
-      this.currentlyDrawing = new this.currentDrawObject(this, clickPoint);
-
-      this.emit("change");
-
       event.preventDefault(); // prevent e.g. selecting some text, that's annoying
+
+      if (this.readOnly) return;
+
+      mouseMoved = false;
+
+      if (this.currentDrawObject === null) return;
+      this.currentlyDrawing = new this.currentDrawObject(this, xyFromEvent(event));
     });
 
     this.canvas.addEventListener("mousemove", event => {
+      mouseMoved = true;
+
       if (this.currentlyDrawing === null) return;
       this.currentlyDrawing.onMouseMove(xyFromEvent(event));
     });
 
     // document because mouse up outside canvas must also stop drawing
-    document.addEventListener("mouseup", () => {
-      if (this.currentlyDrawing === null) return;
-      this.currentlyDrawing.onMouseUp();
+    document.addEventListener("mouseup", event => {
+      if (this.readOnly) return;
 
-      this.objects.push(this.currentlyDrawing);
-      this.currentlyDrawing = null;
+      if (mouseMoved && this.currentlyDrawing !== null) {
+        this.currentlyDrawing.onMouseUp();
+        this.objects.push(this.currentlyDrawing);
+        this.currentlyDrawing = null;
+      } else {
+        const point = new Circle(this, xyFromEvent(event));
+        point.filled = true;
+        point.radius = 3;
+        this.objects.push(point);
+      }
 
       this.emit("change");
     });
