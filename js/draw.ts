@@ -1,5 +1,3 @@
-/* tslint:disable: max-classes-per-file */
-
 /*
 i experimented with different ways to convert the image data to a string:
 
@@ -20,30 +18,26 @@ type Point = [number, number];
 abstract class DrawObject {
   constructor(public parent: CanvasManager) {}
 
-  public get canvas() { return this.parent.canvas; }
-  public get ctx() { return this.parent.ctx; }
+  get canvas() { return this.parent.canvas; }
+  get ctx() { return this.parent.ctx; }
 
-  public abstract draw(): void;
+  abstract draw(): void;
 
-  public abstract onMouseMove(xy: Point): void;
+  abstract onMouseMove(xy: Point): void;
 
-  public abstract onMouseUp(): void;
+  abstract onMouseUp(): void;
 
-  public abstract toStringPart(): string;
+  abstract toStringPart(): string;
 }
 
-interface IDrawObjectFactory {
+interface DrawObjectFactory {
   new(parent: CanvasManager, point: Point): DrawObject;
 
   fromStringPart(parent: CanvasManager, stringPart: string): DrawObject;
 }
 
 class Line extends DrawObject {
-
-  public static fromStringPart(parent: CanvasManager, stringPart: string): DrawObject {
-    return new Line(parent, stringPart.split(";").map((xy) => xy.split(",").map((value) => +value)) as Point[]);
-  }
-  public points: Point[];
+  points: Point[];
 
   constructor(public parent: CanvasManager, points: Point[] | Point) {
     super(parent);
@@ -55,7 +49,7 @@ class Line extends DrawObject {
     }
   }
 
-  public draw() {
+  draw() {
     if (this.points.length >= 2) {
       this.parent.ctx.beginPath();
       this.parent.ctx.moveTo(...(this.points[0]));
@@ -66,7 +60,7 @@ class Line extends DrawObject {
     }
   }
 
-  public onMouseMove(xy: Point) {
+  onMouseMove(xy: Point) {
     this.points.push(xy);
 
     // draw the new component without redrawing everything else
@@ -78,18 +72,22 @@ class Line extends DrawObject {
     this.parent.emit("change");
   }
 
-  public onMouseUp() { /**/ }
+  onMouseUp() {}
 
   // like 'x1,y1;x2,y2;...' where xs and ys are integers
-  public toStringPart() {
-    return this.points.map((xy) => xy.join(",")).join(";");
+  toStringPart() {
+    return this.points.map(xy => xy.join(',')).join(';');
+  }
+
+  static fromStringPart(parent: CanvasManager, stringPart: string): DrawObject {
+    return new Line(parent, stringPart.split(';').map(xy => xy.split(',').map(value => +value)) as Point[]);
   }
 }
 
 class TwoPointLine extends Line {
   private mouseMoveImageData: ImageData | null = null;
 
-  public onMouseMove(xy: Point) {
+  onMouseMove(xy: Point) {
     // there seems to be no easy way to delete an already drawn circle from
     // the canvas, so image data tricks are the best i can do
     if (this.mouseMoveImageData === null) {
@@ -110,33 +108,21 @@ class TwoPointLine extends Line {
     this.draw();
   }
 
-  public onMouseUp() {
+  onMouseUp() {
     super.onMouseUp();
     this.mouseMoveImageData = null; // to avoid memory leaking
   }
 }
 
 class Circle extends DrawObject {
-
-  public static fromStringPart(parent: CanvasManager, stringPart: string): DrawObject {
-    const [circleString, centerX, centerY, radius, isFilled] = stringPart.split(";");
-    if (circleString !== "circle") {
-      throw new Error("does not look like a circle string part: " + stringPart);
-    }
-
-    const circle = new Circle(parent, [+centerX, +centerY]);
-    circle.radius = +radius;
-    circle.filled = !!+isFilled;
-    return circle;
-  }
+  private mouseMoveImageData: ImageData | null = null;
 
   public radius: number = 0;
   public filled: boolean = false;
-  private mouseMoveImageData: ImageData | null = null;
 
   constructor(parent: CanvasManager, public center: Point) { super(parent); }
 
-  public draw() {
+  draw() {
     this.parent.ctx.beginPath();
     this.parent.ctx.arc(this.center[0], this.center[1], this.radius, 0, 2 * Math.PI);
     if (this.filled) {
@@ -147,7 +133,7 @@ class Circle extends DrawObject {
     this.parent.emit("change");
   }
 
-  public onMouseMove(xy: Point) {
+  onMouseMove(xy: Point) {
     if (this.mouseMoveImageData === null) {
       this.mouseMoveImageData = this.parent.ctx.getImageData(0, 0, this.parent.canvas.width, this.parent.canvas.height);
     } else {
@@ -159,29 +145,41 @@ class Circle extends DrawObject {
     this.draw();
   }
 
-  public onMouseUp() {
+  onMouseUp() {
     this.mouseMoveImageData = null;
   }
 
   // 'circle;x;y;r;1' is a filled circle centered at (x,y) with radius r
   // 'circle;x;y;r;0' is an open circle centered at (x,y) with radius r
   // x, y and r are integers
-  public toStringPart() {
-    return "circle;" + this.center.join(";") + ";" + this.radius + ";" + (+!!this.filled);
+  toStringPart() {
+    return 'circle;' + this.center.join(';') + ';' + this.radius + ';' + (+!!this.filled);
+  }
+
+  static fromStringPart(parent: CanvasManager, stringPart: string): DrawObject {
+    const [circleString, centerX, centerY, radius, isFilled] = stringPart.split(';');
+    if (circleString !== "circle") {
+      throw new Error("does not look like a circle string part: " + stringPart);
+    }
+
+    const circle = new Circle(parent, [+centerX, +centerY])
+    circle.radius = +radius;
+    circle.filled = !!+isFilled;
+    return circle;
   }
 }
 
 export default class CanvasManager extends EventEmitter {
-  public canvas: HTMLCanvasElement;
-  public ctx: CanvasRenderingContext2D;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
 
-  public readOnly: boolean;
+  readOnly: boolean;
 
-  public objects: DrawObject[];
+  objects: DrawObject[];
 
-  public currentlyDrawing: DrawObject | null;
+  currentlyDrawing: DrawObject | null;
 
-  private currentDrawObject: IDrawObjectFactory | null;
+  private currentDrawObject: DrawObjectFactory | null;
   private selectedManager: RadioClassManager;
 
   constructor() {
@@ -200,56 +198,20 @@ export default class CanvasManager extends EventEmitter {
     this.readOnly = false;
 
     this.createButtons({
-      circle: Circle,
-      line: TwoPointLine,
-      pen: Line,
+      "pen": Line,
+      "circle": Circle,
+      "line": TwoPointLine,
     });
 
     this.registerEventHandlers();
   }
 
-  public redraw() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.objects.forEach((object) => object.draw());
-    this.emit("change");
-  }
-
-  public getImageString() {
-    return this.objects.map((object) => object.toStringPart()).join("|");
-  }
-
-  public setImageString(imageString: string) {
-    if (imageString === "") return;
-
-    this.objects = imageString.split("|").map((stringPart) => {
-      if (stringPart.startsWith("circle;")) {
-        return Circle.fromStringPart(this, stringPart);
-      } else {
-        return Line.fromStringPart(this, stringPart);
-      }
-    });
-
-    this.redraw();
-  }
-
-  public getDataUrl() {
-    return this.canvas.toDataURL();
-  }
-
-  public undo() {
-    if (this.objects.length === 0) return;
-    if (this.currentlyDrawing !== null) return;
-
-    this.objects.pop();
-    this.redraw();
-  }
-
   private registerEventHandlers() {
-    this.canvas.addEventListener("mousedown", (event) => {
+    this.canvas.addEventListener("mousedown", event => {
       if (this.readOnly) return;
       if (this.currentDrawObject === null) return;
 
-      const clickPoint = xyFromEvent(event);
+      let clickPoint = xyFromEvent(event);
 
       this.currentlyDrawing = new this.currentDrawObject(this, clickPoint);
 
@@ -258,7 +220,7 @@ export default class CanvasManager extends EventEmitter {
       event.preventDefault(); // prevent e.g. selecting some text, that's annoying
     });
 
-    this.canvas.addEventListener("mousemove", (event) => {
+    this.canvas.addEventListener("mousemove", event => {
       if (this.currentlyDrawing === null) return;
       this.currentlyDrawing.onMouseMove(xyFromEvent(event));
     });
@@ -276,7 +238,7 @@ export default class CanvasManager extends EventEmitter {
 
   }
 
-  private createButtons(types: { [key: string]: IDrawObjectFactory }) {
+  private createButtons(types: { [key: string]: DrawObjectFactory }) {
     for (const [type, cls] of Object.entries(types)) {
       const elementId = `draw-${type}-button`;
       const element = document.getElementById(elementId)!;
@@ -286,5 +248,41 @@ export default class CanvasManager extends EventEmitter {
         this.currentDrawObject = cls;
       });
     }
+  }
+
+  redraw() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.objects.forEach(object => object.draw());
+    this.emit("change");
+  }
+
+  getImageString() {
+    return this.objects.map(object => object.toStringPart()).join("|");
+  }
+
+  setImageString(imageString: string) {
+    if (imageString === "") return;
+
+    this.objects = imageString.split("|").map(stringPart => {
+      if (stringPart.startsWith('circle;')) {
+        return Circle.fromStringPart(this, stringPart);
+      } else {
+        return Line.fromStringPart(this, stringPart);
+      }
+    });
+
+    this.redraw();
+  }
+
+  getDataUrl() {
+    return this.canvas.toDataURL();
+  }
+
+  undo() {
+    if (this.objects.length === 0) return;
+    if (this.currentlyDrawing !== null) return;
+
+    this.objects.pop();
+    this.redraw();
   }
 }

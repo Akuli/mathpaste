@@ -7,19 +7,19 @@ export class RadioClassManager {
 
   constructor(public className: string) {}
 
-  public addClass(element: HTMLElement) {
+  addClass(element: HTMLElement) {
     this.removeClass();
     element.classList.add(this.className);
     this.currentElement = element;
   }
 
-  public toggleClass(element: HTMLElement) {
+  toggleClass(element: HTMLElement) {
     const shouldAddClass = this.currentElement !== element;
     this.removeClass();
     if (shouldAddClass) this.addClass(element);
   }
 
-  public removeClass() {
+  removeClass() {
     if (this.currentElement === null) return;
 
     this.currentElement.classList.remove(this.className);

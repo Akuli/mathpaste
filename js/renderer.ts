@@ -10,7 +10,7 @@ export default class Renderer {
 
   private selectedManager: RadioClassManager = new RadioClassManager("selected");
 
-  public render(contents: string) {
+  render(contents: string) {
     const lines = contents.split("\n\n");
 
     for (let i = 0; i < lines.length; ++i) {
@@ -36,7 +36,7 @@ export default class Renderer {
     this.oldLines = lines;
   }
 
-  public selectLine(index: number) {
+  selectLine(index: number) {
     const lineElementToShow = this.elements[index];
 
     if (lineElementToShow === undefined) return;

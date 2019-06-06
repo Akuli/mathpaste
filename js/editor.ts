@@ -5,15 +5,7 @@ import { EventEmitter } from "events";
 import "./asciimath_acemode.ts";
 
 export default class Editor extends EventEmitter {
-
-  get readOnly() {
-    return this.editor.getReadOnly();
-  }
-
-  set readOnly(value) {
-    this.editor.setReadOnly(value);
-  }
-  private editor: ace.Editor;
+  private editor: ace.Editor
 
   constructor() {
     super();
@@ -28,13 +20,29 @@ export default class Editor extends EventEmitter {
     this.registerEventHandlers();
   }
 
-  public getContents() {
+  private registerEventHandlers() {
+    const session = this.editor.getSession();
+
+    session.on("change", () => this.emit("change", this.getContents(), true));
+
+    session.selection.on("changeCursor", () => this.emit("cursorMoved", this.editor.getCursorPosition(), this.getContents()));
+  }
+
+  getContents() {
     return this.editor.getValue();
   }
 
-  public setContents(newContents: string) {
+  setContents(newContents: string) {
     this.editor.getSession().setValue(newContents || "");
     this.emit("change", this.getContents(), false);
+  }
+
+  get readOnly() {
+    return this.editor.getReadOnly();
+  }
+
+  set readOnly(value) {
+    this.editor.setReadOnly(value);
   }
 
   /**
@@ -42,20 +50,9 @@ export default class Editor extends EventEmitter {
    * By "actual line", we mean lines that are line-break separated, not ones
    * that are joined together in the output.
    */
-  public getActualLineIndex() {
+  getActualLineIndex() {
     const { row } = this.editor.getCursorPosition();
     const linesAboveOrAtCursor = this.getContents().split("\n").slice(0, row + 1);
-    return linesAboveOrAtCursor.join("\n").split("\n\n").length - 1;
-  }
-
-  private registerEventHandlers() {
-    const session = this.editor.getSession();
-
-    session.on("change", () => this.emit("change", this.getContents(), true));
-
-    session.selection.on(
-      "changeCursor",
-      () => this.emit("cursorMoved", this.editor.getCursorPosition(), this.getContents()),
-    );
+    return linesAboveOrAtCursor.join('\n').split('\n\n').length - 1;
   }
 }

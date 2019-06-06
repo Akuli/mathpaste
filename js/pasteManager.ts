@@ -1,4 +1,3 @@
-/* tslint:disable */
 /*
 select "Database" at left in Firebase, go to the "Rules" tab
 these are the rules i use:
@@ -25,42 +24,20 @@ these are the rules i use:
 TODO: validate image datas?
 TODO: delete old maths regularly?
 */
-/* tslint:enable */
 
-import * as LZString from "lz-string";
+import * as LZString  from "lz-string";
 
 import * as storageManager from "./storage";
 
 import * as firebase from "firebase/app";
 
-interface IPaste {
-    math: string | null;
-    imageString: string | null;
+type Paste = {
+    math: string | null,
+    imageString: string | null,
 }
 
 export default class PasteManager {
   private maybeFirebaseApp: firebase.app.App | null = null;
-
-  public async loadPaste(): Promise<IPaste> {
-    const hashPaste = await this.getPasteFromHash(window.location.hash);
-    if (hashPaste) return hashPaste;
-
-    const math = storageManager.getMath();
-    const imageString = storageManager.getImageString();
-    return { math, imageString };
-  }
-
-  public async uploadPaste(math: string, imageString: string) {
-    // ref represents the object that represents the math in firebase
-    const fb = await this.getFirebaseApp();
-    const ref = await fb.database().ref("maths").push();
-    ref.set({
-      content: math,
-      image: LZString.compressToUTF16(imageString),
-      timestamp: (new Date()).valueOf(),
-    });
-    return ref.key;
-  }
 
   private async getFirebaseApp(): Promise<firebase.app.App> {
     if (this.maybeFirebaseApp === null) {
@@ -70,24 +47,33 @@ export default class PasteManager {
         apiKey: "AIzaSyD3O2tMBXqz8Go4-xCz9P-HXBH7WNrX9N4",
         authDomain: "mathpaste-8cc8e.firebaseapp.com",
         databaseURL: "https://mathpaste-8cc8e.firebaseio.com",
-        messagingSenderId: "204735746640",
         projectId: "mathpaste-8cc8e",
         storageBucket: "",
+        messagingSenderId: "204735746640"
       });
     }
 
     return this.maybeFirebaseApp;
   }
 
-  private async getPasteFromHash(hash: string): Promise<IPaste | null> {
+  async loadPaste(): Promise<Paste> {
+    const hashPaste = await this.getPasteFromHash(window.location.hash);
+    if (hashPaste) return hashPaste;
+
+    const math = storageManager.getMath();
+    const imageString = storageManager.getImageString();
+    return { math, imageString };
+  }
+
+  private async getPasteFromHash(hash: string): Promise<Paste | null> {
     if (hash.startsWith("#fullmath:")) {
       // this is for backwards compat
       // in older versions of mathpaste, all of the math was compressed in the url
       // in this version of mathpaste, loading those urls is still supported
       const encodedMath = hash.substr("#fullmath:".length);
       return {
-        imageString: "",
         math: LZString.decompressFromEncodedURIComponent(encodedMath),
+        imageString: ""
       };
     }
 
@@ -99,15 +85,28 @@ export default class PasteManager {
     return null;
   }
 
-  private async getPasteFromFirebase(pasteId: string): Promise<IPaste> {
+
+  private async getPasteFromFirebase(pasteId: string): Promise<Paste> {
     const fb = await this.getFirebaseApp();
     const value = (await fb.database().ref(`maths/${pasteId}`).once("value")).val();
 
     // value.image may be missing or empty because backwards compat with older mathpastes
     // but the empty string is not valid LZString utf16 compressed stuff
     return {
-      imageString: value.image ? LZString.decompressFromUTF16(value.image) : "",
       math: value.content,
+      imageString: value.image ? LZString.decompressFromUTF16(value.image) : "",
     };
+  }
+
+  async uploadPaste(math: string, imageString: string) {
+    // ref represents the object that represents the math in firebase
+    const fb = await this.getFirebaseApp();
+    const ref = await fb.database().ref("maths").push();
+    ref.set({
+      content: math,
+      timestamp: (new Date()).valueOf(),
+      image: LZString.compressToUTF16(imageString)
+    });
+    return ref.key;
   }
 }

@@ -1,0 +1,10 @@
+{
+    "esversion": 8,
+    "undef": true,
+    "unused": true,
+    "browser": true,
+    "module": true,
+    "eqeqeq": true,
+    "globals": { "MathJax": false }
+}
+// vim: ft=json
