@@ -17,6 +17,7 @@ import { DrawObject, DrawObjectFactory, Point } from "./drawobjects/drawobject";
 import Pen from "./drawobjects/pen";
 import StraightLine from "./drawobjects/straightline";
 import Circle from "./drawobjects/circle";
+import FilledCircle from "./drawobjects/filledCircle";
 
 export class CanvasManager extends EventEmitter {
   canvas: HTMLCanvasElement;
@@ -39,6 +40,7 @@ export class CanvasManager extends EventEmitter {
 
     this.createButton("pen", Pen).click();
     this.createButton("circle", Circle);
+    this.createButton("filled-circle", FilledCircle);
     this.createButton("line", StraightLine);
 
     this.registerEventHandlers();

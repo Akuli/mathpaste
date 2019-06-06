@@ -9,6 +9,7 @@ import { RadioClassManager } from "./utils";
 import "../index.html";
 import "../css/index.css";
 import "../pics/circle.png";
+import "../pics/filled-circle.png";
 import "../pics/info.png";
 import "../pics/line.png";
 import "../pics/pen.png";
