@@ -1,10 +1,11 @@
 /* tslint:disable: max-line-length */
 
 import * as ace from "brace";
+import "brace/mode/markdown";
 
 type HighlightStateTransition = {
   token: string;
-  regex: RegExp,
+  regex: RegExp | string,
   next?: string,
 };
 type HighlightState = HighlightStateTransition[];
@@ -46,7 +47,12 @@ const literateModeState: HighlightState = [
     token: "comment.block",
     regex: /^> /,
     next: "asciimath-start",
-  }
+  },
+  {
+    token: "",
+    regex: /(?=.)/,
+    next: "markdown-start",
+  },
 ];
 
 type Embed = {
@@ -110,15 +116,27 @@ defineMode("literate_asciimath",
   },
   [
     {
-    moduleName: "asciimath",
-    highlightClassName: "HighlightRules",
-    extraState: [
-      {
-        token: "",
-        regex: /^$/,
-        next: "start",
-      },
-    ]
+      moduleName: "asciimath",
+      highlightClassName: "HighlightRules",
+      extraState: [
+        {
+          token: "",
+          regex: /^$/,
+          next: "start",
+        },
+      ]
+    },
+
+    {
+      moduleName: "markdown",
+      highlightClassName: "MarkdownHighlightRules",
+      extraState: [
+        {
+          token: "",
+          regex: /^$/,
+          next: "start",
+        },
+      ]
     },
   ]
 );
