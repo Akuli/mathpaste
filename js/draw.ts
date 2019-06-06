@@ -17,6 +17,8 @@ const POINT_DISTANCE_THRESHOLD: number = 2;
 
 type Point = [number, number];
 
+type ButtonTypes = { [key: string]: DrawObjectFactory };
+
 abstract class DrawObject {
   constructor(public parent: CanvasManager) {}
 
@@ -209,11 +211,12 @@ export default class CanvasManager extends EventEmitter {
 
     this.readOnly = false;
 
-    this.createButtons({
+    const buttons = this.createButtons({
       pen: Line,
       circle: Circle,
       line: TwoPointLine,
     });
+    buttons.pen.click();
 
     this.registerEventHandlers();
   }
@@ -261,16 +264,24 @@ export default class CanvasManager extends EventEmitter {
 
   }
 
-  private createButtons(types: { [key: string]: DrawObjectFactory }) {
+  private createButtons<T extends ButtonTypes>(types: T): { [K in keyof T]: HTMLButtonElement } {
+    const result: { [key: string]: HTMLButtonElement } = {};
+
     for (const [type, cls] of Object.entries(types)) {
       const elementId = `draw-${type}-button`;
-      const element = document.getElementById(elementId)!;
+      const element = document.getElementById(elementId)! as HTMLButtonElement;
+
+      element.addEventListener("mouseup", event => event.stopPropagation());
 
       element.addEventListener("click", () => {
         this.selectedManager.addClass(element);
         this.currentDrawObject = cls;
       });
+
+      result[type] = element;
     }
+
+    return result as { [K in keyof T]: HTMLButtonElement };
   }
 
   redraw() {
