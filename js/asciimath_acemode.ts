@@ -115,7 +115,7 @@ defineMode("literate_asciimath",
     extraState: [
       {
         token: "",
-        regex: /$/,
+        regex: /^$/,
         next: "start",
       },
     ]
