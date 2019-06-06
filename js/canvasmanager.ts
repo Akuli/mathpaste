@@ -13,7 +13,7 @@ import { EventEmitter } from "events";
 
 import { RadioClassManager, xyFromEvent } from "./utils";
 
-import { DrawObject, DrawObjectFactory, Point } from "./drawobjects/drawobject";
+import { DrawObject, DrawObjectFactory } from "./drawobjects/drawobject";
 import Pen from "./drawobjects/pen";
 import StraightLine from "./drawobjects/straightline";
 import Circle from "./drawobjects/circle";
