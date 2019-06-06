@@ -1,25 +1,26 @@
 import * as ace from "brace";
 
-ace.define("ace/mode/asciimath", ["require", "exports", "ace/lib/oop", "ace/mode/text", "ace/mode/asciimath_highlight_rules"], (acequire, exports) => {
-  var oop = acequire("ace/lib/oop");
-  var TextMode = acequire("ace/mode/text").Mode;
-  var AsciiMathHighlightRules = acequire("ace/mode/asciimath_highlight_rules").AsciiMathHighlightRules;
+const define = (ace as any).define;
 
-  var Mode = function() {
-    this.HighlightRules = AsciiMathHighlightRules;
-  };
-  oop.inherits(Mode, TextMode);
+type Acequire = (arg0: string) => any;
+type Exports = any;
+
+define("ace/mode/asciimath", ["require", "exports", "ace/mode/text", "ace/mode/asciimath_highlight_rules"], (acequire: Acequire, exports: Exports) => {
+  const TextMode = acequire("ace/mode/text").Mode;
+  const AsciiMathHighlightRules = acequire("ace/mode/asciimath_highlight_rules").AsciiMathHighlightRules;
+
+  class Mode extends TextMode {
+    HighlightRules: typeof AsciiMathHighlightRules = AsciiMathHighlightRules;
+  }
 
   exports.Mode = Mode;
 });
 
-ace.define("ace/mode/asciimath_highlight_rules", ["require", "exports", "ace/lib/oop", "ace/mode/text"], function(acequire, exports) {
-
-  var oop = acequire("ace/lib/oop");
-  var TextHighlightRules = acequire("ace/mode/text_highlight_rules").TextHighlightRules;
+define("ace/mode/asciimath_highlight_rules", ["require", "exports", "ace/mode/text"], (acequire: Acequire, exports: Exports): void => {
+  const TextHighlightRules = acequire("ace/mode/text_highlight_rules").TextHighlightRules;
 
   class AsciiMathHighlightRules extends TextHighlightRules {
-    $rules: any = {
+    $rules: { [key: string]: { token: string, regex: RegExp }[] } = {
       "start": [
         {
           token: "keyword.operator",
