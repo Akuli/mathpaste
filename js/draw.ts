@@ -253,7 +253,7 @@ export default class CanvasManager extends EventEmitter {
       } else {
         const point = new Circle(this, xyFromEvent(event));
         point.filled = true;
-        point.radius = 3;
+        point.radius = 2;
         point.draw();
         this.objects.push(point);
       }
