@@ -19,7 +19,7 @@ const cm = new CanvasManager();
 const pm = new PasteManager();
 const render = new Renderer();
 
-cm.on("change", () => void storageManager.setImageString(cm.getImageString()));
+cm.on("change", () => storageManager.setImageString(cm.getImageString()));
 
 editor.on("change", (_, isUserInput) => {
   if (isUserInput) window.location.hash = "";
@@ -31,9 +31,9 @@ editor.on("change", (newMath, isUserInput) => {
   storageManager.setMath(newMath);
 });
 
-editor.on("change", () => void render.render(editor.getContents()));
+editor.on("change", () => render.render(editor.getContents()));
 
-editor.on("cursorMoved", () => void render.selectLine(editor.getActualLineIndex()));
+editor.on("cursorMoved", () => render.selectLine(editor.getActualLineIndex()));
 
 // this is for mathpaste-gtk
 (<any>window).mathpaste = {
@@ -73,10 +73,10 @@ const createBox = (prefix: string) => {
   if (boxElement === null || buttonElement === null) { throw new Error; }
 
   // Prevent the "remove shown" document event listener from being ran
-  boxElement.addEventListener("click", e => void e.stopPropagation());
-  buttonElement.addEventListener("click", e => void e.stopPropagation());
+  boxElement.addEventListener("click", e => e.stopPropagation());
+  buttonElement.addEventListener("click", e => e.stopPropagation());
 
-  buttonElement.addEventListener("click", () => void shownBoxManager.toggleClass(boxElement));
+  buttonElement.addEventListener("click", () => shownBoxManager.toggleClass(boxElement));
 
   return { boxElement, buttonElement };
 };
@@ -94,7 +94,7 @@ createBox("save").buttonElement.addEventListener("click", async () => {
   window.location.hash = "#saved:" + pasteId;
 });
 
-document.addEventListener("click", () => void shownBoxManager.removeClass());
+document.addEventListener("click", () => shownBoxManager.removeClass());
 
 MathJax.Hub.Register.StartupHook("End", async () => {
   MathJax.Hub.processSectionDelay = 0;
