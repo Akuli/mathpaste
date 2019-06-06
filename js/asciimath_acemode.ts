@@ -16,6 +16,8 @@ type HighlightState<S extends "start" | string = "start"> = HighlightStateTransi
 
 type HighlightRules<KS extends "start" | string = "start"> = { [K in KS]: HighlightState<KS> }
 
+type HighlightRulesFactory<KS extends "start" | string = "start"> = (opts: Record<any, any> | undefined) => HighlightRules<KS>;
+
 const asciimathState: HighlightState = [
   {
     token: "keyword.operator",
@@ -47,7 +49,7 @@ const asciimathState: HighlightState = [
   },
 ];
 
-function defineMode<KS extends "start" | string>(name: string, highlightRules: HighlightRules<KS>) {
+function defineMode<KS extends "start" | string>(name: string, highlightRules: HighlightRulesFactory<KS>) {
   (ace as any).define(
     `ace/mode/${name}`,
     ["require", "exports", "ace/mode/text", `ace/mode/${name}_highlight_rules`],
@@ -68,10 +70,16 @@ function defineMode<KS extends "start" | string>(name: string, highlightRules: H
       const TextHighlightRules = acequire("ace/mode/text_highlight_rules").TextHighlightRules;
 
       exports.HighlightRules = class extends TextHighlightRules {
-        $rules: HighlightRules<KS> = highlightRules;
+        $rules: HighlightRules<KS>;
+
+        constructor(opts: Record<any, any> | undefined) {
+          super();
+
+          this.$rules = highlightRules(opts);
+        }
       };
     }
   );
 }
 
-defineMode("asciimath", { start: asciimathState });
+defineMode("asciimath", () => ({ start: asciimathState }));
