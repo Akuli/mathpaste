@@ -31,7 +31,7 @@ interface DrawObject {
 }
 
 interface DrawObjectFactory {
-  new(_parent: CanvasManager, point: Point): DrawObject;
+  new(parent: CanvasManager, point: Point): DrawObject;
 
   fromStringPart(parent: CanvasManager, stringPart: string): DrawObject;
 }
@@ -83,21 +83,21 @@ class Line implements DrawObject {
 }
 
 class TwoPointLine extends Line {
-  _mouseMoveImageData: ImageData | null;
+  private mouseMoveImageData: ImageData | null;
 
   constructor(parent: CanvasManager, point: Point) {
     super(parent, [point]);
-    this._mouseMoveImageData = null;
+    this.mouseMoveImageData = null;
   }
 
   onMouseMove(xy: Point) {
     // there seems to be no easy way to delete an already drawn circle from
     // the canvas, so image data tricks are the best i can do
-    if (this._mouseMoveImageData === null) {
-      this._mouseMoveImageData = this.parent.ctx.getImageData(0, 0, this.parent.canvas.width, this.parent.canvas.height);
+    if (this.mouseMoveImageData === null) {
+      this.mouseMoveImageData = this.parent.ctx.getImageData(0, 0, this.parent.canvas.width, this.parent.canvas.height);
     } else {
       this.parent.ctx.clearRect(0, 0, this.parent.canvas.width, this.parent.canvas.height);
-      this.parent.ctx.putImageData(this._mouseMoveImageData, 0, 0);
+      this.parent.ctx.putImageData(this.mouseMoveImageData, 0, 0);
     }
 
     if (this.points.length === 1) {
@@ -113,12 +113,12 @@ class TwoPointLine extends Line {
 
   onMouseUp() {
     super.onMouseUp();
-    this._mouseMoveImageData = null; // to avoid memory leaking
+    this.mouseMoveImageData = null; // to avoid memory leaking
   }
 }
 
 class Circle implements DrawObject {
-  private _mouseMoveImageData: ImageData | null = null;
+  private mouseMoveImageData: ImageData | null = null;
 
   public radius: number = 0;
   public filled: boolean = false;
@@ -137,11 +137,11 @@ class Circle implements DrawObject {
   }
 
   onMouseMove(xy: Point) {
-    if (this._mouseMoveImageData === null) {
-      this._mouseMoveImageData = this.parent.ctx.getImageData(0, 0, this.parent.canvas.width, this.parent.canvas.height);
+    if (this.mouseMoveImageData === null) {
+      this.mouseMoveImageData = this.parent.ctx.getImageData(0, 0, this.parent.canvas.width, this.parent.canvas.height);
     } else {
       this.parent.ctx.clearRect(0, 0, this.parent.canvas.width, this.parent.canvas.height);
-      this.parent.ctx.putImageData(this._mouseMoveImageData, 0, 0);
+      this.parent.ctx.putImageData(this.mouseMoveImageData, 0, 0);
     }
 
     this.radius = Math.round(Math.hypot(this.center[0] - xy[0], this.center[1] - xy[1]));
@@ -149,7 +149,7 @@ class Circle implements DrawObject {
   }
 
   onMouseUp() {
-    this._mouseMoveImageData = null;
+    this.mouseMoveImageData = null;
   }
 
   // 'circle;x;y;r;1' is a filled circle centered at (x,y) with radius r
@@ -200,16 +200,16 @@ export default class CanvasManager extends EventEmitter {
 
     this.readOnly = false;
 
-    this._createButtons({
+    this.createButtons({
       "pen": Line,
       "circle": Circle,
       "line": TwoPointLine,
     });
 
-    this._registerEventHandlers();
+    this.registerEventHandlers();
   }
 
-  _registerEventHandlers() {
+  private registerEventHandlers() {
     this.canvas.addEventListener("mousedown", event => {
       if (this.readOnly) return;
       if (!this.currentDrawObject) return;
@@ -241,7 +241,7 @@ export default class CanvasManager extends EventEmitter {
 
   }
 
-  _createButtons(types: { [key: string]: DrawObjectFactory }) {
+  private createButtons(types: { [key: string]: DrawObjectFactory }) {
     for (const [type, cls] of Object.entries(types)) {
       const elementId = `draw-${type}-button`;
       const element = document.getElementById(elementId)!;

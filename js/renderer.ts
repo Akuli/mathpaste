@@ -3,39 +3,41 @@ import { default as scrollIntoView, Options } from "scroll-into-view-if-needed";
 import { RadioClassManager } from "./utils";
 
 export default class Renderer {
-  _oldLines: string[] = [];
-  _elements: HTMLElement[] = [];
-  _linesOutput: HTMLElement = document.getElementById("renderedLines")!;
-  _selectedManager: RadioClassManager = new RadioClassManager("selected");
+  private oldLines: string[] = [];
+
+  private elements: HTMLElement[] = [];
+  private lineContainer: HTMLElement = document.getElementById("renderedLines")!;
+
+  private selectedManager: RadioClassManager = new RadioClassManager("selected");
 
   render(contents: string) {
     const lines = contents.split("\n\n");
 
     for (let i = 0; i < lines.length; ++i) {
-      if (this._oldLines[i] === lines[i]) {
+      if (this.oldLines[i] === lines[i]) {
         continue;
       }
 
-      if (this._elements.length <= i) {
+      if (this.elements.length <= i) {
         const $line = document.createElement("div");
         $line.classList.add("line");
-        this._elements.push($line);
-        this._linesOutput.append($line);
+        this.elements.push($line);
+        this.lineContainer.append($line);
       }
 
-      this._elements[i].textContent = "`" + lines[i] + "`";
-      MathJax.Hub.Queue(["Typeset", MathJax.Hub, this._elements[i]]);
+      this.elements[i].textContent = "`" + lines[i] + "`";
+      MathJax.Hub.Queue(["Typeset", MathJax.Hub, this.elements[i]]);
     }
 
-    for (let i = lines.length; i < this._elements.length; ++i) {
-      this._elements[i].textContent = "";
+    for (let i = lines.length; i < this.elements.length; ++i) {
+      this.elements[i].textContent = "";
     }
 
-    this._oldLines = lines;
+    this.oldLines = lines;
   }
 
   selectLine(index: number) {
-    const lineElementToShow = this._elements[index];
+    const lineElementToShow = this.elements[index];
 
     // I don't know when this would happen
     if (!lineElementToShow) return;
@@ -53,6 +55,6 @@ export default class Renderer {
 
     scrollIntoView(lineElementToShow, scrollOptions);
 
-    this._selectedManager.addClass(lineElementToShow);
+    this.selectedManager.addClass(lineElementToShow);
   }
 }

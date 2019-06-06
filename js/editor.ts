@@ -5,44 +5,44 @@ import { EventEmitter } from "events";
 import "./asciimath_acemode.ts";
 
 export default class Editor extends EventEmitter {
-  _editor: ace.Editor
+  private editor: ace.Editor
 
   constructor() {
     super();
 
-    this._editor = ace.edit("editor");
-    this._editor.setOption("selectionStyle", "text");
-    this._editor.setOption("showLineNumbers", false);
-    this._editor.setOption("showGutter", false);
-    this._editor.setOption("wrap", true);
-    this._editor.setTheme("ace/theme/tomorrow_night_eighties");
-    this._editor.getSession().setMode("ace/mode/asciimath");
-    this._registerEventHandlers();
+    this.editor = ace.edit("editor");
+    this.editor.setOption("selectionStyle", "text");
+    this.editor.setOption("showLineNumbers", false);
+    this.editor.setOption("showGutter", false);
+    this.editor.setOption("wrap", true);
+    this.editor.setTheme("ace/theme/tomorrow_night_eighties");
+    this.editor.getSession().setMode("ace/mode/asciimath");
+    this.registerEventHandlers();
   }
 
-  _registerEventHandlers() {
-    const session = this._editor.getSession();
+  private registerEventHandlers() {
+    const session = this.editor.getSession();
 
     session.on("change", () => void this.emit("change", this.getContents(), true));
 
-    session.selection.on("changeCursor", () => void this.emit("cursorMoved", this._editor.getCursorPosition(), this.getContents()));
+    session.selection.on("changeCursor", () => void this.emit("cursorMoved", this.editor.getCursorPosition(), this.getContents()));
   }
 
   getContents() {
-    return this._editor.getValue();
+    return this.editor.getValue();
   }
 
   setContents(newContents: string) {
-    this._editor.getSession().setValue(newContents || "");
+    this.editor.getSession().setValue(newContents || "");
     this.emit("change", this.getContents(), false);
   }
 
   get readOnly() {
-    return this._editor.getReadOnly();
+    return this.editor.getReadOnly();
   }
 
   set readOnly(value) {
-    this._editor.setReadOnly(value);
+    this.editor.setReadOnly(value);
   }
 
   /**
@@ -51,7 +51,7 @@ export default class Editor extends EventEmitter {
    * that are joined together in the output.
    */
   getActualLineIndex() {
-    const { row } = this._editor.getCursorPosition();
+    const { row } = this.editor.getCursorPosition();
     const linesAboveOrAtCursor = this.getContents().split("\n").slice(0, row + 1);
     return linesAboveOrAtCursor.join('\n').split('\n\n').length - 1;
   }

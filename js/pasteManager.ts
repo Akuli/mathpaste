@@ -30,6 +30,7 @@ import * as LZString  from "lz-string";
 import * as storageManager from "./storage";
 
 import * as firebase from "firebase/app";
+import App = firebase.app.App;
 
 type Paste = {
     math: string | null,
@@ -37,17 +38,13 @@ type Paste = {
 }
 
 export default class PasteManager {
-  _maybeFirebase: firebase.app.App | null
+  private maybeFirebaseApp: App | null = null;
 
-  constructor() {
-    this._maybeFirebase = null;
-  }
-
-  async _firebase() {
-    if (!this._maybeFirebase) {
+  private async getFirebaseApp(): Promise<App> {
+    if (!this.maybeFirebaseApp) {
       await import(/* webpackChunkName: "firebaseDatabase" */ "firebase/database");
 
-      this._maybeFirebase = firebase.initializeApp({
+      this.maybeFirebaseApp = firebase.initializeApp({
         apiKey: "AIzaSyD3O2tMBXqz8Go4-xCz9P-HXBH7WNrX9N4",
         authDomain: "mathpaste-8cc8e.firebaseapp.com",
         databaseURL: "https://mathpaste-8cc8e.firebaseio.com",
@@ -57,10 +54,19 @@ export default class PasteManager {
       });
     }
 
-    return this._maybeFirebase;
+    return this.maybeFirebaseApp;
   }
 
-  async getPasteFromHash(hash: string): Promise<Paste> {
+  async loadPaste(): Promise<Paste> {
+    const hashPaste = await this.getPasteFromHash(window.location.hash);
+    if (hashPaste) return hashPaste;
+
+    const math = storageManager.getMath();
+    const imageString = storageManager.getImageString();
+    return { math, imageString };
+  }
+
+  private async getPasteFromHash(hash: string): Promise<Paste> {
     if (hash.startsWith("#fullmath:")) {
       // this is for backwards compat
       // in older versions of mathpaste, all of the math was compressed in the url
@@ -74,23 +80,15 @@ export default class PasteManager {
 
     if (hash.startsWith("#saved:")) {
       const pasteId = hash.substr("#saved:".length);
-      return (await this._getPasteFromFirebase(pasteId));
+      return (await this.getPasteFromFirebase(pasteId));
     }
 
     return { math: null, imageString: null };
   }
 
-  async loadPaste(): Promise<Paste> {
-    const hashPaste = await this.getPasteFromHash(window.location.hash);
-    if (hashPaste) return hashPaste;
 
-    const math = storageManager.getMath();
-    const imageString = storageManager.getImageString();
-    return { math, imageString };
-  }
-
-  async _getPasteFromFirebase(pasteId: string): Promise<Paste> {
-    const fb = await this._firebase();
+  private async getPasteFromFirebase(pasteId: string): Promise<Paste> {
+    const fb = await this.getFirebaseApp();
     const value = (await fb.database().ref(`maths/${pasteId}`).once("value")).val();
 
     // value.image may be missing or empty because backwards compat with older mathpastes
@@ -103,7 +101,7 @@ export default class PasteManager {
 
   async uploadPaste(math: string, imageString: string) {
     // ref represents the object that represents the math in firebase
-    const fb = await this._firebase();
+    const fb = await this.getFirebaseApp();
     const ref = await fb.database().ref("maths").push();
     ref.set({
       content: math,
