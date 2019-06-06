@@ -65,7 +65,7 @@ export default class PasteManager {
     return { math, imageString };
   }
 
-  private async getPasteFromHash(hash: string): Promise<Paste> {
+  private async getPasteFromHash(hash: string): Promise<Paste | null> {
     if (hash.startsWith("#fullmath:")) {
       // this is for backwards compat
       // in older versions of mathpaste, all of the math was compressed in the url
@@ -82,10 +82,7 @@ export default class PasteManager {
       return (await this.getPasteFromFirebase(pasteId));
     }
 
-    return {
-      math: storageManager.getMath(),
-      imageString: storageManager.getImageString() 
-    };
+    return null;
   }
 
 
