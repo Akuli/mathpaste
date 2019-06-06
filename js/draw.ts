@@ -13,6 +13,12 @@ import { EventEmitter } from "events";
 
 import { RadioClassManager, xyFromEvent } from "./utils";
 
+let POINT_DISTANCE_THRESHOLD: number = 2;
+Object.defineProperty(window, "distThreshold", {
+  get: () => POINT_DISTANCE_THRESHOLD,
+  set: (value) => POINT_DISTANCE_THRESHOLD = value,
+});
+
 type Point = [number, number];
 
 abstract class DrawObject {
@@ -60,8 +66,18 @@ class Line extends DrawObject {
     }
   }
 
-  onMouseMove(xy: Point) {
-    this.points.push(xy);
+  addPoint([x, y]: Point): boolean {
+    if (this.points.length > 0) {
+      const [lx, ly] = this.points[this.points.length - 1];
+      if (Math.hypot(x - lx, y - ly) < POINT_DISTANCE_THRESHOLD) return false;
+    }
+
+    this.points.push([x, y]);
+    return true;
+  }
+
+  onMouseMove(point: Point) {
+    if (!this.addPoint(point)) return;
 
     // draw the new component without redrawing everything else
     this.ctx.beginPath();
