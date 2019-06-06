@@ -41,7 +41,6 @@
     "firebase": "^6.1.0",
     "lz-string": "^1.4.4",
     "scroll-into-view-if-needed": "^2.2.20",
-    "tsc": "^1.20150623.0",
     "typescript": "^3.5.1"
   }
 }

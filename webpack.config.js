@@ -27,7 +27,9 @@ module.exports = {
               ["@babel/preset-env", {
                 targets: "> 0.25%, not dead",
                 modules: "false",
-                useBuiltIns: "usage"
+                useBuiltIns: "usage",
+                corejs: "2.0.0",
+                exclude: ["@babel/plugin-transform-regenerator"],
               }]
             ],
             plugins: [
