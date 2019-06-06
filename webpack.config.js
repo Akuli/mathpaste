@@ -21,6 +21,7 @@ module.exports = {
         use: {
           loader: "babel-loader",
           options: {
+            passPerPreset: true,
             presets: [
               "@babel/preset-typescript",
               ["@babel/preset-env", {

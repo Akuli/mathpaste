@@ -15,19 +15,19 @@ import { RadioClassManager, xyFromEvent } from "./utils";
 
 type Point = [number, number];
 
-interface DrawObject {
-  parent: CanvasManager;
+abstract class DrawObject {
+  constructor(public parent: CanvasManager) {}
 
-  // get canvas() { return this.parent.canvas; }
-  // get ctx() { return this.parent.ctx; }
+  get canvas() { return this.parent.canvas; }
+  get ctx() { return this.parent.ctx; }
 
-  draw(): void;
+  abstract draw(): void;
 
-  onMouseMove(xy: Point): void;
+  abstract onMouseMove(xy: Point): void;
 
-  onMouseUp(): void;
+  abstract onMouseUp(): void;
 
-  toStringPart(): string;
+  abstract toStringPart(): string;
 }
 
 interface DrawObjectFactory {
@@ -36,10 +36,12 @@ interface DrawObjectFactory {
   fromStringPart(parent: CanvasManager, stringPart: string): DrawObject;
 }
 
-class Line implements DrawObject {
+class Line extends DrawObject {
   points: Point[];
 
   constructor(public parent: CanvasManager, points: Point[] | Point) {
+    super(parent);
+
     if (Array.isArray(points[0])) {
       this.points = points as Point[];
     } else {
@@ -83,12 +85,7 @@ class Line implements DrawObject {
 }
 
 class TwoPointLine extends Line {
-  private mouseMoveImageData: ImageData | null;
-
-  constructor(parent: CanvasManager, point: Point) {
-    super(parent, [point]);
-    this.mouseMoveImageData = null;
-  }
+  private mouseMoveImageData: ImageData | null = null;
 
   onMouseMove(xy: Point) {
     // there seems to be no easy way to delete an already drawn circle from
@@ -117,13 +114,13 @@ class TwoPointLine extends Line {
   }
 }
 
-class Circle implements DrawObject {
+class Circle extends DrawObject {
   private mouseMoveImageData: ImageData | null = null;
 
   public radius: number = 0;
   public filled: boolean = false;
 
-  constructor(public parent: CanvasManager, public center: Point) {}
+  constructor(parent: CanvasManager, public center: Point) { super(parent); }
 
   draw() {
     this.parent.ctx.beginPath();
@@ -165,7 +162,7 @@ class Circle implements DrawObject {
       throw new Error("does not look like a circle string part: " + stringPart);
     }
 
-    const circle =  new Circle(parent, [+centerX, +centerY])
+    const circle = new Circle(parent, [+centerX, +centerY])
     circle.radius = +radius;
     circle.filled = !!+isFilled;
     return circle;

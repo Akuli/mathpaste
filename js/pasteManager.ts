@@ -82,7 +82,10 @@ export default class PasteManager {
       return (await this.getPasteFromFirebase(pasteId));
     }
 
-    return { math: null, imageString: null };
+    return {
+      math: storageManager.getMath(),
+      imageString: storageManager.getImageString() 
+    };
   }
 
 

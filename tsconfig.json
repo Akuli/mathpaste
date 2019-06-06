@@ -5,6 +5,7 @@
         "strict": true,
         "strictNullChecks": true,
         "moduleResolution": "node",
-        "noImplicitAny": true
+        "noImplicitAny": true,
+        "sourceMap": true
     }
 }
