@@ -7,19 +7,6 @@ import "./asciimath_acemode.ts";
 export default class Editor extends EventEmitter {
   private editor: ace.Editor;
 
-  private _literatePrefix: string | null = null;
-
-  get literatePrefix() {
-    return this._literatePrefix;
-  }
-
-  set literatePrefix(literatePrefix) {
-    this._literatePrefix = literatePrefix;
-
-    /// @ts-ignore
-    this.editor.getSession().setMode({ path: "ace/mode/literate_asciimath", literatePrefix });
-  }
-
   constructor(editorId: string) {
     super();
 
@@ -31,6 +18,10 @@ export default class Editor extends EventEmitter {
     this.editor.setTheme("ace/theme/tomorrow_night_eighties");
     this.editor.getSession().setMode("ace/mode/asciimath");
     this.registerEventHandlers();
+  }
+
+  makeLiterate() {
+    this.editor.getSession().setMode("ace/mode/literate_asciimath");
   }
 
   private registerEventHandlers() {

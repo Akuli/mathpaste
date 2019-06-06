@@ -3,6 +3,8 @@
 import * as ace from "brace";
 import "brace/mode/markdown";
 
+import { LITERATE_PREFIX } from "./consts";
+
 type HighlightStateTransition = {
   token: string;
   regex: RegExp | string,
@@ -98,7 +100,7 @@ defineMode("literate_asciimath",
     start: [
       {
         token: "comment.block",
-        regex: /^> /,
+        regex: "^" + LITERATE_PREFIX,
         next: "asciimath-start",
       },
       {
