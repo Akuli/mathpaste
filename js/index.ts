@@ -1,13 +1,13 @@
-import * as storageManager from "./storage";
 import CanvasManager from "./draw";
 import Editor from "./editor";
-import Renderer from "./renderer";
 import PasteManager from "./pasteManager";
+import Renderer from "./renderer";
+import * as storageManager from "./storage";
 import { RadioClassManager } from "./utils";
 
 // files included in the output
-import "../index.html";
 import "../css/index.css";
+import "../index.html";
 import "../pics/circle.png";
 import "../pics/info.png";
 import "../pics/line.png";
@@ -36,12 +36,12 @@ editor.on("change", () => render.render(editor.getContents()));
 editor.on("cursorMoved", () => render.selectLine(editor.getActualLineIndex()));
 
 // this is for mathpaste-gtk
-(<any>window).mathpaste = {
+(window as any).mathpaste = {
   getMathAndImage() {
     return {
-      math: editor.getContents(),
+      imageDataUrl: cm.getDataUrl(),
       imageString: cm.getImageString(),
-      imageDataUrl: cm.getDataUrl()
+      math: editor.getContents(),
     };
   },
 
@@ -62,7 +62,7 @@ editor.on("cursorMoved", () => render.selectLine(editor.getActualLineIndex()));
 
   setUseLocalStorage(bool: boolean) {
     useLocalStorage = bool;
-  }
+  },
 };
 
 const shownBoxManager = new RadioClassManager("shown");
@@ -70,11 +70,11 @@ const createBox = (prefix: string) => {
   const boxElement = document.getElementById(`${prefix}-box`);
   const buttonElement = document.getElementById(`${prefix}-button`);
 
-  if (boxElement === null || buttonElement === null) { throw new Error; }
+  if (boxElement === null || buttonElement === null) { throw new Error(); }
 
   // Prevent the "remove shown" document event listener from being ran
-  boxElement.addEventListener("click", e => e.stopPropagation());
-  buttonElement.addEventListener("click", e => e.stopPropagation());
+  boxElement.addEventListener("click", (e) => e.stopPropagation());
+  buttonElement.addEventListener("click", (e) => e.stopPropagation());
 
   buttonElement.addEventListener("click", () => shownBoxManager.toggleClass(boxElement));
 
@@ -82,11 +82,13 @@ const createBox = (prefix: string) => {
 };
 
 createBox("info");
-createBox("draw").boxElement.addEventListener("keydown", event => {
+
+createBox("draw").boxElement.addEventListener("keydown", (event) => {
   if (event.key === "z" && event.ctrlKey) {
     cm.undo();
   }
 });
+
 createBox("save").buttonElement.addEventListener("click", async () => {
   const pasteId = await pm.uploadPaste(editor.getContents(), cm.getImageString());
   const $saveBoxInput = document.getElementById("save-url")! as HTMLInputElement;
