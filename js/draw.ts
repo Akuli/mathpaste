@@ -209,7 +209,7 @@ export default class CanvasManager extends EventEmitter {
   private registerEventHandlers() {
     this.canvas.addEventListener("mousedown", event => {
       if (this.readOnly) return;
-      if (!this.currentDrawObject) return;
+      if (this.currentDrawObject === null) return;
 
       let clickPoint = xyFromEvent(event);
 
@@ -261,7 +261,7 @@ export default class CanvasManager extends EventEmitter {
   }
 
   setImageString(imageString: string) {
-    if (!imageString) return;
+    if (imageString === "") return;
 
     this.objects = imageString.split("|").map(stringPart => {
       if (stringPart.startsWith('circle;')) {

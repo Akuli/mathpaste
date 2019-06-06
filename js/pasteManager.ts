@@ -40,7 +40,7 @@ export default class PasteManager {
   private maybeFirebaseApp: firebase.app.App | null = null;
 
   private async getFirebaseApp(): Promise<firebase.app.App> {
-    if (!this.maybeFirebaseApp) {
+    if (this.maybeFirebaseApp === null) {
       await import(/* webpackChunkName: "firebaseDatabase" */ "firebase/database");
 
       this.maybeFirebaseApp = firebase.initializeApp({

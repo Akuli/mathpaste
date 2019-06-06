@@ -39,8 +39,7 @@ export default class Renderer {
   selectLine(index: number) {
     const lineElementToShow = this.elements[index];
 
-    // I don't know when this would happen
-    if (!lineElementToShow) return;
+    if (lineElementToShow === undefined) return;
 
     const scrollOptions: Options = { scrollMode: "if-needed" };
 
