@@ -1,5 +1,5 @@
 import * as storageManager from "./storage";
-import CanvasManager from "./draw";
+import { CanvasManager } from "./canvasmanager";
 import Editor from "./editor";
 import Renderer from "./renderer";
 import PasteManager from "./pasteManager";
