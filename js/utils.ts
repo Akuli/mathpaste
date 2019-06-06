@@ -3,30 +3,27 @@
  * should have.
  */
 export class RadioClassManager {
-  constructor(className) {
-    this.className = className;
+  private currentElement: HTMLElement | null = null;
 
-    // XXX: 99% sure this should be a weakref
-    this._currentElement = null;
-  }
+  constructor(public className: string) {}
 
-  addClass(element) {
+  addClass(element: HTMLElement) {
     this.removeClass();
     element.classList.add(this.className);
-    this._currentElement = element;
+    this.currentElement = element;
   }
 
-  toggleClass(element) {
-    const shouldAddClass = this._currentElement !== element;
+  toggleClass(element: HTMLElement) {
+    const shouldAddClass = this.currentElement !== element;
     this.removeClass();
     if (shouldAddClass) this.addClass(element);
   }
 
   removeClass() {
-    if (this._currentElement !== null) {
-      this._currentElement.classList.remove(this.className);
-      this._currentElement = null;
-    }
+    if (this.currentElement === null) return;
+
+    this.currentElement.classList.remove(this.className);
+    this.currentElement = null;
   }
 }
 
@@ -35,4 +32,4 @@ export class RadioClassManager {
 // experimental property
 // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/offsetX
 // https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/layerX
-export const xyFromEvent = event => [event.offsetX, event.offsetY];
+export const xyFromEvent = (event: MouseEvent): [number, number] => [event.offsetX, event.offsetY];

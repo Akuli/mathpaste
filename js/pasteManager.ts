@@ -25,19 +25,27 @@ TODO: validate image datas?
 TODO: delete old maths regularly?
 */
 
-import LZString from "lz-string";
+import * as LZString  from "lz-string";
 
 import * as storageManager from "./storage";
 
+import * as firebase from "firebase/app";
+
+type Paste = {
+    math: string | null,
+    imageString: string | null,
+}
+
 export default class PasteManager {
+  _maybeFirebase: firebase.app.App | null
+
   constructor() {
     this._maybeFirebase = null;
   }
 
   async _firebase() {
     if (!this._maybeFirebase) {
-      const firebase = await import("firebase/app");
-      await import("firebase/database");
+      await import(/* webpackChunkName: "firebaseDatabase" */ "firebase/database");
 
       this._maybeFirebase = firebase.initializeApp({
         apiKey: "AIzaSyD3O2tMBXqz8Go4-xCz9P-HXBH7WNrX9N4",
@@ -52,7 +60,7 @@ export default class PasteManager {
     return this._maybeFirebase;
   }
 
-  async getPasteFromHash(hash) {
+  async getPasteFromHash(hash: string): Promise<Paste> {
     if (hash.startsWith("#fullmath:")) {
       // this is for backwards compat
       // in older versions of mathpaste, all of the math was compressed in the url
@@ -69,10 +77,10 @@ export default class PasteManager {
       return (await this._getPasteFromFirebase(pasteId));
     }
 
-    return null;
+    return { math: null, imageString: null };
   }
 
-  async loadPaste() {
+  async loadPaste(): Promise<Paste> {
     const hashPaste = await this.getPasteFromHash(window.location.hash);
     if (hashPaste) return hashPaste;
 
@@ -81,7 +89,7 @@ export default class PasteManager {
     return { math, imageString };
   }
 
-  async _getPasteFromFirebase(pasteId) {
+  async _getPasteFromFirebase(pasteId: string): Promise<Paste> {
     const fb = await this._firebase();
     const value = (await fb.database().ref(`maths/${pasteId}`).once("value")).val();
 
@@ -93,7 +101,7 @@ export default class PasteManager {
     };
   }
 
-  async uploadPaste(math, imageString) {
+  async uploadPaste(math: string, imageString: string) {
     // ref represents the object that represents the math in firebase
     const fb = await this._firebase();
     const ref = await fb.database().ref("maths").push();

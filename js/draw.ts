@@ -9,91 +9,95 @@ that was still true after compressing with lzstring, with almost nothing drawn
 on the canvas and with lots of stuff drawn
 */
 
-import EventEmitter from "events";
+import { EventEmitter } from "events";
 
 import { RadioClassManager, xyFromEvent } from "./utils";
 
-class DrawObject {
-  constructor(parent) {
-    this.parent = parent;
-  }
+type Point = [number, number];
 
-  get canvas() { return this.parent.canvas; }
-  get ctx() { return this.parent.ctx; }
+interface DrawObject {
+  parent: CanvasManager;
 
-  draw() { throw new Error("UNIMPLEMENTED"); }
+  // get canvas() { return this.parent.canvas; }
+  // get ctx() { return this.parent.ctx; }
 
-  onMouseMove() {}
+  draw(): void;
 
-  onMouseUp() {}
+  onMouseMove(xy: Point): void;
 
-  toStringPart() { throw new Error("UNIMPLEMENTED"); }
+  onMouseUp(): void;
 
-  static fromStringPart() { throw new Error("UNIMPLEMENTED"); }
+  toStringPart(): string;
 }
 
-class Line extends DrawObject {
-  constructor(parent, points) {
-    super(parent);
+interface DrawObjectFactory {
+  new(_parent: CanvasManager, point: Point): DrawObject;
 
-    if (!Array.isArray(points) || points.length === 0) throw new Error("invalid line input");
+  fromStringPart(parent: CanvasManager, stringPart: string): DrawObject;
+}
 
+class Line implements DrawObject {
+  points: Point[];
+
+  constructor(public parent: CanvasManager, points: Point[] | Point) {
     if (Array.isArray(points[0])) {
-      // points: [[x, y]]
-      this.points = points;
+      this.points = points as Point[];
     } else {
-      // startPoint: [x, y]
-      this.points = [points];
+      this.points = [points as Point];
     }
   }
 
   draw() {
     if (this.points.length >= 2) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(...(this.points[0]));
+      this.parent.ctx.beginPath();
+      this.parent.ctx.moveTo(...(this.points[0]));
       for (const xy of this.points.slice(1)) {
-        this.ctx.lineTo(...xy);
+        this.parent.ctx.lineTo(...xy);
       }
-      this.ctx.stroke();
+      this.parent.ctx.stroke();
     }
   }
 
-  onMouseMove(xy) {
+  onMouseMove(xy: Point) {
     this.points.push(xy);
 
     // draw the new component without redrawing everything else
-    this.ctx.beginPath();
-    this.ctx.moveTo(...(this.points[this.points.length - 2]));
-    this.ctx.lineTo(...(this.points[this.points.length - 1]));
-    this.ctx.stroke();
+    this.parent.ctx.beginPath();
+    this.parent.ctx.moveTo(...(this.points[this.points.length - 2]));
+    this.parent.ctx.lineTo(...(this.points[this.points.length - 1]));
+    this.parent.ctx.stroke();
 
     this.parent.emit("change");
   }
+
+  onMouseUp() {}
 
   // like 'x1,y1;x2,y2;...' where xs and ys are integers
   toStringPart() {
     return this.points.map(xy => xy.join(',')).join(';');
   }
 
-  static fromStringPart(parent, stringPart) {
-    return new Line(parent, stringPart.split(';').map(xy => xy.split(',').map(value => +value)));
+  static fromStringPart(parent: CanvasManager, stringPart: string): DrawObject {
+    return new Line(parent, stringPart.split(';').map(xy => xy.split(',').map(value => +value)) as Point[]);
   }
 }
 
 class TwoPointLine extends Line {
-  constructor(parent, point) {
+  _mouseMoveImageData: ImageData | null;
+
+  constructor(parent: CanvasManager, point: Point) {
     super(parent, [point]);
     this._mouseMoveImageData = null;
   }
 
-  onMouseMove(xy) {
+  onMouseMove(xy: Point) {
     // there seems to be no easy way to delete an already drawn circle from
     // the canvas, so image data tricks are the best i can do
     if (this._mouseMoveImageData === null) {
-      this._mouseMoveImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+      this._mouseMoveImageData = this.parent.ctx.getImageData(0, 0, this.parent.canvas.width, this.parent.canvas.height);
     } else {
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      this.ctx.putImageData(this._mouseMoveImageData, 0, 0);
+      this.parent.ctx.clearRect(0, 0, this.parent.canvas.width, this.parent.canvas.height);
+      this.parent.ctx.putImageData(this._mouseMoveImageData, 0, 0);
     }
 
     if (this.points.length === 1) {
@@ -113,33 +117,31 @@ class TwoPointLine extends Line {
   }
 }
 
-class Circle extends DrawObject {
-  constructor(parent, center, radius, filled) {
-    super(parent);
+class Circle implements DrawObject {
+  private _mouseMoveImageData: ImageData | null = null;
 
-    this.center = center;
-    this.radius = radius || 0;
-    this.filled = !!filled || false;
-    this._mouseMoveImageData = null;
-  }
+  public radius: number = 0;
+  public filled: boolean = false;
+
+  constructor(public parent: CanvasManager, public center: Point) {}
 
   draw() {
-    this.ctx.beginPath();
-    this.ctx.arc(...this.center, this.radius, 0, 2 * Math.PI);
+    this.parent.ctx.beginPath();
+    this.parent.ctx.arc(this.center[0], this.center[1], this.radius, 0, 2 * Math.PI);
     if (this.filled) {
-      this.ctx.fill();
+      this.parent.ctx.fill();
     } else {
-      this.ctx.stroke();
+      this.parent.ctx.stroke();
     }
     this.parent.emit("change");
   }
 
-  onMouseMove(xy) {
+  onMouseMove(xy: Point) {
     if (this._mouseMoveImageData === null) {
-      this._mouseMoveImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+      this._mouseMoveImageData = this.parent.ctx.getImageData(0, 0, this.parent.canvas.width, this.parent.canvas.height);
     } else {
-      this.ctx.clearRect(0, 0, this.ctx.width, this.canvas.height);
-      this.ctx.putImageData(this._mouseMoveImageData, 0, 0);
+      this.parent.ctx.clearRect(0, 0, this.parent.canvas.width, this.parent.canvas.height);
+      this.parent.ctx.putImageData(this._mouseMoveImageData, 0, 0);
     }
 
     this.radius = Math.round(Math.hypot(this.center[0] - xy[0], this.center[1] - xy[1]));
@@ -157,21 +159,37 @@ class Circle extends DrawObject {
     return 'circle;' + this.center.join(';') + ';' + this.radius + ';' + (+!!this.filled);
   }
 
-  static fromStringPart(parent, stringPart) {
+  static fromStringPart(parent: CanvasManager, stringPart: string): DrawObject {
     const [circleString, centerX, centerY, radius, isFilled] = stringPart.split(';');
-    if (circleString !== 'circle') {
+    if (circleString !== "circle") {
       throw new Error("does not look like a circle string part: " + stringPart);
     }
-    return new Circle(parent, [+centerX, +centerY], +radius, +isFilled);
+
+    const circle =  new Circle(parent, [+centerX, +centerY])
+    circle.radius = +radius;
+    circle.filled = !!+isFilled;
+    return circle;
   }
 }
 
 export default class CanvasManager extends EventEmitter {
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+
+  readOnly: boolean;
+
+  objects: DrawObject[];
+
+  currentlyDrawing: DrawObject | null;
+
+  private currentDrawObject: DrawObjectFactory | null;
+  private selectedManager: RadioClassManager;
+
   constructor() {
     super();
 
-    this.canvas = document.getElementById("draw-canvas");
-    this.ctx = this.canvas.getContext("2d");
+    this.canvas = document.getElementById("draw-canvas")! as HTMLCanvasElement;
+    this.ctx = this.canvas.getContext("2d")!;
 
     this.objects = [];
 
@@ -223,10 +241,10 @@ export default class CanvasManager extends EventEmitter {
 
   }
 
-  _createButtons(types) {
+  _createButtons(types: { [key: string]: DrawObjectFactory }) {
     for (const [type, cls] of Object.entries(types)) {
       const elementId = `draw-${type}-button`;
-      const element = document.getElementById(elementId);
+      const element = document.getElementById(elementId)!;
 
       element.addEventListener("click", () => {
         this.selectedManager.addClass(element);
@@ -245,7 +263,7 @@ export default class CanvasManager extends EventEmitter {
     return this.objects.map(object => object.toStringPart()).join("|");
   }
 
-  setImageString(imageString) {
+  setImageString(imageString: string) {
     if (!imageString) return;
 
     this.objects = imageString.split("|").map(stringPart => {

@@ -1,4 +1,4 @@
-import ace from "brace";
+import * as ace from "brace";
 
 ace.define("ace/mode/asciimath", ["require", "exports", "ace/lib/oop", "ace/mode/text", "ace/mode/asciimath_highlight_rules"], (acequire, exports) => {
   var oop = acequire("ace/lib/oop");

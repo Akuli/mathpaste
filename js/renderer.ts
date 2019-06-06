@@ -1,16 +1,14 @@
-import scrollIntoView from "scroll-into-view-if-needed";
+import { default as scrollIntoView, Options } from "scroll-into-view-if-needed";
 
 import { RadioClassManager } from "./utils";
 
 export default class Renderer {
-  constructor() {
-    this._oldLines = [];
-    this._elements = [];
-    this._linesOutput = document.getElementById("renderedLines");
-    this._selectedManager = new RadioClassManager("selected");
-  }
+  _oldLines: string[] = [];
+  _elements: HTMLElement[] = [];
+  _linesOutput: HTMLElement = document.getElementById("renderedLines")!;
+  _selectedManager: RadioClassManager = new RadioClassManager("selected");
 
-  render(contents) {
+  render(contents: string) {
     const lines = contents.split("\n\n");
 
     for (let i = 0; i < lines.length; ++i) {
@@ -36,13 +34,13 @@ export default class Renderer {
     this._oldLines = lines;
   }
 
-  selectLine(index) {
+  selectLine(index: number) {
     const lineElementToShow = this._elements[index];
 
     // I don't know when this would happen
     if (!lineElementToShow) return;
 
-    const scrollOptions = { scrollMode: "if-needed" };
+    const scrollOptions: Options = { scrollMode: "if-needed" };
 
     // FIXME: detect the feature not the user agent
     // XXX: I'm not sure what Akuli meant with this comment. Behavior seems

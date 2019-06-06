@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "module": "esnext",
+        "target": "es6",
+        "strict": true,
+        "strictNullChecks": true,
+        "moduleResolution": "node",
+        "noImplicitAny": true
+    }
+}

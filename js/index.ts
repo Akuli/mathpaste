@@ -36,7 +36,7 @@ editor.on("change", () => void render.render(editor.getContents()));
 editor.on("cursorMoved", () => void render.selectLine(editor.getActualLineIndex()));
 
 // this is for mathpaste-gtk
-window.mathpaste = {
+(<any>window).mathpaste = {
   getMathAndImage() {
     return {
       math: editor.getContents(),
@@ -45,31 +45,32 @@ window.mathpaste = {
     };
   },
 
-  setMathAndImage(newMath, newImageString) {
-    // FIXME: Did the `toBeLoadedByDefault === null` case ever happen?
+  setMathAndImage(newMath: string, newImageString: string) {
     editor.setContents(newMath);
     cm.setImageString(newImageString);
   },
 
   async loadMathFromWindowDotLocationDotHash() {
     const { math, imageString } = await pm.loadPaste();
-    editor.setContents(math);
-    cm.setImageString(imageString);
+    editor.setContents(math || "");
+    cm.setImageString(imageString || "");
   },
 
-  addChangeCallback(cb) {
+  addChangeCallback(cb: () => void) {
     editor.on("change", cb);
   },
 
-  setUseLocalStorage(bool) {
-    useLocalStorage = !!bool;
+  setUseLocalStorage(bool: boolean) {
+    useLocalStorage = bool;
   }
 };
 
 const shownBoxManager = new RadioClassManager("shown");
-const createBox = (type) => {
-  const boxElement = document.getElementById(`${type}-box`);
-  const buttonElement = document.getElementById(`${type}-button`);
+const createBox = (prefix: string) => {
+  const boxElement = document.getElementById(`${prefix}-box`);
+  const buttonElement = document.getElementById(`${prefix}-button`);
+
+  if (boxElement === null || buttonElement === null) { throw new Error; }
 
   // Prevent the "remove shown" document event listener from being ran
   boxElement.addEventListener("click", e => void e.stopPropagation());
@@ -88,7 +89,7 @@ createBox("draw").boxElement.addEventListener("keydown", event => {
 });
 createBox("save").buttonElement.addEventListener("click", async () => {
   const pasteId = await pm.uploadPaste(editor.getContents(), cm.getImageString());
-  const $saveBoxInput = document.getElementById("save-url");
+  const $saveBoxInput = document.getElementById("save-url")! as HTMLInputElement;
   $saveBoxInput.value = window.location.origin + window.location.pathname + "#saved:" + pasteId;
   window.location.hash = "#saved:" + pasteId;
 });
@@ -102,8 +103,8 @@ MathJax.Hub.Register.StartupHook("End", async () => {
   cm.readOnly = true;
 
   const { math, imageString } = await pm.loadPaste();
-  editor.setContents(math);
-  cm.setImageString(imageString);
+  editor.setContents(math || "");
+  cm.setImageString(imageString || "");
 
   editor.readOnly = false;
   cm.readOnly = false;

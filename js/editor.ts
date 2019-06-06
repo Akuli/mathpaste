@@ -1,10 +1,12 @@
-import ace from "brace";
+import * as ace from "brace";
 import "brace/theme/tomorrow_night_eighties";
-import EventEmitter from "events";
+import { EventEmitter } from "events";
 
-import "./asciimath_acemode";
+import "./asciimath_acemode.ts";
 
 export default class Editor extends EventEmitter {
+  _editor: ace.Editor
+
   constructor() {
     super();
 
@@ -15,7 +17,6 @@ export default class Editor extends EventEmitter {
     this._editor.setOption("wrap", true);
     this._editor.setTheme("ace/theme/tomorrow_night_eighties");
     this._editor.getSession().setMode("ace/mode/asciimath");
-    this._editor.setAutoScrollEditorIntoView(true);
     this._registerEventHandlers();
   }
 
@@ -31,7 +32,7 @@ export default class Editor extends EventEmitter {
     return this._editor.getValue();
   }
 
-  setContents(newContents) {
+  setContents(newContents: string) {
     this._editor.getSession().setValue(newContents || "");
     this.emit("change", this.getContents(), false);
   }
