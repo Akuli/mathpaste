@@ -23,9 +23,9 @@ export default class Editor extends EventEmitter {
   private registerEventHandlers() {
     const session = this.editor.getSession();
 
-    session.on("change", () => void this.emit("change", this.getContents(), true));
+    session.on("change", () => this.emit("change", this.getContents(), true));
 
-    session.selection.on("changeCursor", () => void this.emit("cursorMoved", this.editor.getCursorPosition(), this.getContents()));
+    session.selection.on("changeCursor", () => this.emit("cursorMoved", this.editor.getCursorPosition(), this.getContents()));
   }
 
   getContents() {
