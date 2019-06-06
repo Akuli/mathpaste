@@ -1,3 +1,4 @@
+/* tslint:disable */
 /*
 select "Database" at left in Firebase, go to the "Rules" tab
 these are the rules i use:
@@ -24,8 +25,9 @@ these are the rules i use:
 TODO: validate image datas?
 TODO: delete old maths regularly?
 */
+/* tslint:enable */
 
-import * as LZString  from "lz-string";
+import * as LZString from "lz-string";
 
 import * as storageManager from "./storage";
 
@@ -34,7 +36,7 @@ import * as firebase from "firebase/app";
 type Paste = {
     math: string | null,
     imageString: string | null,
-}
+};
 
 export default class PasteManager {
   private maybeFirebaseApp: firebase.app.App | null = null;
@@ -49,7 +51,7 @@ export default class PasteManager {
         databaseURL: "https://mathpaste-8cc8e.firebaseio.com",
         projectId: "mathpaste-8cc8e",
         storageBucket: "",
-        messagingSenderId: "204735746640"
+        messagingSenderId: "204735746640",
       });
     }
 
@@ -73,7 +75,7 @@ export default class PasteManager {
       const encodedMath = hash.substr("#fullmath:".length);
       return {
         math: LZString.decompressFromEncodedURIComponent(encodedMath),
-        imageString: ""
+        imageString: "",
       };
     }
 
@@ -84,7 +86,6 @@ export default class PasteManager {
 
     return null;
   }
-
 
   private async getPasteFromFirebase(pasteId: string): Promise<Paste> {
     const fb = await this.getFirebaseApp();
@@ -105,7 +106,7 @@ export default class PasteManager {
     ref.set({
       content: math,
       timestamp: (new Date()).valueOf(),
-      image: LZString.compressToUTF16(imageString)
+      image: LZString.compressToUTF16(imageString),
     });
     return ref.key;
   }

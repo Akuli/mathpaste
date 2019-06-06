@@ -36,12 +36,12 @@ editor.on("change", () => render.render(editor.getContents()));
 editor.on("cursorMoved", () => render.selectLine(editor.getActualLineIndex()));
 
 // this is for mathpaste-gtk
-(<any>window).mathpaste = {
+(window as any).mathpaste = {
   getMathAndImage() {
     return {
       math: editor.getContents(),
       imageString: cm.getImageString(),
-      imageDataUrl: cm.getDataUrl()
+      imageDataUrl: cm.getDataUrl(),
     };
   },
 
@@ -62,15 +62,13 @@ editor.on("cursorMoved", () => render.selectLine(editor.getActualLineIndex()));
 
   setUseLocalStorage(bool: boolean) {
     useLocalStorage = bool;
-  }
+  },
 };
 
 const shownBoxManager = new RadioClassManager("shown");
 const createBox = (prefix: string) => {
-  const boxElement = document.getElementById(`${prefix}-box`);
-  const buttonElement = document.getElementById(`${prefix}-button`);
-
-  if (boxElement === null || buttonElement === null) { throw new Error; }
+  const boxElement = document.getElementById(`${prefix}-box`)!;
+  const buttonElement = document.getElementById(`${prefix}-button`)!;
 
   // Prevent the "remove shown" document event listener from being ran
   boxElement.addEventListener("click", e => e.stopPropagation());

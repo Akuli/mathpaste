@@ -72,15 +72,15 @@ class Line extends DrawObject {
     this.parent.emit("change");
   }
 
-  onMouseUp() {}
+  onMouseUp() { /**/ }
 
   // like 'x1,y1;x2,y2;...' where xs and ys are integers
   toStringPart() {
-    return this.points.map(xy => xy.join(',')).join(';');
+    return this.points.map(xy => xy.join(",")).join(";");
   }
 
   static fromStringPart(parent: CanvasManager, stringPart: string): DrawObject {
-    return new Line(parent, stringPart.split(';').map(xy => xy.split(',').map(value => +value)) as Point[]);
+    return new Line(parent, stringPart.split(";").map(xy => xy.split(",").map(value => +value)) as Point[]);
   }
 }
 
@@ -153,16 +153,16 @@ class Circle extends DrawObject {
   // 'circle;x;y;r;0' is an open circle centered at (x,y) with radius r
   // x, y and r are integers
   toStringPart() {
-    return 'circle;' + this.center.join(';') + ';' + this.radius + ';' + (+!!this.filled);
+    return "circle;" + this.center.join(";") + ";" + this.radius + ";" + (+!!this.filled);
   }
 
   static fromStringPart(parent: CanvasManager, stringPart: string): DrawObject {
-    const [circleString, centerX, centerY, radius, isFilled] = stringPart.split(';');
+    const [circleString, centerX, centerY, radius, isFilled] = stringPart.split(";");
     if (circleString !== "circle") {
       throw new Error("does not look like a circle string part: " + stringPart);
     }
 
-    const circle = new Circle(parent, [+centerX, +centerY])
+    const circle = new Circle(parent, [+centerX, +centerY]);
     circle.radius = +radius;
     circle.filled = !!+isFilled;
     return circle;
@@ -198,9 +198,9 @@ export default class CanvasManager extends EventEmitter {
     this.readOnly = false;
 
     this.createButtons({
-      "pen": Line,
-      "circle": Circle,
-      "line": TwoPointLine,
+      pen: Line,
+      circle: Circle,
+      line: TwoPointLine,
     });
 
     this.registerEventHandlers();
@@ -211,7 +211,7 @@ export default class CanvasManager extends EventEmitter {
       if (this.readOnly) return;
       if (this.currentDrawObject === null) return;
 
-      let clickPoint = xyFromEvent(event);
+      const clickPoint = xyFromEvent(event);
 
       this.currentlyDrawing = new this.currentDrawObject(this, clickPoint);
 
@@ -264,7 +264,7 @@ export default class CanvasManager extends EventEmitter {
     if (imageString === "") return;
 
     this.objects = imageString.split("|").map(stringPart => {
-      if (stringPart.startsWith('circle;')) {
+      if (stringPart.startsWith("circle;")) {
         return Circle.fromStringPart(this, stringPart);
       } else {
         return Line.fromStringPart(this, stringPart);

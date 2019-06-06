@@ -5,7 +5,7 @@ import { EventEmitter } from "events";
 import "./asciimath_acemode.ts";
 
 export default class Editor extends EventEmitter {
-  private editor: ace.Editor
+  private editor: ace.Editor;
 
   constructor() {
     super();
@@ -25,7 +25,10 @@ export default class Editor extends EventEmitter {
 
     session.on("change", () => this.emit("change", this.getContents(), true));
 
-    session.selection.on("changeCursor", () => this.emit("cursorMoved", this.editor.getCursorPosition(), this.getContents()));
+    session.selection.on(
+      "changeCursor",
+      () => this.emit("cursorMoved", this.editor.getCursorPosition(), this.getContents()),
+    );
   }
 
   getContents() {
@@ -53,6 +56,6 @@ export default class Editor extends EventEmitter {
   getActualLineIndex() {
     const { row } = this.editor.getCursorPosition();
     const linesAboveOrAtCursor = this.getContents().split("\n").slice(0, row + 1);
-    return linesAboveOrAtCursor.join('\n').split('\n\n').length - 1;
+    return linesAboveOrAtCursor.join("\n").split("\n\n").length - 1;
   }
 }
