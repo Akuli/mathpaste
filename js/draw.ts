@@ -243,7 +243,8 @@ export default class CanvasManager extends EventEmitter {
     document.addEventListener("mouseup", event => {
       if (this.readOnly) return;
 
-      if (mouseMoved && this.currentlyDrawing !== null) {
+      if (mouseMoved && this.currentlyDrawing !== null &&
+          !(this.currentlyDrawing instanceof Line && this.currentlyDrawing.points.length === 0)) {
         this.currentlyDrawing.onMouseUp();
         this.objects.push(this.currentlyDrawing);
         this.currentlyDrawing = null;
