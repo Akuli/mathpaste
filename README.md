@@ -48,14 +48,24 @@ math, click the pencil button and draw something.
 
 ## Developing MathPaste
 
+First, fetch the repository.
+
     $ git clone https://github.com/Akuli/mathpaste
     $ cd mathpaste
-    $ git submodule init
-    $ git submodule update
-    $ python3 -m http.server
+    $ npm install
 
-Now mathpaste should be running in `http://localhost:8000`.
+You can now start a development server, with live reloading, by running
 
+    $ npm run start
+
+Then visiting http://localhost:8080/
+
+If you want to distribute this somewhere, you must run
+
+    $ npm run build
+
+Then, `dist/` will contain the "compiled" webapp which you can put on your
+server or deploy to gh-pages with `deploy.sh`.
 
 [mathb.in]: http://mathb.in/
 [asciimath]: http://asciimath.org/
