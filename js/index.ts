@@ -32,7 +32,7 @@ editor.on("change", (newMath, isUserInput) => {
   storageManager.setMath(newMath);
 });
 
-editor.on("change", () => render.render(editor.getContents()));
+editor.on("change", () => render.render(editor.contents));
 
 editor.on("cursorMoved", () => render.selectLine(editor.getActualLineIndex()));
 
@@ -40,20 +40,20 @@ editor.on("cursorMoved", () => render.selectLine(editor.getActualLineIndex()));
 (window as any).mathpaste = {
   getMathAndImage() {
     return {
-      math: editor.getContents(),
+      math: editor.contents,
       imageString: cm.getImageString(),
       imageDataUrl: cm.getDataUrl(),
     };
   },
 
   setMathAndImage(newMath: string, newImageString: string) {
-    editor.setContents(newMath);
+    editor.contents = newMath;
     cm.setImageString(newImageString);
   },
 
   async loadMathFromWindowDotLocationDotHash() {
     const { math, imageString } = await pm.loadPaste();
-    editor.setContents(math || "");
+    editor.contents = math || "";
     cm.setImageString(imageString || "");
   },
 
@@ -87,7 +87,7 @@ createBox("draw").boxElement.addEventListener("keydown", event => {
   }
 });
 createBox("save").buttonElement.addEventListener("click", async () => {
-  const pasteId = await pm.uploadPaste(editor.getContents(), cm.getImageString());
+  const pasteId = await pm.uploadPaste(editor.contents, cm.getImageString());
   const $saveBoxInput = document.getElementById("save-url")! as HTMLInputElement;
   $saveBoxInput.value = window.location.origin + window.location.pathname + "#saved:" + pasteId;
   window.location.hash = "#saved:" + pasteId;
@@ -107,7 +107,7 @@ MathJax.Hub.Register.StartupHook("End", async () => {
   cm.readOnly = true;
 
   const { math, imageString } = await pm.loadPaste();
-  editor.setContents(math || "");
+  editor.contents = math || "";
   cm.setImageString(imageString || "");
 
   editor.readOnly = false;

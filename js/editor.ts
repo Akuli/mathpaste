@@ -28,21 +28,21 @@ export default class Editor extends EventEmitter {
   private registerEventHandlers() {
     const session = this.editor.getSession();
 
-    session.on("change", () => this.emit("change", this.getContents(), true));
+    session.on("change", () => this.emit("change", this.contents, true));
 
     session.selection.on(
       "changeCursor",
-      () => this.emit("cursorMoved", this.editor.getCursorPosition(), this.getContents()),
+      () => this.emit("cursorMoved", this.editor.getCursorPosition(), this.contents),
     );
   }
 
-  getContents() {
+  get contents() {
     return this.editor.getValue();
   }
 
-  setContents(newContents: string) {
-    this.editor.getSession().setValue(newContents || "");
-    this.emit("change", this.getContents(), false);
+  set contents(value: string) {
+    this.editor.getSession().setValue(value);
+    this.emit("change", this.contents, false);
   }
 
   get readOnly() {
@@ -60,7 +60,7 @@ export default class Editor extends EventEmitter {
    */
   getActualLineIndex() {
     const { row } = this.editor.getCursorPosition();
-    const linesAboveOrAtCursor = this.getContents().split("\n").slice(0, row + 1);
+    const linesAboveOrAtCursor = this.contents.split("\n").slice(0, row + 1);
     return linesAboveOrAtCursor.join("\n").split("\n\n").length - 1;
   }
 }
