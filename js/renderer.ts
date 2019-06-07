@@ -2,8 +2,6 @@ import { default as scrollIntoView, Options } from "scroll-into-view-if-needed";
 
 import { RadioClassManager } from "./utils";
 
-import { Marked } from "marked-ts";
-
 import { LITERATE_PREFIX } from "./consts";
 
 export default class Renderer {
@@ -33,7 +31,7 @@ export default class Renderer {
     return line.substr(LITERATE_PREFIX.length);
   }
 
-  render(contents: string) {
+  async render(contents: string) {
     const lines = contents.split("\n\n");
 
     for (let i = 0; i < lines.length; ++i) {
@@ -53,6 +51,8 @@ export default class Renderer {
         this.elements[i].textContent = "`" + mathLine + "`";
         MathJax.Hub.Queue(["Typeset", MathJax.Hub, this.elements[i]]);
       } else {
+        const Marked = (await import("marked-ts")).Marked;
+
         this.elements[i].innerHTML = Marked.parse(lines[i]);
       }
     }
