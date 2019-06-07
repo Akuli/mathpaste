@@ -2,7 +2,7 @@ import * as ace from "brace";
 import "brace/theme/tomorrow_night_eighties";
 import { EventEmitter } from "events";
 
-import "./asciimath_acemode.ts";
+import "./modes/asciimath";
 
 export default class Editor extends EventEmitter {
   private editor: ace.Editor;
@@ -20,7 +20,8 @@ export default class Editor extends EventEmitter {
     this.registerEventHandlers();
   }
 
-  makeLiterate() {
+  async makeLiterate() {
+    await import("./modes/literate_asciimath");
     this.editor.getSession().setMode("ace/mode/literate_asciimath");
   }
 
