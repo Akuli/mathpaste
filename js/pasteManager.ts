@@ -43,7 +43,7 @@ export default class PasteManager {
 
   private async getFirebaseApp(): Promise<firebase.app.App> {
     if (this.maybeFirebaseApp === null) {
-      await import(/* webpackChunkName: "firebaseDatabase" */ "firebase/database");
+      await import(/* webpackPrefetch: true */ "firebase/database");
 
       this.maybeFirebaseApp = firebase.initializeApp({
         apiKey: "AIzaSyD3O2tMBXqz8Go4-xCz9P-HXBH7WNrX9N4",

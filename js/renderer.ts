@@ -23,45 +23,58 @@ export default class Renderer {
     this.oldLines = [];
   }
 
-  getMathLine(line: string): string | null {
-    if (!this.literate) return line;
+  private insertNewLineElement(idx: number) {
+    const lineElement = document.createElement("div");
+    lineElement.classList.add("line");
 
-    if (!line.startsWith(LITERATE_PREFIX)) return null;
+    if (idx === this.elements.length) {
+      this.elements.push(lineElement);
+      this.lineContainer.append(lineElement);
+    } else {
+      this.lineContainer.insertBefore(lineElement, this.lineContainer.children[idx]);
+      this.elements.splice(idx, 0, lineElement);
+    }
+  }
 
-    return line.substr(LITERATE_PREFIX.length);
+  private removeLineElement(idx: number) {
+    const [lineElement] = this.elements.splice(idx, 1);
+    this.lineContainer.removeChild(lineElement);
+  }
+
+  private async renderLine(line: string, idx: number) {
+    const lineElement = this.elements[idx];
+
+    if (this.literate && line.startsWith(LITERATE_PREFIX)) {
+      line = line.substr(LITERATE_PREFIX.length);
+      lineElement.textContent = "`" + line + "`";
+      MathJax.Hub.Queue(["Typeset", MathJax.Hub, lineElement]);
+    } else {
+      // XXX: Are the next two lines slow enough that we have to use `setImmediate`?
+      const marked = await import("marked-ts");
+      lineElement.innerHTML = marked.Marked.parse(line);
+    }
   }
 
   async render(contents: string) {
-    const lines = contents.split("\n\n");
+    const newLines = contents.split("\n\n");
+    const diff = await import(/* webpackPreload: true */ "diff");
 
-    for (let i = 0; i < lines.length; ++i) {
-      if (this.oldLines[i] === lines[i]) {
-        continue;
-      }
+    let lineIndex = 0;
+    for (const change of diff.diffArrays(this.oldLines, newLines)) {
+      for (const line of change.value) {
+        if (change.added) {
+          this.insertNewLineElement(lineIndex);
+          this.renderLine(line, lineIndex);
+        } else if (change.removed) {
+          this.removeLineElement(lineIndex);
+          continue;
+        }
 
-      if (this.elements.length <= i) {
-        const $line = document.createElement("div");
-        $line.classList.add("line");
-        this.elements.push($line);
-        this.lineContainer.append($line);
-      }
-
-      const mathLine = this.getMathLine(lines[i]);
-      if (mathLine !== null) {
-        this.elements[i].textContent = "`" + mathLine + "`";
-        MathJax.Hub.Queue(["Typeset", MathJax.Hub, this.elements[i]]);
-      } else {
-        const Marked = (await import("marked-ts")).Marked;
-
-        this.elements[i].innerHTML = Marked.parse(lines[i]);
+        lineIndex += 1;
       }
     }
 
-    for (let i = lines.length; i < this.elements.length; ++i) {
-      this.elements[i].textContent = "";
-    }
-
-    this.oldLines = lines;
+    this.oldLines = newLines;
   }
 
   selectLine(index: number) {

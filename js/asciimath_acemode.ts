@@ -1,5 +1,7 @@
 /* tslint:disable: max-line-length */
 
+// TODO: lazy import `brace/mode/markdown`
+
 import * as ace from "brace";
 import "brace/mode/markdown";
 
