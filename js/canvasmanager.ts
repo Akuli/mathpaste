@@ -24,8 +24,7 @@ export class CanvasManager extends EventEmitter {
   readOnly: boolean = false;
 
   objects: DrawObject[] = [];
-
-  currentlyDrawing: DrawObject | null = null;
+  drawing: boolean = false;
 
   private currentDrawObjectFactory: ((point: Point) => DrawObject) | null = null;
   private selectedManager: RadioClassManager = new RadioClassManager("selected");
@@ -54,41 +53,41 @@ export class CanvasManager extends EventEmitter {
     let mouseMoved = false;
 
     this.canvas.addEventListener("mousedown", event => {
-      event.preventDefault(); // prevent e.g. selecting some text, that's annoying
+      event.preventDefault();
 
       if (this.readOnly) return;
 
       mouseMoved = false;
 
       if (this.currentDrawObjectFactory === null) return;
-      this.currentlyDrawing = this.currentDrawObjectFactory(xyFromEvent(event));
+      this.drawing = true;
+      this.objects.push(this.currentDrawObjectFactory(xyFromEvent(event)));
     });
 
     this.canvas.addEventListener("mousemove", event => {
-      mouseMoved = true;
+      if (!this.drawing) return;
 
-      if (this.currentlyDrawing === null) return;
-      this.currentlyDrawing.onMouseMove(xyFromEvent(event));
-      this.draw(this.currentlyDrawing);
+      mouseMoved = true;
+      this.objects[this.objects.length - 1].onMouseMove(xyFromEvent(event));
+      this.draw(this.objects[this.objects.length - 1]);
     });
 
     // document because mouse up outside canvas must also stop drawing
     document.addEventListener("mouseup", event => {
       if (this.readOnly) return;
+      if (!this.drawing) return;
 
-      if (mouseMoved && this.currentlyDrawing !== null &&
-          !(this.currentlyDrawing instanceof Pen && this.currentlyDrawing.points.length === 0)) {
-        this.objects.push(this.currentlyDrawing);
-      } else {
+      // Draw a vertex instead of empty stuff.
+      if (!mouseMoved) {
+        this.objects.pop();
         const vertex = new Circle(xyFromEvent(event), true, 2);
         this.objects.push(vertex);
+        this.draw(vertex);
       }
 
       this.imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
 
-      this.currentlyDrawing = null;
-
-      this.emit("change");
+      this.drawing = false;
     });
 
   }
@@ -128,16 +127,18 @@ export class CanvasManager extends EventEmitter {
 
     this.objects.forEach(obj => {
       this.imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      this.draw(obj)
+      this.draw(obj);
     });
+
+    this.imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
   }
 
   undo() {
     if (this.objects.length === 0) return;
-    if (this.currentlyDrawing !== null) return;
 
     this.objects.pop();
     this.redraw();
+    this.drawing = false;
   }
 
   getImageString() {
