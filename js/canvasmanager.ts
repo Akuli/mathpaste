@@ -89,7 +89,6 @@ export class CanvasManager extends EventEmitter {
 
       this.drawing = false;
     });
-
   }
 
   private createButton(type: string, factory: (point: Point) => DrawObject): HTMLButtonElement {

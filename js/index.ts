@@ -75,21 +75,24 @@ const createBox = (prefix: string) => {
   boxElement.addEventListener("click", e => e.stopPropagation());
   buttonElement.addEventListener("click", e => e.stopPropagation());
 
-  buttonElement.addEventListener("click", () => {
-    shownBoxManager.toggleClass(boxElement)
-    if (shownBoxManager.hasClass(boxElement)) boxElement.focus();
-  });
+  buttonElement.addEventListener("click", () => shownBoxManager.toggleClass(boxElement));
 
   return { boxElement, buttonElement };
 };
 
-createBox("info");
-createBox("draw").boxElement.addEventListener("keydown", event => {
-  if (event.key === "z" && event.ctrlKey) {
+const boxes = {
+  info: createBox("info"),
+  draw: createBox("draw"),
+  save: createBox("save"),
+};
+
+document.addEventListener("keydown", event => {
+  if (event.key === "z" && event.ctrlKey && shownBoxManager.hasClass(boxes.draw.boxElement)) {
     cm.undo();
   }
 });
-createBox("save").buttonElement.addEventListener("click", async () => {
+
+boxes.save.buttonElement.addEventListener("click", async () => {
   const pasteId = await pm.uploadPaste(editor.contents, cm.getImageString());
   const $saveBoxInput = document.getElementById("save-url")! as HTMLInputElement;
   $saveBoxInput.value = window.location.origin + window.location.pathname + "#saved:" + pasteId;
