@@ -7,7 +7,6 @@ export interface DrawObject {
   path: Path2D;
 
   onMouseMove(point: Point): void;
-  onMouseUp(): void;
 
   toStringPart(): string;
 }

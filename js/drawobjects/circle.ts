@@ -17,8 +17,6 @@ export class Circle implements DrawObject {
     this.path.arc(this.center[0], this.center[1], this.radius, 0, 2 * Math.PI);
   }
 
-  onMouseUp() {}
-
   // 'circle;x;y;r;1' is a filled circle centered at (x,y) with radius r
   // 'circle;x;y;r;0' is an open circle centered at (x,y) with radius r
   // x, y and r are integers

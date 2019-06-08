@@ -33,8 +33,6 @@ export class Pen implements DrawObject {
     this.addPoint(point);
   }
 
-  onMouseUp() {}
-
   // like 'x1,y1;x2,y2;...' where xs and ys are integers
   toStringPart() {
     return this.points.map(xy => xy.join(",")).join(";");

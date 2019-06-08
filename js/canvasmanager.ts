@@ -78,7 +78,6 @@ export class CanvasManager extends EventEmitter {
 
       if (mouseMoved && this.currentlyDrawing !== null &&
           !(this.currentlyDrawing instanceof Pen && this.currentlyDrawing.points.length === 0)) {
-        this.currentlyDrawing.onMouseUp();
         this.objects.push(this.currentlyDrawing);
       } else {
         const vertex = new Circle(xyFromEvent(event), true, 2);
