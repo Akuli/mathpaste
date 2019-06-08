@@ -14,7 +14,7 @@ export class RadioClassManager {
   }
 
   toggleClass(element: HTMLElement) {
-    const shouldAddClass = this.hasClass(element);
+    const shouldAddClass = !this.hasClass(element);
     this.removeClass();
     if (shouldAddClass) this.addClass(element);
   }

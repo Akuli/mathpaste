@@ -75,11 +75,7 @@ const createBox = (prefix: string) => {
   boxElement.addEventListener("click", e => e.stopPropagation());
   buttonElement.addEventListener("click", e => e.stopPropagation());
 
-  buttonElement.addEventListener("click", () => {
-    shownBoxManager.toggleClass(boxElement);
-
-    if (shownBoxManager.hasClass(boxElement)) boxElement.focus();
-  });
+  buttonElement.addEventListener("click", () => shownBoxManager.toggleClass(boxElement));
 
   return { boxElement, buttonElement };
 };

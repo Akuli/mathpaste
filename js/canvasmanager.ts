@@ -13,11 +13,9 @@ import { EventEmitter } from "events";
 
 import { RadioClassManager, xyFromEvent } from "./utils";
 
-import { DrawObject, DrawObjectFactory } from "./drawobjects/drawobject";
-import Pen from "./drawobjects/pen";
-import StraightLine from "./drawobjects/straightline";
-import Circle from "./drawobjects/circle";
-import FilledCircle from "./drawobjects/filledCircle";
+import { Point, DrawObject } from "./drawobjects/drawobject";
+import { Pen, StraightLine } from "./drawobjects/pen";
+import { Circle } from "./drawobjects/circle";
 
 export class CanvasManager extends EventEmitter {
   canvas: HTMLCanvasElement;
@@ -29,8 +27,10 @@ export class CanvasManager extends EventEmitter {
 
   currentlyDrawing: DrawObject | null = null;
 
-  private currentDrawObject: DrawObjectFactory | null = null;
+  private currentDrawObjectFactory: ((point: Point) => DrawObject) | null = null;
   private selectedManager: RadioClassManager = new RadioClassManager("selected");
+
+  private imageData: ImageData | null = null;
 
   constructor(canvasId: string) {
     super();
@@ -38,10 +38,14 @@ export class CanvasManager extends EventEmitter {
     this.canvas = document.getElementById(canvasId)! as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d")!;
 
-    this.createButton("pen", Pen).click();
-    this.createButton("circle", Circle);
-    this.createButton("filled-circle", FilledCircle);
-    this.createButton("line", StraightLine);
+    this.createButton("pen", p => new Pen(p)).click();
+    this.createButton("circle", p => new Circle(p));
+    this.createButton("filled-circle", p => {
+      const circle = new Circle(p);
+      circle.lineMode = "fill";
+      return circle;
+    });
+    this.createButton("line", p => new StraightLine(p));
 
     this.registerEventHandlers();
   }
@@ -56,8 +60,8 @@ export class CanvasManager extends EventEmitter {
 
       mouseMoved = false;
 
-      if (this.currentDrawObject === null) return;
-      this.currentlyDrawing = new this.currentDrawObject(this, xyFromEvent(event));
+      if (this.currentDrawObjectFactory === null) return;
+      this.currentlyDrawing = this.currentDrawObjectFactory(xyFromEvent(event));
     });
 
     this.canvas.addEventListener("mousemove", event => {
@@ -65,6 +69,7 @@ export class CanvasManager extends EventEmitter {
 
       if (this.currentlyDrawing === null) return;
       this.currentlyDrawing.onMouseMove(xyFromEvent(event));
+      this.draw(this.currentlyDrawing);
     });
 
     // document because mouse up outside canvas must also stop drawing
@@ -76,12 +81,11 @@ export class CanvasManager extends EventEmitter {
         this.currentlyDrawing.onMouseUp();
         this.objects.push(this.currentlyDrawing);
       } else {
-        const point = new Circle(this, xyFromEvent(event));
-        point.filled = true;
-        point.radius = 2;
-        point.draw();
-        this.objects.push(point);
+        const vertex = new Circle(xyFromEvent(event), true, 2);
+        this.objects.push(vertex);
       }
+
+      this.imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
 
       this.currentlyDrawing = null;
 
@@ -90,7 +94,7 @@ export class CanvasManager extends EventEmitter {
 
   }
 
-  private createButton(type: string, cls: DrawObjectFactory): HTMLButtonElement {
+  private createButton(type: string, factory: (point: Point) => DrawObject): HTMLButtonElement {
     const elementId = `draw-${type}-button`;
     const element = document.getElementById(elementId)! as HTMLButtonElement;
 
@@ -98,16 +102,43 @@ export class CanvasManager extends EventEmitter {
 
     element.addEventListener("click", () => {
       this.selectedManager.addClass(element);
-      this.currentDrawObject = cls;
+      this.currentDrawObjectFactory = factory;
     });
 
     return element;
   }
 
+  draw(obj: DrawObject) {
+    if (this.imageData !== null) this.ctx.putImageData(this.imageData, 0, 0);
+
+    switch (obj.lineMode) {
+      case "fill":
+        this.ctx.fill(obj.path);
+        break;
+
+      case "stroke":
+        this.ctx.stroke(obj.path);
+        break;
+    }
+
+    this.emit("change");
+  }
+
   redraw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.objects.forEach(object => object.draw());
-    this.emit("change");
+
+    this.objects.forEach(obj => {
+      this.imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+      this.draw(obj)
+    });
+  }
+
+  undo() {
+    if (this.objects.length === 0) return;
+    if (this.currentlyDrawing !== null) return;
+
+    this.objects.pop();
+    this.redraw();
   }
 
   getImageString() {
@@ -119,9 +150,9 @@ export class CanvasManager extends EventEmitter {
 
     this.objects = imageString.split("|").map(stringPart => {
       if (stringPart.startsWith("circle;")) {
-        return Circle.fromStringPart(this, stringPart);
+        return Circle.fromStringPart(stringPart);
       } else {
-        return Pen.fromStringPart(this, stringPart);
+        return Pen.fromStringPart(stringPart);
       }
     });
 
@@ -130,13 +161,5 @@ export class CanvasManager extends EventEmitter {
 
   getDataUrl() {
     return this.canvas.toDataURL();
-  }
-
-  undo() {
-    if (this.objects.length === 0) return;
-    if (this.currentlyDrawing !== null) return;
-
-    this.objects.pop();
-    this.redraw();
   }
 }
