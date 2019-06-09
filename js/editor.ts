@@ -18,6 +18,16 @@ export default class Editor extends EventEmitter {
     this.editor.setTheme("ace/theme/tomorrow_night_eighties");
     this.editor.getSession().setMode("ace/mode/asciimath");
     this.registerEventHandlers();
+
+    // undoing is done differently, it should undo either in the math only or
+    // in the editor only
+    if (!(delete (this.editor.getKeyboardHandler() as any).commandKeyBinding['ctrl-z'])) {
+      throw new Error("cannot remove (br)ace's default ctrl+z handler");
+    }
+  }
+
+  undo() {
+    this.editor.undo();
   }
 
   async makeLiterate() {
