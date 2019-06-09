@@ -1,5 +1,36 @@
+html {
+    height: 100%;
+}
+
 body {
+    margin: 0px;
+    padding: 10px;
+    height: calc(100% - 10px - 10px);
     background-color: #000;
+}
+
+#main-content {
+    height: 100%;
+    position: relative;
+    display: flex;
+}
+
+#main-content > * {
+    flex: 1;
+}
+
+#main-content > *:first-child {
+    border-radius: 10px 0px 0px 10px;
+}
+
+#main-content > *:last-child {
+    border-radius: 0px 10px 10px 0px;
+}
+
+.popup-box.shown {
+    position: absolute;
+    top: 15px;
+    right: 30px;
 }
 
 .pic-button {
@@ -32,6 +63,7 @@ body {
     flex-direction: column;
     position: absolute;
     right: 5px;
+    top: 5px;
 }
 
 /* TODO: Use a proper CSS3 animation so the pop-up boxes pop-up correctly. */
@@ -114,47 +146,24 @@ code {
 }
 
 
-.editor-container {
-    position: relative;
-
-    width: 50%;
-    height: 100%;
-
-    float: left;
-}
-
 #editor {
-    position: absolute;
-
-    width: 100%;
-    height: 100%;
-
     font-size: 1.2em;
-
-    border: 0px;
-    border-radius: 10px 0px 0px 10px;
 }
 
 #renderedLines {
-    position: relative;
-
-    width: 50%;
-    height: 100%;
-    float: right;
-
     background-color: #ddd;
-
     text-align: left;
-
-    border: 0px;
-    border-radius: 0px 10px 10px 0px;
-
     overflow: auto;
 }
 
 #renderedLines > .line {
-    padding-top: 1em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
     padding-left: 1em;
+}
+
+#renderedLines > .line > p {
+    margin: 0px;
 }
 
 #renderedLines > .line.selected {
