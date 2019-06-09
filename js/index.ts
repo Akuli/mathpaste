@@ -101,6 +101,9 @@ const boxes = {
   save: createBox("save"),
 };
 
+boxes.draw.buttonElement.addEventListener("click",
+  () => cm.readOnly = !shownBoxManager.hasClass(boxes.draw.boxElement));
+
 /*
 if you think that you can do this in some other way, you are likely wrong.
 
