@@ -5,7 +5,7 @@ export class Circle implements DrawObject {
   path: Path2D;
 
   constructor(public center: Point, filled: boolean = false, public radius: number = 0) {
-    this.lineMode = filled ? "fill" : "stroke";
+    this.lineMode = filled ? LineMode.Fill : LineMode.Stroke;
 
     this.path = new Path2D();
     this.path.arc(this.center[0], this.center[1], this.radius, 0, 2 * Math.PI);
@@ -21,7 +21,7 @@ export class Circle implements DrawObject {
   // 'circle;x;y;r;0' is an open circle centered at (x,y) with radius r
   // x, y and r are integers
   toStringPart() {
-    return "circle;" + this.center.join(";") + ";" + this.radius + ";" + (+!!(this.lineMode === "fill"));
+    return "circle;" + this.center.join(";") + ";" + this.radius + ";" + (+!!(this.lineMode === LineMode.Fill));
   }
 
   static fromStringPart(stringPart: string): DrawObject {

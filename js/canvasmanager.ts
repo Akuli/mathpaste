@@ -13,7 +13,7 @@ import { EventEmitter } from "events";
 
 import { RadioClassManager, xyFromEvent } from "./utils";
 
-import { Point, DrawObject } from "./drawobjects/drawobject";
+import { Point, LineMode, DrawObject } from "./drawobjects/drawobject";
 import { Pen, StraightLine } from "./drawobjects/pen";
 import { Circle } from "./drawobjects/circle";
 
@@ -39,11 +39,7 @@ export class CanvasManager extends EventEmitter {
 
     this.createButton("pen", p => new Pen(p)).click();
     this.createButton("circle", p => new Circle(p));
-    this.createButton("filled-circle", p => {
-      const circle = new Circle(p);
-      circle.lineMode = "fill";
-      return circle;
-    });
+    this.createButton("filled-circle", p => new Circle(p, true));
     this.createButton("line", p => new StraightLine(p));
 
     this.registerEventHandlers();
@@ -108,11 +104,11 @@ export class CanvasManager extends EventEmitter {
     if (this.imageData !== null) this.ctx.putImageData(this.imageData, 0, 0);
 
     switch (obj.lineMode) {
-      case "fill":
+      case LineMode.Fill:
         this.ctx.fill(obj.path);
         break;
 
-      case "stroke":
+      case LineMode.Stroke:
         this.ctx.stroke(obj.path);
         break;
     }

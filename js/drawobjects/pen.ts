@@ -3,7 +3,7 @@ import { Point, LineMode, DrawObject } from "./drawobject";
 const POINT_DISTANCE_THRESHOLD: number = 2;
 
 export class Pen implements DrawObject {
-  lineMode: LineMode = "stroke";
+  lineMode: LineMode = LineMode.Stroke;
 
   path: Path2D;
 
