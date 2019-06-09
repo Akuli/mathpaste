@@ -16,7 +16,14 @@ import "../pics/line.png";
 import "../pics/pen.png";
 import "../pics/save.png";
 
-const editor = new Editor("editor");
+const editor = new Editor("editor", {
+    selectionStyle: "text",
+    showLineNumbers: false,
+    showGutter: false,
+    wrap: true,
+    theme: "ace/theme/tomorrow_night_eighties",
+    mode: "ace/mode/asciimath",
+});
 const cm = new CanvasManager("draw-canvas");
 const pm = new PasteManager();
 const render = new Renderer("renderedLines");
@@ -42,7 +49,7 @@ editor.on("change", (newMath, isUserInput) => {
 
 editor.on("change", () => render.render(editor.contents));
 
-editor.on("cursorMoved", () => render.selectLine(editor.getActualLineIndex()));
+editor.on("cursorMoved", () => render.selectLine(editor.getRenderedLineIndex()));
 
 // this is for mathpaste-gtk
 (window as any).mathpaste = {
@@ -110,6 +117,7 @@ thing again and I couldn't reproduce the problem (wut).
 PLEASE DON'T REWRITE THIS VERY DIFFERENTLY unless you truly understand what is
 going on, unlike anyone else who has worked on mathpaste so far!
 */
+editor.deleteKeybinding("ctrl-z");
 document.addEventListener("keydown", event => {
   if (event.key === "z" && event.ctrlKey) {
     if (shownBoxManager.hasClass(boxes.draw.boxElement)) {
