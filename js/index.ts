@@ -90,6 +90,9 @@ const createBox = (prefix: string) => {
   boxElement.addEventListener("click", e => e.stopPropagation());
   buttonElement.addEventListener("click", e => e.stopPropagation());
 
+  // Prevent random vertices from appearing in the draw area
+  buttonElement.addEventListener("mouseup", e => e.stopPropagation());
+
   buttonElement.addEventListener("click", () => shownBoxManager.toggleClass(boxElement));
 
   return { boxElement, buttonElement };
