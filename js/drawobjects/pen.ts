@@ -26,7 +26,10 @@ export class Pen implements DrawObject {
   }
 
   addPoint(point: Point) {
-    if (this.shouldAdd(point)) this.path.lineTo(...point);
+    if (this.shouldAdd(point)) {
+      this.path.lineTo(...point);
+      this.points.push(point);
+    }
   }
 
   onMouseMove(point: Point) {
