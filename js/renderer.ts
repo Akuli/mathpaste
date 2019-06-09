@@ -4,8 +4,7 @@ import { default as scrollIntoView, Options } from "scroll-into-view-if-needed";
 import * as markedTs from 'marked-ts';
 
 import { RadioClassManager } from "./utils";
-
-const TEXT_PREFIX: string = "> ";
+import * as consts from './consts';
 
 
 class MathpasteMarkdownRenderer extends markedTs.Renderer {
@@ -60,8 +59,8 @@ export default class Renderer {
     const lineElement = this.elements[idx];
 
     let needsMathjax: bool;
-    if (line.startsWith(TEXT_PREFIX)) {
-      line = line.substr(TEXT_PREFIX.length);
+    if (line.startsWith(consts.TEXT_PREFIX)) {
+      line = line.substr(consts.TEXT_PREFIX.length);
       // XXX(PurpleMyst): Are the next two lines slow enough that we have to use `setImmediate`?
       // akuli: the first of those 2 lines is gone now, it used to be `await import("marked-ts");`
       lineElement.innerHTML = markedTs.Marked.parse(line);
