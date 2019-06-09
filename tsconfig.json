@@ -1,14 +1,9 @@
 {
     "compilerOptions": {
         "module": "esnext",
-        "target": "es6",
+        "target": "esnext",
         "strict": true,
-        "strictNullChecks": true,
-        "strictBindCallApply": true,
-        "strictFunctionTypes": true,
-        "strictPropertyInitialization": true,
         "moduleResolution": "node",
-        "noImplicitAny": true,
         "sourceMap": true
     }
 }
