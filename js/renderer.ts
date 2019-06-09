@@ -1,21 +1,7 @@
 import { default as scrollIntoView, Options } from "scroll-into-view-if-needed";
 
-// TODO(akuli): myst's code used to lazy-load this, so maybe add that back?
-import * as markedTs from 'marked-ts';
-
 import { RadioClassManager } from "./utils";
-import * as consts from './consts';
-
-// I have no idea why marked-ts uses global options instead of setting the
-// options on a markdown parser instance or something
-markedTs.Marked.setOptions({renderer: new class extends markedTs.Renderer {
-  // markdown like `x^2=1` runs this
-  // the ` characters that this returns are used by mathjax
-  codespan(text: string): string {
-    return '`' + text + '`';
-  }
-}});
-
+import { TEXT_PREFIX } from './consts';
 
 export default class Renderer {
   /* this is created per-instance */
@@ -25,6 +11,7 @@ export default class Renderer {
   private lineContainer: HTMLElement;
 
   private selectedManager: RadioClassManager = new RadioClassManager("selected");
+  private markedImported: boolean = false;
 
   constructor(lineContainerId: string) {
     this.lineContainer = document.getElementById(lineContainerId)!;
@@ -51,11 +38,25 @@ export default class Renderer {
   private async renderLine(line: string, idx: number) {
     const lineElement = this.elements[idx];
 
-    if (line.startsWith(consts.TEXT_PREFIX)) {
-      line = line.substr(consts.TEXT_PREFIX.length);
-      // XXX(PurpleMyst): Are the next two lines slow enough that we have to use `setImmediate`?
-      // akuli: the first of those 2 lines is gone now, it used to be `await import("marked-ts");`
-      lineElement.innerHTML = markedTs.Marked.parse(line);
+    if (line.startsWith(TEXT_PREFIX)) {
+      const marked = await import("marked-ts");
+
+      if (!this.markedImported) {
+        // I have no idea why marked-ts uses global options instead of setting the
+        // options on a markdown parser instance or something
+        marked.Marked.setOptions({renderer: new class extends marked.Renderer {
+          // markdown like `x^2=1` runs this
+          // the ` characters that this returns are used by mathjax
+          codespan(text: string): string {
+            return '`' + text + '`';
+          }
+        }});
+
+        this.markedImported = true;
+      }
+
+      line = line.substr(TEXT_PREFIX.length);
+      lineElement.innerHTML = marked.Marked.parse(line);
 
       // if the line contains `, we can render it as math
       if (line.indexOf('`') === -1) return;
