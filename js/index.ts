@@ -151,6 +151,5 @@ MathJax.Hub.Register.StartupHook("End", async () => {
   cm.setImageString(imageString || "");
 
   editor.readOnly = false;
-  cm.readOnly = false;
 });
 MathJax.Hub.Configured();
