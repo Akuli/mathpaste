@@ -22,8 +22,6 @@ markedTs.Marked.setOptions({renderer: new MathpasteMarkdownRenderer});
 
 
 export default class Renderer {
-  private literate: boolean = false;
-
   /* TODO(akuli): is the [] shared by all instances like it would be in a python class
   variable? it doesn't matter if it is because there's only 1 Renderer object
   used, but what if more Renderer objects are created in a later version of
