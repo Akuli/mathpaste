@@ -124,8 +124,8 @@ export class CanvasManager extends EventEmitter {
   redraw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+    this.imageData = null;
     this.objects.forEach(obj => {
-      this.imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
       this.draw(obj);
     });
 
