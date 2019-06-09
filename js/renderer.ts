@@ -1,7 +1,7 @@
 import { default as scrollIntoView, Options } from "scroll-into-view-if-needed";
 
 import { RadioClassManager } from "./utils";
-import { TEXT_PREFIX } from './consts';
+import { TEXT_PREFIX } from "./consts";
 
 export default class Renderer {
   /* this is created per-instance */
@@ -42,15 +42,15 @@ export default class Renderer {
       const marked = await import("marked-ts");
 
       if (!this.markedImported) {
-        // I have no idea why marked-ts uses global options instead of setting the
-        // options on a markdown parser instance or something
-        marked.Marked.setOptions({renderer: new class extends marked.Renderer {
-          // markdown like `x^2=1` runs this
-          // the ` characters that this returns are used by mathjax
-          codespan(text: string): string {
-            return '`' + text + '`';
-          }
-        }});
+        marked.Marked.setOptions({
+          renderer: new class extends marked.Renderer {
+            // markdown like `x^2=1` runs this
+            // the ` characters that this returns are used by mathjax
+            codespan(text: string): string {
+              return "`" + text + "`";
+            }
+          }(),
+        });
 
         this.markedImported = true;
       }
@@ -59,7 +59,7 @@ export default class Renderer {
       lineElement.innerHTML = marked.Marked.parse(line);
 
       // if the line contains `, we can render it as math
-      if (line.indexOf('`') === -1) return;
+      if (line.indexOf("`") === -1) return;
     } else {
       lineElement.textContent = "`" + line + "`";
     }

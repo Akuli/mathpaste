@@ -17,7 +17,7 @@ defineMode("literate_asciimath",
         regex: /(?=.)/,
         next: "asciimath-start",
       },
-    ]
+    ],
   },
   [
     {
@@ -29,7 +29,7 @@ defineMode("literate_asciimath",
           regex: /^$/,
           next: "start",
         },
-      ]
+      ],
     },
 
     {
@@ -41,7 +41,7 @@ defineMode("literate_asciimath",
           regex: /^$/,
           next: "start",
         },
-      ]
+      ],
     },
-  ]
+  ],
 );

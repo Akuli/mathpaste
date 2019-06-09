@@ -22,10 +22,10 @@ export function defineMode(name: string, highlightRules: HighlightRules, embeds:
     ["require", "exports", "ace/mode/text", `ace/mode/${name}_highlight_rules`],
     (acequire: any, exports: any) => {
       const TextMode = acequire("ace/mode/text").Mode;
-      const HighlightRules = acequire(`ace/mode/${name}_highlight_rules`).HighlightRules;
+      const ModeHighlightRules = acequire(`ace/mode/${name}_highlight_rules`).HighlightRules;
 
       exports.Mode = class extends TextMode {
-        HighlightRules: typeof HighlightRules = HighlightRules;
+        HighlightRules: typeof ModeHighlightRules = ModeHighlightRules;
       };
     },
   );
@@ -47,10 +47,10 @@ export function defineMode(name: string, highlightRules: HighlightRules, embeds:
           embeds.forEach(embed => this.embedRules(
             acequire(`ace/mode/${embed.moduleName}_highlight_rules`)[embed.highlightClassName],
             `${embed.moduleName}-`,
-            embed.extraState
+            embed.extraState,
           ));
         }
       };
-    }
+    },
   );
 }
