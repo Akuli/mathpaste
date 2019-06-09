@@ -2,7 +2,7 @@ import * as ace from "brace";
 import "brace/theme/tomorrow_night_eighties";
 import { EventEmitter } from "events";
 
-import "./modes/literate_asciimath";
+import "./modes/asciimath";
 
 export default class Editor extends EventEmitter {
   private editor: ace.Editor;
@@ -16,7 +16,7 @@ export default class Editor extends EventEmitter {
     this.editor.setOption("showGutter", false);
     this.editor.setOption("wrap", true);
     this.editor.setTheme("ace/theme/tomorrow_night_eighties");
-    this.editor.getSession().setMode("ace/mode/literate_asciimath");
+    this.editor.getSession().setMode("ace/mode/asciimath");
     this.registerEventHandlers();
 
     // undoing is done differently, it should undo either in the math only or
@@ -48,6 +48,10 @@ export default class Editor extends EventEmitter {
   set contents(value: string) {
     this.editor.getSession().setValue(value);
     this.emit("change", this.contents, false);
+  }
+
+  setMode(modeName: string) {
+    this.editor.getSession().setMode(modeName);
   }
 
   get readOnly() {

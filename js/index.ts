@@ -4,6 +4,7 @@ import Editor from "./editor";
 import Renderer from "./renderer";
 import PasteManager from "./pasteManager";
 import { RadioClassManager } from "./utils";
+import { TEXT_PREFIX } from "./consts";
 
 // files included in the output
 import "../index.html";
@@ -24,6 +25,13 @@ cm.on("change", () => storageManager.setImageString(cm.getImageString()));
 
 editor.on("change", (_, isUserInput) => {
   if (isUserInput) window.location.hash = "";
+});
+
+editor.on("change", async (contents: string) => {
+  if (contents.split("\n\n").some(line => line.startsWith(TEXT_PREFIX))) {
+    await import("./modes/literate_asciimath");
+    editor.setMode("ace/mode/literate_asciimath");
+  }
 });
 
 let useLocalStorage = true;
