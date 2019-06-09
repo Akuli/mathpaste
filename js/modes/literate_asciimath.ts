@@ -1,20 +1,21 @@
 import "brace/mode/markdown";
 
 import { defineMode } from "./defineMode";
-import { LITERATE_PREFIX } from "../consts";
+import { TEXT_PREFIX } from "../consts";
+import "./asciimath";
 
 defineMode("literate_asciimath",
   {
     start: [
       {
         token: "comment.block",
-        regex: "^" + LITERATE_PREFIX,
-        next: "asciimath-start",
+        regex: "^" + TEXT_PREFIX,
+        next: "markdown-start",
       },
       {
         token: "",
         regex: /(?=.)/,
-        next: "markdown-start",
+        next: "asciimath-start",
       },
     ]
   },
