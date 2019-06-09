@@ -58,7 +58,7 @@ export default class Renderer {
   private async renderLine(line: string, idx: number) {
     const lineElement = this.elements[idx];
 
-    let needsMathjax: bool;
+    let needsMathjax: boolean;
     if (line.startsWith(consts.TEXT_PREFIX)) {
       line = line.substr(consts.TEXT_PREFIX.length);
       // XXX(PurpleMyst): Are the next two lines slow enough that we have to use `setImmediate`?
