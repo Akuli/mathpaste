@@ -5,7 +5,6 @@ const resolve = require("path").resolve;
 module.exports = {
   entry: "./js/index.ts",
   mode: "production",
-  devtool: "source-map",
   output: {
     filename: "main.js",
     path: resolve(__dirname, "dist"),
@@ -41,6 +40,7 @@ module.exports = {
       },
       {
         test: /\.(html|css|png)$/,
+        exclude: /node_modules/,
         use: {
           loader: "file-loader",
           options: {

@@ -60,6 +60,10 @@ You can now start a development server, with live reloading, by running
 
 Then visiting http://localhost:8080/
 
+If for some reason you want a source-map for better debugging, you can use
+
+    $ npm run start --devtool sourcemap
+
 If you want to distribute this somewhere, you must run
 
     $ npm run build
