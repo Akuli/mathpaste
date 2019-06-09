@@ -75,11 +75,10 @@ export class CanvasManager extends EventEmitter {
     // document because mouse up outside canvas must also stop drawing
     document.addEventListener("mouseup", event => {
       if (this.readOnly) return;
-      if (!this.drawing) return;
 
       // Draw a vertex instead of empty stuff.
       if (!mouseMoved) {
-        this.objects.pop();
+        if (this.drawing) this.objects.pop();
         const vertex = new Circle(xyFromEvent(event), true, 2);
         this.objects.push(vertex);
         this.draw(vertex);

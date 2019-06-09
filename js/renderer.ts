@@ -44,7 +44,7 @@ export default class Renderer {
   private async renderLine(line: string, idx: number) {
     const lineElement = this.elements[idx];
 
-    if (this.literate && line.startsWith(LITERATE_PREFIX)) {
+    if (!this.literate || line.startsWith(LITERATE_PREFIX)) {
       line = line.substr(LITERATE_PREFIX.length);
       lineElement.textContent = "`" + line + "`";
       MathJax.Hub.Queue(["Typeset", MathJax.Hub, lineElement]);
