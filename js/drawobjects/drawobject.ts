@@ -1,6 +1,9 @@
 export type Point = [number, number];
 
-export enum LineMode { Stroke, Fill }
+export enum LineMode {
+  Stroke,
+  Fill,
+}
 
 export interface DrawObject {
   lineMode: LineMode;

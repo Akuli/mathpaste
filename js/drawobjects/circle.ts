@@ -21,7 +21,7 @@ export class Circle implements DrawObject {
   // 'circle;x;y;r;0' is an open circle centered at (x,y) with radius r
   // x, y and r are integers
   toStringPart() {
-    return "circle;" + this.center.join(";") + ";" + this.radius + ";" + (+!!(this.lineMode === LineMode.Fill));
+    return "circle;" + this.center.join(";") + ";" + this.radius + ";" + +!!(this.lineMode === LineMode.Fill);
   }
 
   static fromStringPart(stringPart: string): DrawObject {

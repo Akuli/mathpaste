@@ -34,8 +34,8 @@ import * as storageManager from "./storage";
 import * as firebase from "firebase/app";
 
 type Paste = {
-    math: string | null,
-    imageString: string | null,
+  math: string | null;
+  imageString: string | null;
 };
 
 export default class PasteManager {
@@ -81,7 +81,7 @@ export default class PasteManager {
 
     if (hash.startsWith("#saved:")) {
       const pasteId = hash.substr("#saved:".length);
-      return (await this.getPasteFromFirebase(pasteId));
+      return await this.getPasteFromFirebase(pasteId);
     }
 
     return null;
@@ -89,7 +89,10 @@ export default class PasteManager {
 
   private async getPasteFromFirebase(pasteId: string): Promise<Paste> {
     const fb = await this.getFirebaseApp();
-    const value = (await fb.database().ref(`maths/${pasteId}`).once("value")).val();
+    const value = (await fb
+      .database()
+      .ref(`maths/${pasteId}`)
+      .once("value")).val();
 
     // value.image may be missing or empty because backwards compat with older mathpastes
     // but the empty string is not valid LZString utf16 compressed stuff
@@ -102,10 +105,13 @@ export default class PasteManager {
   async uploadPaste(math: string, imageString: string) {
     // ref represents the object that represents the math in firebase
     const fb = await this.getFirebaseApp();
-    const ref = await fb.database().ref("maths").push();
+    const ref = await fb
+      .database()
+      .ref("maths")
+      .push();
     ref.set({
       content: math,
-      timestamp: (new Date()).valueOf(),
+      timestamp: new Date().valueOf(),
       image: LZString.compressToUTF16(imageString),
     });
     return ref.key;

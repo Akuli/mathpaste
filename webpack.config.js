@@ -10,7 +10,7 @@ module.exports = {
     path: resolve(__dirname, "dist"),
   },
   resolve: {
-    extensions: [ ".ts", ".js" ]
+    extensions: [".ts", ".js"],
   },
   module: {
     rules: [
@@ -23,20 +23,20 @@ module.exports = {
             passPerPreset: true,
             presets: [
               "@babel/preset-typescript",
-              ["@babel/preset-env", {
-                targets: "> 0.25%, not dead",
-                modules: "false",
-                useBuiltIns: "usage",
-                corejs: "2.0.0",
-                exclude: ["@babel/plugin-transform-regenerator"],
-              }]
+              [
+                "@babel/preset-env",
+                {
+                  targets: "> 0.25%, not dead",
+                  modules: "false",
+                  useBuiltIns: "usage",
+                  corejs: "2.0.0",
+                  exclude: ["@babel/plugin-transform-regenerator"],
+                },
+              ],
             ],
-            plugins: [
-              "@babel/plugin-syntax-dynamic-import",
-              "@babel/plugin-proposal-class-properties"
-            ],
-          }
-        }
+            plugins: ["@babel/plugin-syntax-dynamic-import", "@babel/plugin-proposal-class-properties"],
+          },
+        },
       },
       {
         test: /\.(html|css|png)$/,
@@ -44,10 +44,10 @@ module.exports = {
         use: {
           loader: "file-loader",
           options: {
-            name: "[path][name].[ext]"
-          }
-        }
-      }
-    ]
+            name: "[path][name].[ext]",
+          },
+        },
+      },
+    ],
   },
 };

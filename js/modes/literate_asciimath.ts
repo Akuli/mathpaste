@@ -4,7 +4,8 @@ import { defineMode } from "./defineMode";
 import { TEXT_PREFIX } from "../consts";
 import "./asciimath";
 
-defineMode("literate_asciimath",
+defineMode(
+  "literate_asciimath",
   {
     start: [
       {

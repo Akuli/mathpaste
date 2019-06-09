@@ -17,12 +17,12 @@ import "../pics/pen.png";
 import "../pics/save.png";
 
 const editor = new Editor("editor", {
-    selectionStyle: "text",
-    showLineNumbers: false,
-    showGutter: false,
-    wrap: true,
-    theme: "ace/theme/tomorrow_night_eighties",
-    mode: "ace/mode/asciimath",
+  selectionStyle: "text",
+  showLineNumbers: false,
+  showGutter: false,
+  wrap: true,
+  theme: "ace/theme/tomorrow_night_eighties",
+  mode: "ace/mode/asciimath",
 });
 const cm = new CanvasManager("draw-canvas");
 const pm = new PasteManager();
@@ -104,8 +104,7 @@ const boxes = {
   save: createBox("save"),
 };
 
-shownBoxManager.on("change",
-  () => cm.readOnly = !shownBoxManager.hasClass(boxes.draw.boxElement));
+shownBoxManager.on("change", () => (cm.readOnly = !shownBoxManager.hasClass(boxes.draw.boxElement)));
 
 /*
 if you think that you can do this in some other way, you are likely wrong.

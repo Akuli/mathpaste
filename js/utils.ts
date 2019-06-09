@@ -7,7 +7,9 @@ import { EventEmitter } from "events";
 export class RadioClassManager extends EventEmitter {
   private currentElement: HTMLElement | null = null;
 
-  constructor(public className: string) { super(); }
+  constructor(public className: string) {
+    super();
+  }
 
   addClass(element: HTMLElement) {
     this.removeClass();

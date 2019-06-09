@@ -43,13 +43,13 @@ export default class Renderer {
 
       if (!this.markedImported) {
         marked.Marked.setOptions({
-          renderer: new class extends marked.Renderer {
+          renderer: new (class extends marked.Renderer {
             // markdown like `x^2=1` runs this
             // the ` characters that this returns are used by mathjax
             codespan(text: string): string {
               return "`" + text + "`";
             }
-          }(),
+          })(),
         });
 
         this.markedImported = true;

@@ -6,7 +6,7 @@ export function setMath(newMath: string) {
   localStorage.setItem("mathpaste-math", newMath);
 }
 
-export function getImageString(): string | null  {
+export function getImageString(): string | null {
   return localStorage.getItem("mathpaste-image-string");
 }
 
