@@ -1,1 +1,1 @@
-export const TEXT_PREFIX: string = "> ";
+export const TEXT_PREFIX: string = ">";
