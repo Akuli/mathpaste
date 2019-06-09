@@ -6,26 +6,19 @@ import * as markedTs from 'marked-ts';
 import { RadioClassManager } from "./utils";
 import * as consts from './consts';
 
-
-class MathpasteMarkdownRenderer extends markedTs.Renderer {
+// I have no idea why marked-ts uses global options instead of setting the
+// options on a markdown parser instance or something
+markedTs.Marked.setOptions({renderer: new class extends markedTs.Renderer {
   // markdown like `x^2=1` runs this
   // the ` characters that this returns are used by mathjax
   codespan(text: string): string {
     return '`' + text + '`';
   }
-}
-
-// I have no idea why marked-ts uses global options instead of setting the
-// options on a markdown parser instance or something
-markedTs.Marked.setOptions({renderer: new MathpasteMarkdownRenderer});
+}});
 
 
 export default class Renderer {
-  /* TODO(akuli): is the [] shared by all instances like it would be in a python class
-  variable? it doesn't matter if it is because there's only 1 Renderer object
-  used, but what if more Renderer objects are created in a later version of
-  mathpaste for whatever reason? could cause a somewhat hard-to-debug bug
-  */
+  /* this is created per-instance */
   private oldLines: string[] = [];
 
   private elements: HTMLElement[] = [];
@@ -58,21 +51,19 @@ export default class Renderer {
   private async renderLine(line: string, idx: number) {
     const lineElement = this.elements[idx];
 
-    let needsMathjax: boolean;
     if (line.startsWith(consts.TEXT_PREFIX)) {
       line = line.substr(consts.TEXT_PREFIX.length);
       // XXX(PurpleMyst): Are the next two lines slow enough that we have to use `setImmediate`?
       // akuli: the first of those 2 lines is gone now, it used to be `await import("marked-ts");`
       lineElement.innerHTML = markedTs.Marked.parse(line);
-      needsMathjax = (line.indexOf('`') !== -1);
+
+      // if the line contains `, we can render it as math
+      if (line.indexOf('`') === -1) return;
     } else {
       lineElement.textContent = "`" + line + "`";
-      needsMathjax = true;
     }
 
-    if (needsMathjax) {
-      MathJax.Hub.Queue(["Typeset", MathJax.Hub, lineElement]);
-    }
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, lineElement]);
   }
 
   async render(contents: string) {
