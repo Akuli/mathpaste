@@ -1,16 +1,19 @@
+import { EventEmitter } from "events";
+
 /**
  * Manages "radio classes", i.e. classes which only one element at a time
  * should have.
  */
-export class RadioClassManager {
+export class RadioClassManager extends EventEmitter {
   private currentElement: HTMLElement | null = null;
 
-  constructor(public className: string) {}
+  constructor(public className: string) { super(); }
 
   addClass(element: HTMLElement) {
     this.removeClass();
     element.classList.add(this.className);
     this.currentElement = element;
+    this.emit("change");
   }
 
   toggleClass(element: HTMLElement) {
@@ -24,6 +27,7 @@ export class RadioClassManager {
 
     this.currentElement.classList.remove(this.className);
     this.currentElement = null;
+    this.emit("change");
   }
 
   hasClass(element: HTMLElement): boolean {
