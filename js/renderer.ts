@@ -17,7 +17,7 @@ export default class Renderer {
     this.lineContainer = document.getElementById(lineContainerId)!;
   }
 
-  private insertNewLineElement(idx: number) {
+  private insertNewLineElement(idx: number): HTMLElement {
     const lineElement = document.createElement("div");
     lineElement.classList.add("line");
 
@@ -28,6 +28,8 @@ export default class Renderer {
       this.lineContainer.insertBefore(lineElement, this.lineContainer.children[idx]);
       this.elements.splice(idx, 0, lineElement);
     }
+
+    return lineElement;
   }
 
   private removeLineElement(idx: number) {
@@ -55,9 +57,7 @@ export default class Renderer {
     return marked;
   }
 
-  private async renderLine(line: string, idx: number) {
-    const lineElement = this.elements[idx];
-
+  private async renderLine(line: string, lineElement: HTMLElement) {
     if (line.startsWith(TEXT_PREFIX)) {
       const marked = await this.marked();
 
@@ -81,13 +81,14 @@ export default class Renderer {
     for (const change of diff.diffArrays(this.oldLines, newLines)) {
       for (const line of change.value) {
         if (change.added) {
-          this.insertNewLineElement(lineIndex);
-          this.renderLine(line, lineIndex);
+          this.renderLine(line, this.insertNewLineElement(lineIndex));
         } else if (change.removed) {
           this.removeLineElement(lineIndex);
           continue;
         }
 
+        // Do not place this in the `if (change.added)` branch because it is
+        // possible for both `change.added` and `change.removed` to be falsy.
         lineIndex += 1;
       }
     }
