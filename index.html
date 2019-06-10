@@ -1,15 +1,13 @@
 <html>
 <head>
     <title>MathPaste</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="./css/index.css"></link>
-    <!-- https://www.npmjs.com/package/scroll-into-view-if-needed -->
-    <script src="https://unpkg.com/scroll-into-view-if-needed/umd/scroll-into-view-if-needed.min.js"></script>
 </head>
 <body>
-    <div>
-        <div class="editor-container">
-            <div id="editor"></div>
-        </div>
+    <div id="main-content">
+        <div id="editor"></div>
 
         <div id="renderedLines"></div>
     </div>
@@ -76,6 +74,7 @@
             <div>
                 <input type="image" title="Pen" class="pic-button selected" id="draw-pen-button" src="pics/pen.png" />
                 <input type="image" title="Circle" class="pic-button" id="draw-circle-button" src="pics/circle.png" />
+                <input type="image" title="Filled Circle" class="pic-button" id="draw-filled-circle-button" src="pics/filled-circle.png" />
                 <input type="image" title="Line" class="pic-button" id="draw-line-button" src="pics/line.png" />
             </div>
             <canvas width="600" height="400" id="draw-canvas"></canvas>
@@ -89,23 +88,11 @@
         <div class="popup-box" id="settings-box"></div>
     </div>
 
-    <!-- these firebase things must be before other script tags for some reason -->
-    <script src="https://www.gstatic.com/firebasejs/5.0.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/5.0.0/firebase-database.js"></script>
-    <script>
-      // Initialize Firebase
-      var config = {
-        apiKey: "AIzaSyD3O2tMBXqz8Go4-xCz9P-HXBH7WNrX9N4",
-        authDomain: "mathpaste-8cc8e.firebaseapp.com",
-        databaseURL: "https://mathpaste-8cc8e.firebaseio.com",
-        projectId: "mathpaste-8cc8e",
-        storageBucket: "",
-        messagingSenderId: "204735746640"
-      };
-      firebase.initializeApp(config);
-    </script>
+    <!-- Because MathJax v2 dates back to 2006, it's impossible to get it to
+         play nicely with stuff such as webpack. So we just stuff it in here and hope for the best.
+         MathJax v3 seems to be unstable and I couldn't fiugre out how to use it (read: couldn't be bothered cause it's complex) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=AM_HTMLorMML&delayStartupUntil=configured"></script>
 
-    <script type="text/javascript" src="./js/require.js"></script>
-    <script type="text/javascript" src="./js/index.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
