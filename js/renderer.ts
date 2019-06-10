@@ -81,6 +81,9 @@ export default class Renderer {
     for (const change of diff.diffArrays(this.oldLines, newLines)) {
       for (const line of change.value) {
         if (change.added) {
+          // XXX: Should we `await this.renderLine`? I have also thought about
+          // making just adding the `renderLine` promises to a list and `await
+          // Promise.all`-ing them at the end.
           this.renderLine(line, this.insertNewLineElement(lineIndex));
         } else if (change.removed) {
           this.removeLineElement(lineIndex);
