@@ -35,25 +35,31 @@ export default class Renderer {
     this.lineContainer.removeChild(lineElement);
   }
 
+  private async marked() {
+    const marked = await import("marked-ts");
+
+    if (!this.markedImported) {
+      marked.Marked.setOptions({
+        renderer: new (class extends marked.Renderer {
+          // markdown like `x^2=1` runs this
+          // the ` characters that this returns are used by mathjax
+          codespan(text: string): string {
+            return "`" + text + "`";
+          }
+        })(),
+      });
+
+      this.markedImported = true;
+    }
+
+    return marked;
+  }
+
   private async renderLine(line: string, idx: number) {
     const lineElement = this.elements[idx];
 
     if (line.startsWith(TEXT_PREFIX)) {
-      const marked = await import("marked-ts");
-
-      if (!this.markedImported) {
-        marked.Marked.setOptions({
-          renderer: new (class extends marked.Renderer {
-            // markdown like `x^2=1` runs this
-            // the ` characters that this returns are used by mathjax
-            codespan(text: string): string {
-              return "`" + text + "`";
-            }
-          })(),
-        });
-
-        this.markedImported = true;
-      }
+      const marked = await this.marked();
 
       line = line.substr(TEXT_PREFIX.length);
       lineElement.innerHTML = marked.Marked.parse(line);
