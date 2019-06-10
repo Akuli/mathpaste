@@ -69,7 +69,8 @@ If you want to distribute this somewhere, you must run
     $ npm run build
 
 Then, `dist/` will contain the "compiled" webapp which you can put on your
-server or deploy to gh-pages with `deploy.sh`.
+server or deploy to gh-pages with `deploy.sh`. You can run `deploy.sh`
+without arguments.
 
 Types are not checked by `npm run build` or `npm run start`. You can check
 types either by utilizing a language server in your editor, which is out of
