@@ -6,6 +6,7 @@ import "./modes/asciimath";
 
 export default class Editor extends EventEmitter {
   private editor: ace.Editor;
+  private isSettingContents: boolean = false;
 
   constructor(editorId: string, options: any) {
     super();
@@ -26,7 +27,11 @@ export default class Editor extends EventEmitter {
   private registerEventHandlers() {
     const session = this.editor.getSession();
 
-    session.on("change", () => this.emit("change", this.contents, true));
+    session.on("change", () => {
+      if (!this.isSettingContents) {
+        this.emit("change", this.contents, /* created by user: */true);
+      }
+    });
 
     session.selection.on("changeCursor", () =>
       this.emit("cursorMoved", this.editor.getCursorPosition(), this.contents),
@@ -38,8 +43,17 @@ export default class Editor extends EventEmitter {
   }
 
   set contents(value: string) {
-    this.editor.getSession().setValue(value);
-    this.emit("change", this.contents, false);
+    // this would trigger an registerEventHandlers() callback without
+    // the isSettingContents attribute, which created funny bugs before
+    // isSettingContents was added
+    this.isSettingContents = true;
+    try {
+      this.editor.getSession().setValue(value);
+    } finally {
+      this.isSettingContents = false;
+    }
+
+      this.emit("change", this.contents, /* not created by user: */false);
   }
 
   setMode(modeName: string) {
