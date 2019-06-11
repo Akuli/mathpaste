@@ -10,14 +10,16 @@ on the canvas and with lots of stuff drawn
 */
 
 import { RadioClassManager, StrictEventEmitter, xyFromEvent } from "./utils";
+import { Pen } from "./drawobjects/pen";
+import { Circle } from "./drawobjects/circle";
 
 import { Point, LineMode, DrawObject } from "./drawobjects/drawobject";
-import { Pen, StraightLine } from "./drawobjects/pen";
-import { Circle } from "./drawobjects/circle";
 
 interface CanvasManagerEvents {
   change: () => void;
 }
+
+type Buttons = Record<string, (point: Point) => DrawObject>;
 
 export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   canvas: HTMLCanvasElement;
@@ -39,12 +41,17 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     this.canvas = document.getElementById(canvasId)! as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d")!;
 
-    this.createButton("pen", p => new Pen(p)).click();
-    this.createButton("circle", p => new Circle(p));
-    this.createButton("filled-circle", p => new Circle(p, true));
-    this.createButton("line", p => new StraightLine(p));
-
     this.registerEventHandlers();
+  }
+
+  createButtons<B extends Buttons>(buttons: B): Record<keyof B, HTMLButtonElement> {
+    const result = {} as Record<string, HTMLButtonElement>;
+
+    for (const [type, factory] of Object.entries(buttons)) {
+      result[type] = this.createButton(type, factory);
+    }
+
+    return result as Record<keyof B, HTMLButtonElement>;
   }
 
   private registerEventHandlers() {

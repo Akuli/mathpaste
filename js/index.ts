@@ -6,6 +6,9 @@ import PasteManager from "./pasteManager";
 import { RadioClassManager } from "./utils";
 import { TEXT_PREFIX } from "./consts";
 
+import { Pen, StraightLine } from "./drawobjects/pen";
+import { Circle } from "./drawobjects/circle";
+
 // files included in the output
 import "../index.html";
 import "../css/index.css";
@@ -27,6 +30,14 @@ const editor = new Editor("editor", {
 const cm = new CanvasManager("draw-canvas");
 const pm = new PasteManager();
 const render = new Renderer("renderedLines");
+
+const buttons = cm.createButtons({
+  pen: p => new Pen(p),
+  circle: p => new Circle(p),
+  "filled-circle": p => new Circle(p, true),
+  line: p => new StraightLine(p),
+});
+buttons.pen.click();
 
 cm.on("change", () => storageManager.setImageString(cm.getImageString()));
 
