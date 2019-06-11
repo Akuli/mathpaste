@@ -14,7 +14,7 @@ export default class Renderer {
   private markedImported: boolean = false;
 
   // XXX: need to find a good value for this
-  private renderDebouncer: Debouncer = new Debouncer(100);
+  private renderDebouncer: Debouncer = new Debouncer(10);
 
   constructor(lineContainerId: string) {
     this.lineContainer = document.getElementById(lineContainerId)!;
