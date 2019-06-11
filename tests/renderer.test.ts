@@ -26,4 +26,35 @@ describe("Renderer", () => {
     await renderer.render(TEXT_PREFIX + "how **bold** of you");
     expect(lineContainer.innerHTML).toBe(`<div class="line"><p>how <strong>bold</strong> of you</p>\n</div>`);
   });
+
+  it("should keep state consistent after concurrent render calls", async () => {
+    const lineContainer = createLineContainer();
+    const renderer = new Renderer(lineContainer.id);
+
+    let toRender = "";
+    const actions = [
+      () => {
+        toRender = "";
+      },
+      () => {
+        toRender += Array(10)
+          .fill("a^2 + b^2 = c^2")
+          .join("\n\n");
+      },
+    ];
+
+    const promiseArray = [];
+    for (let i = 0; i < 10; i++) {
+      const act = actions[i % actions.length];
+      act();
+      promiseArray.push(renderer.render(toRender));
+    }
+    promiseArray.push(renderer.render(""));
+
+    const results = await Promise.all(promiseArray);
+    expect(lineContainer.innerHTML).toBe('<div class="line">``</div>');
+    expect(results).toEqual(
+      new Array(promiseArray.length).fill(undefined).map((_, idx) => idx === promiseArray.length - 1),
+    );
+  });
 });

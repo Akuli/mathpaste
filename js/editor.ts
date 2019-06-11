@@ -29,7 +29,7 @@ export default class Editor extends EventEmitter {
 
     session.on("change", () => {
       if (!this.isSettingContents) {
-        this.emit("change", this.contents, /* created by user: */true);
+        this.emit("change", this.contents, /* created by user: */ true);
       }
     });
 
@@ -53,7 +53,7 @@ export default class Editor extends EventEmitter {
       this.isSettingContents = false;
     }
 
-      this.emit("change", this.contents, /* not created by user: */false);
+    this.emit("change", this.contents, /* not created by user: */ false);
   }
 
   setMode(modeName: string) {
