@@ -99,6 +99,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     const elementId = `draw-${type}-button`;
     const element = document.getElementById(elementId)! as HTMLButtonElement;
 
+    // avoid drawing in the canvas
     element.addEventListener("mouseup", event => event.stopPropagation());
 
     element.addEventListener("click", () => {

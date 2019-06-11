@@ -29,8 +29,6 @@ TODO: delete old maths regularly?
 
 import * as LZString from "lz-string";
 
-import * as storageManager from "./storage";
-
 import * as firebase from "firebase/app";
 
 type Paste = {
@@ -62,8 +60,8 @@ export default class PasteManager {
     const hashPaste = await this.getPasteFromHash(window.location.hash);
     if (hashPaste) return hashPaste;
 
-    const math = storageManager.getMath();
-    const imageString = storageManager.getImageString();
+    const math = localStorage.getItem("mathpaste-math");
+    const imageString = localStorage.getItem("mathpaste-image-string");
     return { math, imageString };
   }
 
@@ -115,5 +113,13 @@ export default class PasteManager {
       image: LZString.compressToUTF16(imageString),
     });
     return ref.key;
+  }
+
+  saveMath(math: string) {
+    localStorage.setItem("mathpaste-math", math);
+  }
+
+  saveImageString(imageString: string) {
+    localStorage.setItem("mathpaste-image-string", imageString);
   }
 }

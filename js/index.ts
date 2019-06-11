@@ -1,4 +1,3 @@
-import * as storageManager from "./storage";
 import { CanvasManager } from "./canvasmanager";
 import { Editor, ChangeType } from "./editor";
 import Renderer from "./renderer";
@@ -39,7 +38,7 @@ const buttons = cm.createButtons({
 });
 buttons.pen.click();
 
-cm.on("change", () => storageManager.setImageString(cm.getImageString()));
+cm.on("change", () => pm.saveImageString(cm.getImageString()));
 
 editor.on("change", (_, changeType) => {
   if (changeType === ChangeType.UserInput) window.location.hash = "";
@@ -55,7 +54,7 @@ editor.on("change", async (contents: string) => {
 let useLocalStorage = true;
 editor.on("change", (newMath, changeType) => {
   if (!useLocalStorage || changeType !== ChangeType.UserInput) return;
-  storageManager.setMath(newMath);
+  pm.saveMath(newMath);
 });
 
 editor.on("change", () => render.render(editor.contents));
