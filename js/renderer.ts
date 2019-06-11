@@ -1,4 +1,4 @@
-import { default as scrollIntoView, Options } from "scroll-into-view-if-needed";
+import scrollIntoView, { Options } from "scroll-into-view-if-needed";
 
 import { RadioClassManager, Debouncer } from "./utils";
 import { TEXT_PREFIX } from "./consts";
