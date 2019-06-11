@@ -47,7 +47,7 @@ editor.on("change", (_, changeType) => {
 editor.on("change", async (contents: string) => {
   if (contents.split("\n\n").some(line => line.startsWith(TEXT_PREFIX))) {
     await import("./modes/literate_asciimath");
-    editor.setMode("ace/mode/literate_asciimath");
+    editor.mode = "ace/mode/literate_asciimath";
   }
 });
 

@@ -4,7 +4,7 @@
   "description": "MathPaste is a simple math-sharing service. Unlike most other math pastebins, like [mathb.in], it uses [asciimath] instead of LaTeX. We think that asciimath syntax is much nicer to work with than LaTeX syntax; for example, if you want to write fraction like this...",
   "private": true,
   "scripts": {
-    "test": "jest",
+    "test": "jest --verbose",
     "start": "webpack-dev-server",
     "build": "webpack",
     "check-types": "tsc --noEmit"

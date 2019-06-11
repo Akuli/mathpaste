@@ -63,8 +63,12 @@ export class Editor extends StrictEventEmitter<EditorEvents>() {
     }
   }
 
-  setMode(modeName: string) {
-    this.editor.getSession().setMode(modeName);
+  get mode() {
+    return (this.editor.getSession().getMode() as any).$id;
+  }
+
+  set mode(value: string) {
+    this.editor.getSession().setMode(value);
   }
 
   get readOnly() {
