@@ -30,7 +30,7 @@ const render = new Renderer("renderedLines");
 
 cm.on("change", () => storageManager.setImageString(cm.getImageString()));
 
-editor.on("change", (_, changeType: ChangeType) => {
+editor.on("change", (_, changeType) => {
   if (changeType === ChangeType.UserInput) window.location.hash = "";
 });
 
@@ -42,7 +42,7 @@ editor.on("change", async (contents: string) => {
 });
 
 let useLocalStorage = true;
-editor.on("change", (newMath: string, changeType: ChangeType) => {
+editor.on("change", (newMath, changeType) => {
   if (!useLocalStorage || changeType !== ChangeType.UserInput) return;
   storageManager.setMath(newMath);
 });

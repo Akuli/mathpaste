@@ -1,6 +1,7 @@
 import * as ace from "brace";
 import "brace/theme/tomorrow_night_eighties";
-import { EventEmitter } from "events";
+
+import { StrictEventEmitter } from "./utils";
 
 import "./modes/asciimath";
 
@@ -9,7 +10,12 @@ export enum ChangeType {
   SetContents,
 }
 
-export class Editor extends EventEmitter {
+interface EditorEvents {
+  change: (contents: string, changeType: ChangeType) => void;
+  cursorMoved: (position: ace.Position, contents: string) => void;
+}
+
+export class Editor extends StrictEventEmitter<EditorEvents>() {
   private editor: ace.Editor;
   private isSettingContents: boolean = false;
 

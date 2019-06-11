@@ -1,10 +1,20 @@
 import { EventEmitter } from "events";
+import ImportedStrictEventEmitter from "strict-event-emitter-types";
+
+// https://github.com/bterlson/strict-event-emitter-types/issues/3
+export function StrictEventEmitter<Events>() {
+  return EventEmitter as (new () => ImportedStrictEventEmitter<EventEmitter, Events>);
+}
+
+interface RadioClassManagerEvents {
+  change: () => void;
+}
 
 /**
  * Manages "radio classes", i.e. classes which only one element at a time
  * should have.
  */
-export class RadioClassManager extends EventEmitter {
+export class RadioClassManager extends StrictEventEmitter<RadioClassManagerEvents>() {
   private currentElement: HTMLElement | null = null;
 
   constructor(public className: string) {

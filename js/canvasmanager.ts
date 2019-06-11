@@ -9,15 +9,17 @@ that was still true after compressing with lzstring, with almost nothing drawn
 on the canvas and with lots of stuff drawn
 */
 
-import { EventEmitter } from "events";
-
-import { RadioClassManager, xyFromEvent } from "./utils";
+import { RadioClassManager, StrictEventEmitter, xyFromEvent } from "./utils";
 
 import { Point, LineMode, DrawObject } from "./drawobjects/drawobject";
 import { Pen, StraightLine } from "./drawobjects/pen";
 import { Circle } from "./drawobjects/circle";
 
-export class CanvasManager extends EventEmitter {
+interface CanvasManagerEvents {
+  change: () => void;
+}
+
+export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
 
