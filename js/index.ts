@@ -1,6 +1,6 @@
 import * as storageManager from "./storage";
 import { CanvasManager } from "./canvasmanager";
-import Editor from "./editor";
+import { Editor, ChangeType } from "./editor";
 import Renderer from "./renderer";
 import PasteManager from "./pasteManager";
 import { RadioClassManager } from "./utils";
@@ -30,8 +30,8 @@ const render = new Renderer("renderedLines");
 
 cm.on("change", () => storageManager.setImageString(cm.getImageString()));
 
-editor.on("change", (_, isUserInput) => {
-  if (isUserInput) window.location.hash = "";
+editor.on("change", (_, changeType: ChangeType) => {
+  if (changeType === ChangeType.UserInput) window.location.hash = "";
 });
 
 editor.on("change", async (contents: string) => {
@@ -42,8 +42,8 @@ editor.on("change", async (contents: string) => {
 });
 
 let useLocalStorage = true;
-editor.on("change", (newMath, isUserInput) => {
-  if (!useLocalStorage || !isUserInput) return;
+editor.on("change", (newMath: string, changeType: ChangeType) => {
+  if (!useLocalStorage || changeType !== ChangeType.UserInput) return;
   storageManager.setMath(newMath);
 });
 

@@ -4,7 +4,12 @@ import { EventEmitter } from "events";
 
 import "./modes/asciimath";
 
-export default class Editor extends EventEmitter {
+export enum ChangeType {
+  UserInput,
+  SetContents,
+}
+
+export class Editor extends EventEmitter {
   private editor: ace.Editor;
   private isSettingContents: boolean = false;
 
@@ -28,9 +33,7 @@ export default class Editor extends EventEmitter {
     const session = this.editor.getSession();
 
     session.on("change", () => {
-      if (!this.isSettingContents) {
-        this.emit("change", this.contents, /* created by user: */ true);
-      }
+      this.emit("change", this.contents, this.isSettingContents ? ChangeType.SetContents : ChangeType.UserInput);
     });
 
     session.selection.on("changeCursor", () =>
@@ -52,8 +55,6 @@ export default class Editor extends EventEmitter {
     } finally {
       this.isSettingContents = false;
     }
-
-    this.emit("change", this.contents, /* not created by user: */ false);
   }
 
   setMode(modeName: string) {
