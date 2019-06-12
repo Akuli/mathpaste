@@ -2,7 +2,11 @@ declare namespace MathJax {
   class Hub {
     static processSectionDelay: number;
 
-    static Queue(arg0: [string, any, HTMLElement]): void;
+    static Queue(
+      arg0:
+        | [string, unknown, HTMLElement]
+        | [string, unknown, HTMLElement, (math: string, element: HTMLElement) => void],
+    ): void;
 
     static Configured(): void;
 

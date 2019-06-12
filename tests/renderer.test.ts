@@ -4,12 +4,22 @@ import Renderer from "../js/renderer";
 describe("Renderer", () => {
   const createLineContainer = () => {
     const lineContainer = document.createElement("div");
-    lineContainer.id = "lineContainer" + new Date().valueOf();
+    lineContainer.id = "lineContainer" + new Date().valueOf() + Math.floor(Math.random() * 10);
     document.body.append(lineContainer);
     return lineContainer;
   };
 
-  (global as any).MathJax = { Hub: { Queue: jest.fn() } };
+  const renderCallbacks = new Map() as Map<string, () => void>;
+  const delayedCallbacks = new Set();
+  const MathjaxHubQueue = jest.fn(([cmd, hub, element, callback]: [string, MathJax.Hub, Element, () => void]) => {
+    expect(cmd).toBe("Typeset");
+    expect(hub).toBe(MathJax.Hub);
+    expect(element.parentElement).not.toBeNull();
+    renderCallbacks.set(element.parentElement!.id, callback);
+    if (!delayedCallbacks.has(element.parentElement!.id)) callback();
+  });
+
+  (global as any).MathJax = { Hub: { Queue: MathjaxHubQueue } };
 
   describe("#render()", () => {
     it("renders math by default", async () => {
@@ -18,7 +28,7 @@ describe("Renderer", () => {
       const math = "alpha + beta";
       await renderer.render(math);
       expect(lineContainer.innerHTML).toBe(`<div class="line">\`${math}\`</div>`);
-      expect(MathJax.Hub.Queue).toHaveBeenCalledWith(["Typeset", MathJax.Hub, lineContainer.firstChild]);
+      expect(MathJax.Hub.Queue).toHaveBeenCalledTimes(1);
     });
 
     it("renders markdown when prefixed with TEXT_PREFIX", async () => {
@@ -26,6 +36,25 @@ describe("Renderer", () => {
       const renderer = new Renderer(lineContainer.id);
       await renderer.render(TEXT_PREFIX + "how **bold** of you");
       expect(lineContainer.innerHTML).toBe(`<div class="line"><p>how <strong>bold</strong> of you</p>\n</div>`);
+    });
+
+    it("resolves only after math has been typeset", async () => {
+      const lineContainer = createLineContainer();
+      const renderer = new Renderer(lineContainer.id);
+      delayedCallbacks.add(lineContainer.id);
+
+      let timePassed = false;
+      const promise = renderer.render("");
+
+      setTimeout(() => {
+        timePassed = true;
+        const callback = renderCallbacks.get(lineContainer.id);
+        expect(callback).not.toBeUndefined();
+        callback!();
+      }, 10);
+
+      await promise;
+      expect(timePassed).toBeTruthy();
     });
 
     it("keeps state consistent even after concurrent render calls", async () => {

@@ -64,7 +64,10 @@ editor.on("change", (newMath, changeType) => {
   pm.saveMath(newMath);
 });
 
-editor.on("change", () => render.render(editor.contents));
+editor.on("change", async () => {
+  await render.render(editor.contents);
+  render.selectLine(editor.getRenderedLineIndex());
+});
 
 editor.on("cursorMoved", () => render.selectLine(editor.getRenderedLineIndex()));
 

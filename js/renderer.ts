@@ -73,7 +73,7 @@ export default class Renderer {
       lineElement.textContent = "`" + line + "`";
     }
 
-    MathJax.Hub.Queue(["Typeset", MathJax.Hub, lineElement]);
+    return new Promise(resolve => MathJax.Hub.Queue(["Typeset", MathJax.Hub, lineElement, () => resolve()]));
   }
 
   async render(contents: string): Promise<boolean> {
