@@ -158,6 +158,9 @@ code {
 
 #renderedLines > .line {
     padding: 0.5em;
+
+    transition-property: background-color;
+    transition-duration: 250ms;   /* shorter is unnoticable, longer is annoying */
 }
 
 #renderedLines > .line > p {
