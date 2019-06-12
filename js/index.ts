@@ -32,7 +32,9 @@ const render = new Renderer("renderedLines");
 
 const query = new URLSearchParams(window.location.search);
 if (query.has("vim")) {
-  editor.keyboardHandler = "ace/keyboard/vim";
+  import("brace/keybinding/vim").then(() => {
+    editor.keyboardHandler = "ace/keyboard/vim";
+  });
 }
 
 const buttons = cm.createButtons({
