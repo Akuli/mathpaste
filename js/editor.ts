@@ -1,5 +1,5 @@
-import * as ace from "brace";
-import "brace/theme/tomorrow_night_eighties";
+import * as ace from "ace-builds";
+import "ace-builds/webpack-resolver";
 
 import { StrictEventEmitter } from "./utils";
 
@@ -12,11 +12,11 @@ export enum ChangeType {
 
 interface EditorEvents {
   change: (contents: string, changeType: ChangeType) => void;
-  cursorMoved: (position: ace.Position, contents: string) => void;
+  cursorMoved: (position: ace.Ace.Point, contents: string) => void;
 }
 
 export class Editor extends StrictEventEmitter<EditorEvents>() {
-  private editor: ace.Editor;
+  private editor: ace.Ace.Editor;
   private isSettingContents: boolean = false;
 
   constructor(editorId: string, options: any) {
@@ -38,7 +38,7 @@ export class Editor extends StrictEventEmitter<EditorEvents>() {
   private registerEventHandlers() {
     const session = this.editor.getSession();
 
-    session.on("change", () => {
+    session.on("change" as any, () => {
       this.emit("change", this.contents, this.isSettingContents ? ChangeType.SetContents : ChangeType.UserInput);
     });
 
