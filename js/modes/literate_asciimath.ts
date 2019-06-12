@@ -1,3 +1,5 @@
+import "brace/mode/markdown";
+
 import { defineMode } from "./defineMode";
 import { TEXT_PREFIX } from "../consts";
 import "./asciimath";
