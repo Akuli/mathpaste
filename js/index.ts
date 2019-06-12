@@ -30,6 +30,11 @@ const cm = new CanvasManager("draw-canvas");
 const pm = new PasteManager();
 const render = new Renderer("renderedLines");
 
+const query = new URLSearchParams(window.location.search);
+if (query.has("vim")) {
+  editor.keyboardHandler = "ace/keyboard/vim";
+}
+
 const buttons = cm.createButtons({
   pen: p => new Pen(p),
   circle: p => new Circle(p),

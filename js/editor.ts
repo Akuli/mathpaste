@@ -71,6 +71,14 @@ export class Editor extends StrictEventEmitter<EditorEvents>() {
     this.editor.getSession().setMode(value);
   }
 
+  get keyboardHandler() {
+    return this.editor.getKeyboardHandler();
+  }
+
+  set keyboardHandler(value: string) {
+    this.editor.setKeyboardHandler(value);
+  }
+
   get readOnly() {
     return this.editor.getReadOnly();
   }
