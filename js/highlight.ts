@@ -4,19 +4,12 @@ import { getScrollbarWidth } from "./utils";
 
 export type Rules = Array<{ cls: string; regex: RegExp }>;
 
-export default (editor: Editor, rules: Rules) => {
-  const overlay = document.getElementById("editor-highlight")!;
+const createHighlighter = (rules: Rules) => {
+  const rulesRegex = new RegExp(rules.map(({ regex }) => `(${regex.toString().slice(1, -1)})`).join("|"), "g");
+  const rulesClasses = rules.map(({ cls }) => cls);
 
-  const createOverlay = () => {
-    const rect = editor.element.getBoundingClientRect();
-
-    overlay.style.width = (rect.width - getScrollbarWidth()).toString();
-    overlay.style.height = rect.height.toString();
-  };
-
-  // we should be safe from XSS cause we split up stuff like `<script>`
-  const updateOverlay = () =>
-    (overlay.innerHTML = editor.contents
+  return (s: string) =>
+    s
       .replace(rulesRegex, (match, ...args) => {
         // we skip the last two arguments because they are the offset and the whole string.
         const groups = args.slice(0, -2) as Array<string | undefined>;
@@ -24,15 +17,28 @@ export default (editor: Editor, rules: Rules) => {
         const cls = rulesClasses[groupIndex];
         return `<span class="${cls}">${match}</span>`;
       })
-      .replace(/\n/g, "<br>"));
+      .replace(/\n/g, "<br>");
+};
 
-  const rulesRegex = new RegExp(rules.map(({ regex }) => `(${regex.toString().slice(1, -1)})`).join("|"), "g");
-  const rulesClasses = rules.map(({ cls }) => cls);
+export default (editor: Editor, rules: Rules) => {
+  const overlay = document.getElementById("editor-highlight")!;
 
-  createOverlay();
+  const highlighter = createHighlighter(rules);
+
+  const updateOverlay = () => {
+    const rect = editor.element.getBoundingClientRect();
+
+    overlay.style.width = (rect.width - getScrollbarWidth()).toString();
+    overlay.style.height = rect.height.toString();
+
+    overlay.innerHTML = highlighter(editor.contents);
+  };
+
   updateOverlay();
-
   editor.on("change", updateOverlay);
-  window.addEventListener("resize", createOverlay);
-  editor.element.addEventListener("scroll", () => (overlay.scrollTop = editor.element.scrollTop));
+  window.addEventListener("resize", updateOverlay);
+  editor.element.addEventListener("scroll", () => {
+    overlay.scrollTop = editor.element.scrollTop;
+    overlay.scrollLeft = editor.element.scrollLeft;
+  });
 };

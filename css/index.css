@@ -147,8 +147,9 @@ code {
     border-radius: 0.25rem;
 }
 
-/* XXX: is the editor class really needed? :thinking: */
-.editor { font-size: 1.2rem }
+.editor {
+    font-size: 1.2rem;
+}
 
 #editor-container {
     width: 100%;
@@ -167,9 +168,12 @@ code {
     --purple: #cc99cc;
 }
 
+/* FIXME: only show scrollbar if needed. this needs to be accounted for in the
+ * javascript code */
 #editor-text {
+    width: 100%;
     height: 100%;
-    overflow: auto;
+    overflow: scroll;
     color: transparent;
 
     /* https://stackoverflow.com/a/47678978 */
