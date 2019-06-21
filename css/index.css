@@ -174,9 +174,13 @@ code {
 }
 
 #editor-highlight {
-    position: relative;
+    position: absolute;
     pointer-events: none;
     overflow: hidden;
+
+    /* XXX: no idea why this is needed */
+    margin-left: -1.5px;
+    margin-top: -1.5px;
 }
 
 #editor-container               { background: var(--background)  }
