@@ -11,6 +11,7 @@ import { Circle } from "./drawobjects/circle";
 // files included in the output
 import "../index.html";
 import "../css/index.css";
+import "../css/reset.css";
 import "../pics/circle.png";
 import "../pics/filled-circle.png";
 import "../pics/info.png";
