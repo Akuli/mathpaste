@@ -15,7 +15,7 @@ interface EditorEvents {
 
 // FIXME: theme: tomorrow_night_eighties
 export class Editor extends StrictEventEmitter<EditorEvents>() {
-  element: HTMLDivElement;
+  readonly element: HTMLDivElement;
 
   constructor() {
     super();
