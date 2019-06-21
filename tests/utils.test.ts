@@ -1,16 +1,16 @@
-import { Debouncer } from "../js/utils";
+import { debounce } from "../js/utils";
 
-describe("Debouncer", () => {
+describe("debounce", () => {
   const sleep = (interval: number) => new Promise(resolve => setTimeout(resolve, interval));
 
   describe("#debounce()", () => {
     it("only calls a function once if called many times", async () => {
       const fn = jest.fn();
-      const debouncer = new Debouncer(10);
+      const debouncedFn = debounce(10, fn);
 
       const debounced = [];
       for (let i = 0; i < 100; ++i) {
-        debounced.push(debouncer.debounce(fn));
+        debounced.push(debouncedFn());
       }
       await Promise.all(debounced);
 
@@ -19,20 +19,20 @@ describe("Debouncer", () => {
 
     it("calls a function many times if enough time passes", async () => {
       const fn = jest.fn();
-      const debouncer = new Debouncer(10);
+      const debouncedFn = debounce(10, fn);
 
       let counter = 0;
 
       await new Promise(resolve => {
         setTimeout(async function helper() {
-          await debouncer.debounce(fn);
+          await debouncedFn();
 
           if (++counter < 20) {
-            setTimeout(helper, debouncer.interval);
+            setTimeout(helper, debouncedFn.interval);
           } else {
             resolve();
           }
-        }, debouncer.interval);
+        }, debouncedFn.interval);
       });
 
       expect(fn).toHaveBeenCalledTimes(20);
@@ -40,34 +40,32 @@ describe("Debouncer", () => {
 
     it("resolves even if the function is not called", async () => {
       const fn = jest.fn();
-      const debouncer = new Debouncer(10);
+      const debouncedFn = debounce(10, fn);
 
-      const notCalled = debouncer.debounce(fn);
-      const called = debouncer.debounce(fn);
+      const notCalled = debouncedFn();
+      const called = debouncedFn();
 
       expect(await Promise.all([notCalled, called])).toEqual([false, true]);
     });
 
     it("awaits promises given to it", async () => {
       let awaited = false;
-      const debouncer = new Debouncer(0);
-
-      await debouncer.debounce(async () => {
+      const debouncedFn = debounce(10, async () => {
         await sleep(100);
         awaited = true;
       });
+
+      await debouncedFn();
       expect(awaited).toBeTruthy();
     });
 
     it("rejects when exceptions are thrown", async () => {
       const up = new Error("yeet");
-      const debouncer = new Debouncer(0);
+      const debouncedFn = debounce(0, () => {
+        throw up;
+      });
 
-      await expect(
-        debouncer.debounce(() => {
-          throw up;
-        }),
-      ).rejects.toThrow(up);
+      await expect(debouncedFn()).rejects.toThrow(up);
     });
   });
 });

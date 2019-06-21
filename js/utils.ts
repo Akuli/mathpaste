@@ -54,37 +54,39 @@ export class RadioClassManager extends StrictEventEmitter<RadioClassManagerEvent
 // https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/layerX
 export const xyFromEvent = (event: MouseEvent): [number, number] => [event.offsetX, event.offsetY];
 
-export class Debouncer {
-  private timeoutHandle: any | null = null;
-  private promiseResolve: ((value: boolean) => void) | null = null;
+export const debounce = (interval: number, func: (...args: any[]) => any) => {
+  // the reason we use `any` is because different platforms use different
+  // values for `{set,clear}Timeout` and TypeScript gets confused.
+  let timeoutHandle: any | null = null;
+  let promiseResolve: ((value: boolean) => void) | null = null;
 
-  constructor(public interval: number) {}
-
-  debounce(func: () => unknown): Promise<boolean> {
+  const closure = (...args: any[]) => {
     return new Promise((resolve, reject) => {
-      if (this.timeoutHandle !== null) {
-        clearTimeout(this.timeoutHandle);
-        if (this.promiseResolve !== null) this.promiseResolve(false);
+      if (timeoutHandle !== null) {
+        clearTimeout(timeoutHandle);
+        if (promiseResolve !== null) promiseResolve(false);
       }
 
-      this.timeoutHandle = setTimeout(async () => {
+      timeoutHandle = setTimeout(async () => {
         try {
           // This is fine even if `func` does not return a promise because
           // `await` with a non-promise is basically a noop.
-          await func();
+          await func(...args);
           resolve(true);
         } catch (e) {
           reject(e);
         } finally {
-          this.timeoutHandle = null;
-          this.promiseResolve = null;
+          timeoutHandle = null;
+          promiseResolve = null;
         }
-      }, this.interval);
+      }, interval);
 
-      this.promiseResolve = resolve;
+      promiseResolve = resolve;
     });
-  }
-}
+  };
+  closure.interval = interval;
+  return closure;
+};
 
 export const offsetToPosition = (text: string, offset: number) =>
   Array.from(text.substr(0, offset)).reduce(
