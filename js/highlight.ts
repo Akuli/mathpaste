@@ -1,9 +1,10 @@
-import rules from "./modes/asciimath";
 import { Editor } from "./editor";
 
 import { getScrollbarWidth } from "./utils";
 
-export default (editor: Editor) => {
+export type Rules = Array<{ cls: string; regex: RegExp }>;
+
+export default (editor: Editor, rules: Rules) => {
   const overlay = document.getElementById("editor-highlight")!;
 
   const createOverlay = () => {

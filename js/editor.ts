@@ -2,7 +2,7 @@ import highlight from "./highlight";
 
 import { StrictEventEmitter, offsetToPosition } from "./utils";
 
-import "./modes/asciimath";
+import rules from "./modes/asciimath";
 
 export enum ChangeType {
   UserInput,
@@ -23,7 +23,7 @@ export class Editor extends StrictEventEmitter<EditorEvents>() {
     this.element = document.getElementById("editor-text") as HTMLDivElement;
     this.element.addEventListener("input", () => this.emit("change", this.contents, ChangeType.UserInput));
 
-    highlight(this);
+    highlight(this, rules);
   }
 
   get contents() {
