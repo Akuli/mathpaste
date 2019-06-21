@@ -10,6 +10,7 @@
     "interface-over-type-literal": false,
     "arrow-parens": false,
     "interface-name": false,
-    "object-literal-key-quotes": false
+    "object-literal-key-quotes": false,
+    "no-console": false
   }
 }

@@ -3,9 +3,11 @@ html {
 }
 
 body {
+    --body-padding: 0.5rem;
+
     margin: 0px;
-    padding: 0.5rem;
-    height: calc(100% - 0.5rem - 0.5rem);
+    padding: var(--body-padding);
+    height: calc(100% - 2 * var(--body-padding));
     background-color: #000;
 }
 
@@ -19,11 +21,11 @@ body {
     flex: 1;
 }
 
-#main-content > *:first-child {
+#editor-container,.editor {
     border-radius: 0.5rem 0px 0px 0.5rem;
 }
 
-#main-content > *:last-child {
+#renderedLines {
     border-radius: 0px 0.5rem 0.5rem 0px;
 }
 
@@ -145,10 +147,49 @@ code {
     border-radius: 0.25rem;
 }
 
+/* XXX: is the editor class really needed? :thinking: */
+.editor { font-size: 1.2rem }
 
-#editor {
-    font-size: 1.2em;
+#editor-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    --foreground: #cccccc;
+    --background: #2d2d2d;
+    --comment: #999999;
+    --red: #f2777a;
+    --orange: #f99157;
+    --yellow: #ffcc66;
+    --green: #99cc99;
+    --aqua: #009999;
+    --blue: #99cccc;
+    --purple: #cc99cc;
 }
+
+#editor-text {
+    height: 100%;
+    overflow: auto;
+    color: transparent;
+}
+
+#editor-highlight {
+    position: absolute;
+    pointer-events: none;
+    overflow: hidden;
+
+    /* XXX: no idea why this is needed */
+    margin-left: -1.5px;
+    margin-top: -1.5px;
+}
+
+#editor-container               { background: var(--background)  }
+#editor-text                    { caret-color: var(--foreground) }
+#editor-highlight               { color: var(--foreground)       }
+#editor-highlight span.number   { color: var(--yellow)           }
+#editor-highlight span.keyword  { color: var(--blue)             }
+#editor-highlight span.comment  { color: var(--comment)          }
+#editor-highlight span.variable { color: var(--red)              }
 
 #renderedLines {
     background-color: #ddd;

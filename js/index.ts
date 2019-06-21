@@ -18,24 +18,10 @@ import "../pics/line.png";
 import "../pics/pen.png";
 import "../pics/save.png";
 
-const editor = new Editor("editor", {
-  selectionStyle: "text",
-  showLineNumbers: false,
-  showGutter: false,
-  wrap: true,
-  theme: "ace/theme/tomorrow_night_eighties",
-  mode: "ace/mode/asciimath",
-});
+const editor = new Editor();
 const cm = new CanvasManager("draw-canvas");
 const pm = new PasteManager();
 const render = new Renderer("renderedLines");
-
-const query = new URLSearchParams(window.location.search);
-if (query.has("vim")) {
-  import("brace/keybinding/vim").then(() => {
-    editor.keyboardHandler = "ace/keyboard/vim";
-  });
-}
 
 const buttons = cm.createButtons({
   pen: p => new Pen(p),
@@ -51,12 +37,12 @@ editor.on("change", (_, changeType) => {
   if (changeType === ChangeType.UserInput) window.location.hash = "";
 });
 
-editor.on("change", async (contents: string) => {
-  if (contents.split("\n\n").some(line => line.startsWith(TEXT_PREFIX))) {
-    await import("./modes/literate_asciimath");
-    editor.mode = "ace/mode/literate_asciimath";
-  }
-});
+// editor.on("change", async (contents: string) => {
+//   if (contents.split("\n\n").some(line => line.startsWith(TEXT_PREFIX))) {
+//     await import("./modes/literate_asciimath");
+//     editor.mode = "ace/mode/literate_asciimath";
+//   }
+// });
 
 let useLocalStorage = true;
 editor.on("change", (newMath, changeType) => {
@@ -66,10 +52,13 @@ editor.on("change", (newMath, changeType) => {
 
 editor.on("change", async () => {
   await render.render(editor.contents);
-  render.selectLine(editor.getRenderedLineIndex());
+
+  const idx = editor.getRenderedLineIndex();
+  if (idx !== null) render.selectLine(idx);
 });
 
-editor.on("cursorMoved", () => render.selectLine(editor.getRenderedLineIndex()));
+// FIXME: this behavior is hard to implement with contenteditable
+// editor.on("cursorMoved", () => render.selectLine(editor.getRenderedLineIndex()));
 
 // this is for mathpaste-gtk
 (window as any).mathpaste = {
@@ -142,16 +131,17 @@ thing again and I couldn't reproduce the problem (wut).
 PLEASE DON'T REWRITE THIS VERY DIFFERENTLY unless you truly understand what is
 going on, unlike anyone else who has worked on mathpaste so far!
 */
-editor.deleteKeybinding("ctrl-z");
-document.addEventListener("keydown", event => {
-  if (event.key === "z" && event.ctrlKey) {
-    if (shownBoxManager.hasClass(boxes.draw.boxElement)) {
-      cm.undo();
-    } else {
-      editor.undo();
-    }
-  }
-});
+// FIXME
+// editor.deleteKeybinding("ctrl-z");
+// document.addEventListener("keydown", event => {
+//   if (event.key === "z" && event.ctrlKey) {
+//     if (shownBoxManager.hasClass(boxes.draw.boxElement)) {
+//       cm.undo();
+//     } else {
+//       editor.undo();
+//     }
+//   }
+// });
 
 boxes.save.buttonElement.addEventListener("click", async () => {
   const pasteId = await pm.uploadPaste(editor.contents, cm.getImageString());

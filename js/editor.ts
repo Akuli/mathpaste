@@ -1,7 +1,6 @@
-import * as ace from "brace";
-import "brace/theme/tomorrow_night_eighties";
+import highlight from "./highlight";
 
-import { StrictEventEmitter } from "./utils";
+import { StrictEventEmitter, offsetToPosition } from "./utils";
 
 import "./modes/asciimath";
 
@@ -12,84 +11,56 @@ export enum ChangeType {
 
 interface EditorEvents {
   change: (contents: string, changeType: ChangeType) => void;
-  cursorMoved: (position: ace.Position, contents: string) => void;
 }
 
+// FIXME: theme: tomorrow_night_eighties
 export class Editor extends StrictEventEmitter<EditorEvents>() {
-  private editor: ace.Editor;
-  private isSettingContents: boolean = false;
+  element: HTMLDivElement;
 
-  constructor(editorId: string, options: any) {
+  constructor() {
     super();
 
-    this.editor = ace.edit(editorId);
-    this.editor.setOptions(options);
-    this.registerEventHandlers();
-  }
+    this.element = document.getElementById("editor-text") as HTMLDivElement;
+    this.element.addEventListener("input", () => this.emit("change", this.contents, ChangeType.UserInput));
 
-  deleteKeybinding(binding: string) {
-    delete (this.editor.getKeyboardHandler() as any).commandKeyBinding[binding];
-  }
-
-  undo() {
-    this.editor.undo();
-  }
-
-  private registerEventHandlers() {
-    const session = this.editor.getSession();
-
-    session.on("change", () => {
-      this.emit("change", this.contents, this.isSettingContents ? ChangeType.SetContents : ChangeType.UserInput);
-    });
-
-    session.selection.on("changeCursor", () =>
-      this.emit("cursorMoved", this.editor.getCursorPosition(), this.contents),
-    );
+    highlight(this);
   }
 
   get contents() {
-    return this.editor.getValue();
+    return this.element.innerText;
   }
 
   set contents(value: string) {
-    // this would trigger an registerEventHandlers() callback without
-    // the isSettingContents attribute, which created funny bugs before
-    // isSettingContents was added
-    this.isSettingContents = true;
-    try {
-      this.editor.getSession().setValue(value);
-    } finally {
-      this.isSettingContents = false;
-    }
-  }
-
-  get mode() {
-    return (this.editor.getSession().getMode() as any).$id;
-  }
-
-  set mode(value: string) {
-    this.editor.getSession().setMode(value);
-  }
-
-  get keyboardHandler() {
-    return this.editor.getKeyboardHandler();
-  }
-
-  set keyboardHandler(value: string) {
-    this.editor.setKeyboardHandler(value);
+    this.element.innerText = value;
+    this.emit("change", this.contents, ChangeType.SetContents);
   }
 
   get readOnly() {
-    return this.editor.getReadOnly();
+    return !this.element.isContentEditable;
   }
 
   set readOnly(value) {
-    this.editor.setReadOnly(value);
+    this.element.contentEditable = (!value).toString();
+  }
+
+  private getCaretPosition() {
+    const sel = window.getSelection();
+    if (sel === null || sel.rangeCount !== 1) return null;
+    const range = sel.getRangeAt(0);
+    if (range.commonAncestorContainer.parentNode !== this.element) return null;
+
+    return offsetToPosition(this.contents, range.endOffset);
   }
 
   getRenderedLineIndex() {
-    const { row } = this.editor.getCursorPosition();
-    const linesAboveOrAtCursor = this.contents.split("\n").slice(0, row + 1);
-    return linesAboveOrAtCursor.join("\n").split("\n\n").length - 1;
+    const caret = this.getCaretPosition();
+    if (caret === null) return null;
+    return (
+      this.contents
+        .split("\n")
+        .slice(0, caret.row + 1)
+        .join("\n")
+        .split("\n\n").length - 1
+    );
   }
 }
