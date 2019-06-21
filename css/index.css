@@ -171,6 +171,9 @@ code {
     height: 100%;
     overflow: auto;
     color: transparent;
+
+    /* https://stackoverflow.com/a/47678978 */
+    display: inline-block;
 }
 
 #editor-highlight {
@@ -179,6 +182,8 @@ code {
     overflow: hidden;
 
     /* XXX: no idea why this is needed */
+    /* `position: relative` fixes this without hard-coded margin except it
+     * breaks pointer events? */
     margin-left: -1.5px;
     margin-top: -1.5px;
 }
