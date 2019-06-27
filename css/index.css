@@ -124,19 +124,20 @@ body {
 table {
     border: 1px solid #666;
     border-collapse: collapse;
-    width: 100%;
 }
 
-th {
-    text-align: left;
+#info-box-table {
+    width: 100%;
 }
 
 tr {
     border-bottom: 1px solid #666;
 }
 
-td {
+th, td {
+    text-align: left;
     padding: 0.25rem;
+    padding-right: 1em;
 }
 
 code {
