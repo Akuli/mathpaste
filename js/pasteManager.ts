@@ -102,10 +102,14 @@ export default class PasteManager {
   }
 
   private async getPasteFromFirebase(pasteId: string, decryptionKey?: string): Promise<Paste> {
+    // pasteId is string formatted here, but there's no need to avoid injection attacks.
+    // The database access has very restricted permissions.
+    // If I added a pasteId validation here, any mathpaste user could easily get around it,
+    // because this is client-side code.
     const fb = await this.getFirebaseApp();
     let value = (await fb
       .database()
-      .ref(`maths/${pasteId}`)   // TODO: check pasteId for evil characters before this?
+      .ref(`maths/${pasteId}`)
       .once("value")
     ).val();
 
