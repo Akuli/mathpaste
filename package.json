@@ -7,7 +7,8 @@
     "test": "jest --verbose",
     "start": "webpack-dev-server",
     "build": "webpack",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "lint": "find js -name '*.ts' | grep -v '\\.d\\.ts' | xargs tslint"
   },
   "repository": {
     "type": "git",

@@ -78,6 +78,10 @@ the scope of this README, or by running
 
     $ npm run check-types
 
+To lint all TypeScript files, run this command:
+
+    $ npm run lint
+
 [mathb.in]: http://mathb.in/
 [asciimath]: http://asciimath.org/
 
