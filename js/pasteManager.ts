@@ -11,8 +11,9 @@ these are the rules i use:
         // exercise for you:  30 days = 2592000000 milliseconds
         ".read": "data.child('timestamp').val() > (now - 2592000000)",
 
-        // new maths must have a string content and a number timestamp
-        ".validate": "newData.hasChildren(['content', 'timestamp']) && newData.child('content').isString() && newData.child('timestamp').isNumber()",
+        // new maths must have a number timestamp
+        // rest doesn't matter, will just cause errors when someone tries to view the math
+        ".validate": "newData.hasChildren(['timestamp']) && newData.child('timestamp').isNumber()",
 
         // the docs don't seem to mention this, but nothing works without this
         // it still validates before writing
@@ -22,14 +23,19 @@ these are the rules i use:
   }
 }
 
-TODO: validate image datas?
+there used to be more ".validate" rules, but those got outdated easily when developing mathpaste
+
 TODO: delete old maths regularly?
+
+encryption works so that the decryption key is NEVER sent to the database
+so as the database user, i can't read people's mathpastes
+the decryption key goes only to the paste URL, giving access only to people who have the URL
 */
 /* tslint:enable */
 
 import * as LZString from "lz-string";
-
 import * as firebase from "firebase/app";
+import SimpleCrypto from "simple-crypto-js";
 
 type Paste = {
   math: string | null;
@@ -78,19 +84,40 @@ export default class PasteManager {
     }
 
     if (hash.startsWith("#saved:")) {
-      const pasteId = hash.substr("#saved:".length);
-      return await this.getPasteFromFirebase(pasteId);
+      const afterFirstColon = hash.substr("#saved:".length);
+      let pasteId: string, decryptionKey: string | undefined;
+
+      if (afterFirstColon.includes(":")) {
+        [ pasteId, decryptionKey ] = afterFirstColon.split(":");
+      } else {
+        // backwards compatibility: old pastes are not encrypted
+        pasteId = afterFirstColon;
+        decryptionKey = undefined;
+      }
+
+      return await this.getPasteFromFirebase(pasteId, decryptionKey);
     }
 
     return null;
   }
 
-  private async getPasteFromFirebase(pasteId: string): Promise<Paste> {
+  private async getPasteFromFirebase(pasteId: string, decryptionKey?: string): Promise<Paste> {
     const fb = await this.getFirebaseApp();
-    const value = (await fb
+    let value = (await fb
       .database()
-      .ref(`maths/${pasteId}`)
-      .once("value")).val();
+      .ref(`maths/${pasteId}`)   // TODO: check pasteId for evil characters before this?
+      .once("value")
+    ).val();
+
+    // new mathpastes encrypt the stuff
+    if (value.encryptedValue !== undefined) {
+      if (decryptionKey === undefined) {
+        throw new Error("missing decryption key");
+      }
+
+      // true means that we're decrypting an object
+      value = new SimpleCrypto(decryptionKey!).decrypt(value.encryptedValue, true);
+    }
 
     // value.image may be missing or empty because backwards compat with older mathpastes
     // but the empty string is not valid LZString utf16 compressed stuff
@@ -100,7 +127,14 @@ export default class PasteManager {
     };
   }
 
-  async uploadPaste(math: string, imageString: string) {
+  // returns a usable window.location.hash value
+  async uploadPaste(math: string, imageString: string): Promise<string> {
+    const decryptionKey = SimpleCrypto.generateRandom() as string;
+    const encryptedValue = new SimpleCrypto(decryptionKey).encrypt({
+      content: math,
+      image: LZString.compressToUTF16(imageString),
+    });
+
     // ref represents the object that represents the math in firebase
     const fb = await this.getFirebaseApp();
     const ref = await fb
@@ -108,11 +142,11 @@ export default class PasteManager {
       .ref("maths")
       .push();
     ref.set({
-      content: math,
+      encryptedValue: encryptedValue,
       timestamp: new Date().valueOf(),
-      image: LZString.compressToUTF16(imageString),
     });
-    return ref.key;
+
+    return "#saved:" + ref.key! + ":" + decryptionKey;
   }
 
   saveMath(math: string) {

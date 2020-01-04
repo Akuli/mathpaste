@@ -154,10 +154,8 @@ document.addEventListener("keydown", event => {
 });
 
 boxes.save.buttonElement.addEventListener("click", async () => {
-  const pasteId = await pm.uploadPaste(editor.contents, cm.getImageString());
-  const $saveBoxInput = document.getElementById("save-url")! as HTMLInputElement;
-  $saveBoxInput.value = window.location.origin + window.location.pathname + "#saved:" + pasteId;
-  window.location.hash = "#saved:" + pasteId;
+  window.location.hash = await pm.uploadPaste(editor.contents, cm.getImageString());
+  (document.getElementById("save-url")! as HTMLInputElement).value = window.location.href;
 });
 
 document.addEventListener("click", () => shownBoxManager.removeClass());
