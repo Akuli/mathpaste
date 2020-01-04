@@ -85,7 +85,8 @@ export default class PasteManager {
 
     if (hash.startsWith("#saved:")) {
       const afterFirstColon = hash.substr("#saved:".length);
-      let pasteId: string, decryptionKey: string | undefined;
+      let pasteId: string;
+      let decryptionKey: string | undefined;
 
       if (afterFirstColon.includes(":")) {
         [ pasteId, decryptionKey ] = afterFirstColon.split(":");
@@ -134,7 +135,7 @@ export default class PasteManager {
   // returns a usable window.location.hash value
   async uploadPaste(math: string, imageString: string): Promise<string> {
     const decryptionKey = SimpleCrypto.generateRandom() as string;
-    const encryptedValue = new SimpleCrypto(decryptionKey).encrypt({
+    const encryptedValueString = new SimpleCrypto(decryptionKey).encrypt({
       content: math,
       image: LZString.compressToUTF16(imageString),
     });
@@ -146,7 +147,7 @@ export default class PasteManager {
       .ref("maths")
       .push();
     ref.set({
-      encryptedValue: encryptedValue,
+      encryptedValue: encryptedValueString,
       timestamp: new Date().valueOf(),
     });
 
