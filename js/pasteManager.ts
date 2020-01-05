@@ -15,9 +15,8 @@ these are the rules i use:
         // rest doesn't matter, will just cause errors when someone tries to view the math
         ".validate": "newData.hasChildren(['timestamp']) && newData.child('timestamp').isNumber()",
 
-        // the docs don't seem to mention this, but nothing works without this
-        // it still validates before writing
-        ".write": true
+        // allow adding stuff to database but don't allow changing or deleting
+        ".write": "!data.exists()"
       }
     }
   }
