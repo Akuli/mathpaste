@@ -38,8 +38,6 @@ math, click the pencil button and draw something.
 ## More Links
 
 - If you have any trouble with mathpaste, please [open a new issue on GitHub].
-- [MathPaste GTK] is a desktop application for using MathPaste. With it, you
-  can easily save maths as files on your computer.
 - MathPaste renders the asciimath with [MathJax].
 - [PurpleMyst] and [Akuli] created MathPaste.
 - MathPaste is based on the "interactive renderer" on [asciimath.org][asciimath].
