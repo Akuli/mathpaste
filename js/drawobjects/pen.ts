@@ -1,3 +1,14 @@
+/*
+i experimented with different ways to convert the image data to a string:
+
+1) coordinates of end points of drawn lines joined with separator characters
+2) the full image data as one character for each pixel
+
+strings from 2 are of course about 1000 times longer than strings from 1, and
+that was still true after compressing with lzstring, with almost nothing drawn
+on the canvas and with lots of stuff drawn
+*/
+
 import { Point, LineMode, DrawObject } from "./drawobject";
 
 const POINT_DISTANCE_THRESHOLD: number = 2;
