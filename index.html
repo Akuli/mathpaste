@@ -13,9 +13,9 @@
     </div>
 
     <div id="button-holder">
-        <input type="image" title="Info" class="pic-button" id="info-button" src="pics/info.png" />
-        <input type="image" title="Draw" class="pic-button" id="draw-button" src="pics/pen.png" />
-        <input type="image" title="Save" class="pic-button" id="save-button" src="pics/save.png" />
+        <button id="info-button">Help</button>
+        <button id="draw-button">Draw</button>
+        <button id="save-button">Save</button>
     </div>
 
     <div id="popup-holder">
@@ -72,10 +72,16 @@
 
         <div class="popup-box" id="draw-box">
             <div>
-                <input type="image" title="Pen" class="pic-button selected" id="draw-pen-button" src="pics/pen.png" />
+                <input type="image" title="Pen" class="pic-button" id="draw-pen-button" src="pics/pen.png" />
                 <input type="image" title="Circle" class="pic-button" id="draw-circle-button" src="pics/circle.png" />
                 <input type="image" title="Filled Circle" class="pic-button" id="draw-filled-circle-button" src="pics/filled-circle.png" />
                 <input type="image" title="Line" class="pic-button" id="draw-line-button" src="pics/line.png" />
+                <hr class="button-separator" />
+                <input type="image" class="pic-button color-button" src="pics/1x1-transparent.png" style="background-color: black;" id="draw-default-color-button" />
+                <input type="image" class="pic-button color-button" src="pics/1x1-transparent.png" style="background-color: red;" />
+                <input type="image" class="pic-button color-button" src="pics/1x1-transparent.png" style="background-color: blue;" />
+                <input type="image" class="pic-button color-button" src="pics/1x1-transparent.png" style="background-color: green;" />
+                <input type="image" class="pic-button color-button" src="pics/1x1-transparent.png" style="background-color: magenta;" />
             </div>
             <canvas width="600" height="400" id="draw-canvas"></canvas>
         </div>
