@@ -4,7 +4,7 @@ describe("RunOnceAtATime", () => {
   it("calls a slow function twice if ran many times concurrently", async () => {
     const sleep = (interval: number) => new Promise(resolve => setTimeout(resolve, interval)) as Promise<void>;
     const fn = jest.fn();
-    const runner = new RunOnceAtATime(async() => {
+    const runner = new RunOnceAtATime(async () => {
       await sleep(20);
       fn();
     });
@@ -22,7 +22,7 @@ describe("RunOnceAtATime", () => {
 
   it("calls a function many times if not ran while already running", async () => {
     const fn = jest.fn();
-    const runner = new RunOnceAtATime(async() => fn());
+    const runner = new RunOnceAtATime(async () => fn());
 
     await runner.run();
     await runner.run();
@@ -35,9 +35,9 @@ describe("RunOnceAtATime", () => {
   it("doesn't stop working when an exception is thrown", async () => {
     let counter = 0;
     const up = new Error("yeet");
-    const runner = new RunOnceAtATime(async() => {
+    const runner = new RunOnceAtATime(async () => {
       counter++;
-      if (counter == 1) {
+      if (counter === 1) {
         throw up;
       }
     });
@@ -47,8 +47,8 @@ describe("RunOnceAtATime", () => {
     // couldn't get this to work with jest's .toThrow
     let caught = false;
     try {
-      await runner.run()
-    } catch(e) {
+      await runner.run();
+    } catch (e) {
       expect(e).toBe(up);
       caught = true;
     }

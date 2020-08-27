@@ -1,7 +1,6 @@
 import { TEXT_PREFIX } from "../js/consts";
 import Renderer from "../js/renderer";
 
-
 describe("Renderer", () => {
   let lineContainerNum = 0;
 

@@ -8,7 +8,7 @@
     "start": "webpack-dev-server",
     "build": "webpack",
     "check-types": "tsc --noEmit",
-    "lint": "find js -name '*.ts' ! -name '*.d.ts' -exec tslint {} +"
+    "lint": "find js tests -name '*.ts' ! -name '*.d.ts' -exec tslint {} +"
   },
   "repository": {
     "type": "git",
