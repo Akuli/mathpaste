@@ -14,6 +14,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
 
+  // TODO: is this really needed after c9d6687 ?
   readOnly: boolean = false;
 
   objects: DrawObject[] = [];
