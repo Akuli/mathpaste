@@ -1,73 +1,61 @@
-import { Debouncer } from "../js/utils";
+import { RunOnceAtATime } from "../js/utils";
 
-describe("Debouncer", () => {
-  const sleep = (interval: number) => new Promise(resolve => setTimeout(resolve, interval));
+describe("RunOnceAtATime", () => {
+  it("calls a slow function twice if ran many times concurrently", async () => {
+    const sleep = (interval: number) => new Promise(resolve => setTimeout(resolve, interval)) as Promise<void>;
+    const fn = jest.fn();
+    const runner = new RunOnceAtATime(async() => {
+      await sleep(20);
+      fn();
+    });
 
-  describe("#debounce()", () => {
-    it("only calls a function once if called many times", async () => {
-      const fn = jest.fn();
-      const debouncer = new Debouncer(10);
+    const promises = [];
+    for (let i = 0; i < 100; ++i) {
+      promises.push(runner.run());
+    }
+    await Promise.all(promises);
 
-      const debounced = [];
-      for (let i = 0; i < 100; ++i) {
-        debounced.push(debouncer.debounce(fn));
+    // first call: let's get started
+    // second call: i've been asked to run while i was doing 1st call, let's run again now
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  it("calls a function many times if not ran while already running", async () => {
+    const fn = jest.fn();
+    const runner = new RunOnceAtATime(async() => fn());
+
+    await runner.run();
+    await runner.run();
+    await runner.run();
+    await runner.run();
+    await runner.run();
+    expect(fn).toHaveBeenCalledTimes(5);
+  });
+
+  it("doesn't stop working when an exception is thrown", async () => {
+    let counter = 0;
+    const up = new Error("yeet");
+    const runner = new RunOnceAtATime(async() => {
+      counter++;
+      if (counter == 1) {
+        throw up;
       }
-      await Promise.all(debounced);
-
-      expect(fn).toHaveBeenCalledTimes(1);
     });
 
-    it("calls a function many times if enough time passes", async () => {
-      const fn = jest.fn();
-      const debouncer = new Debouncer(10);
+    expect(counter).toEqual(0);
 
-      let counter = 0;
+    // couldn't get this to work with jest's .toThrow
+    let caught = false;
+    try {
+      await runner.run()
+    } catch(e) {
+      expect(e).toBe(up);
+      caught = true;
+    }
+    expect(caught).toBe(true);
+    expect(counter).toEqual(1);
 
-      await new Promise(resolve => {
-        setTimeout(async function helper() {
-          await debouncer.debounce(fn);
-
-          if (++counter < 20) {
-            setTimeout(helper, debouncer.interval);
-          } else {
-            resolve();
-          }
-        }, debouncer.interval);
-      });
-
-      expect(fn).toHaveBeenCalledTimes(20);
-    });
-
-    it("resolves even if the function is not called", async () => {
-      const fn = jest.fn();
-      const debouncer = new Debouncer(10);
-
-      const notCalled = debouncer.debounce(fn);
-      const called = debouncer.debounce(fn);
-
-      expect(await Promise.all([notCalled, called])).toEqual([false, true]);
-    });
-
-    it("awaits promises given to it", async () => {
-      let awaited = false;
-      const debouncer = new Debouncer(0);
-
-      await debouncer.debounce(async () => {
-        await sleep(100);
-        awaited = true;
-      });
-      expect(awaited).toBeTruthy();
-    });
-
-    it("rejects when exceptions are thrown", async () => {
-      const up = new Error("yeet");
-      const debouncer = new Debouncer(0);
-
-      await expect(
-        debouncer.debounce(() => {
-          throw up;
-        }),
-      ).rejects.toThrow(up);
-    });
+    await runner.run();
+    expect(counter).toEqual(2);
   });
 });

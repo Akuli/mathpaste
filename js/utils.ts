@@ -47,34 +47,32 @@ export class RadioClassManager extends StrictEventEmitter<RadioClassManagerEvent
   }
 }
 
-export class Debouncer {
-  private timeoutHandle: any | null = null;
-  private promiseResolve: ((value: boolean) => void) | null = null;
+// Ensures that two instances of func don't run at the same time.
+// Similar to locks in thread programming.
+export class RunOnceAtATime {
+  public currentlyRunning: boolean = false;  // public only for tests
+  private runAgain: boolean = false;
 
-  constructor(public interval: number) {}
+  constructor(private func: () => Promise<void>) {}
 
-  debounce(func: () => unknown): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      if (this.timeoutHandle !== null) {
-        clearTimeout(this.timeoutHandle);
-        if (this.promiseResolve !== null) this.promiseResolve(false);
-      }
+  async run() {
+   if (this.currentlyRunning) {
+      this.runAgain = true;
+      return;
+    }
 
-      this.timeoutHandle = setTimeout(async () => {
-        try {
-          // This is fine even if `func` does not return a promise because
-          // `await` with a non-promise is basically a noop.
-          await func();
-          resolve(true);
-        } catch (e) {
-          reject(e);
-        } finally {
-          this.timeoutHandle = null;
-          this.promiseResolve = null;
-        }
-      }, this.interval);
+    this.currentlyRunning = true;
+    try {
+      do {
+        this.runAgain = false;
+        await this.func();
 
-      this.promiseResolve = resolve;
-    });
+        // let the browser do other things (and possibly set this.runAgain)
+        // I tried the experimental requestIdleCallback instead of setTimeout, that worked too
+        await new Promise(resolve => setTimeout(resolve, 10));
+      } while (this.runAgain);
+    } finally {
+      this.currentlyRunning = false;
+    }
   }
 }

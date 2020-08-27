@@ -1,6 +1,6 @@
 import scrollIntoView, { Options } from "scroll-into-view-if-needed";
 
-import { RadioClassManager, Debouncer } from "./utils";
+import { RadioClassManager, RunOnceAtATime } from "./utils";
 import { TEXT_PREFIX } from "./consts";
 
 export default class Renderer {
@@ -13,11 +13,15 @@ export default class Renderer {
   private selectedManager: RadioClassManager = new RadioClassManager("selected");
   private markedImported: boolean = false;
 
-  // XXX: need to find a good value for this
-  private renderDebouncer: Debouncer = new Debouncer(10);
+  private renderRunner: RunOnceAtATime;
 
-  constructor(lineContainerId: string) {
+  constructor(lineContainerId: string, getContentsAndLineToHighlight: () => [string, number]) {
     this.lineContainer = document.getElementById(lineContainerId)!;
+    this.renderRunner = new RunOnceAtATime(async() => await this.renderRaw(...getContentsAndLineToHighlight()));
+  }
+
+  async render() {
+    await this.renderRunner.run();
   }
 
   private insertNewLineElement(idx: number): HTMLElement {
@@ -76,32 +80,31 @@ export default class Renderer {
     return new Promise(resolve => MathJax.Hub.Queue(["Typeset", MathJax.Hub, lineElement, () => resolve()]));
   }
 
-  async render(contents: string): Promise<boolean> {
-    return this.renderDebouncer.debounce(async () => {
-      const newLines = contents.split("\n\n");
-      const diff = await import(/* webpackPreload: true */ "diff");
+  private async renderRaw(contents: string, lineToHighlight: number): Promise<void> {
+    const newLines = contents.split("\n\n");
+    const diff = await import(/* webpackPreload: true */ "diff");
 
-      let lineIndex = 0;
-      for (const change of diff.diffArrays(this.oldLines, newLines)) {
-        for (const line of change.value) {
-          if (change.added) {
-            await this.renderLine(line, this.insertNewLineElement(lineIndex));
-          } else if (change.removed) {
-            this.removeLineElement(lineIndex);
-            continue;
-          }
-
-          // Do not place this in the `if (change.added)` branch because it is
-          // possible for both `change.added` and `change.removed` to be falsy.
-          lineIndex += 1;
+    let lineIndex = 0;
+    for (const change of diff.diffArrays(this.oldLines, newLines)) {
+      for (const line of change.value) {
+        if (change.added) {
+          await this.renderLine(line, this.insertNewLineElement(lineIndex));
+        } else if (change.removed) {
+          this.removeLineElement(lineIndex);
+          continue;
         }
-      }
 
-      this.oldLines = newLines;
-    });
+        // Do not place this in the `if (change.added)` branch because it is
+        // possible for both `change.added` and `change.removed` to be falsy.
+        lineIndex += 1;
+      }
+    }
+
+    this.oldLines = newLines;
+    this.highlightLine(lineToHighlight);
   }
 
-  selectLine(index: number) {
+  highlightLine(index: number) {
     const lineElementToShow = this.elements[index];
 
     if (lineElementToShow === undefined) return;

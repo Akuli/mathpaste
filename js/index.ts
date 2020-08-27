@@ -29,7 +29,6 @@ const editor = new Editor("editor", {
 });
 const cm = new CanvasManager("draw-canvas");
 const pm = new PasteManager();
-const render = new Renderer("renderedLines");
 
 const query = new URLSearchParams(window.location.search);
 if (query.has("vim")) {
@@ -69,12 +68,9 @@ editor.on("change", (newMath, changeType) => {
   pm.saveMath(newMath);
 });
 
-editor.on("change", async () => {
-  await render.render(editor.contents);
-  render.selectLine(editor.getRenderedLineIndex());
-});
-
-editor.on("cursorMoved", () => render.selectLine(editor.getRenderedLineIndex()));
+const render = new Renderer("renderedLines", () => [editor.contents, editor.getRenderedLineIndex()]);
+editor.on("change", () => render.render());
+editor.on("cursorMoved", () => render.highlightLine(editor.getRenderedLineIndex()));
 
 // this is for mathpaste-gtk
 (window as any).mathpaste = {
