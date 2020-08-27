@@ -80,6 +80,13 @@ To lint all TypeScript files, run this command:
 
     $ npm run lint
 
+There are also some tests in the `tests/` subdirectory. You can run them like this:
+
+    $ npm run test
+
+All these checks run automatically in GitHub Actions
+when you push to github or create a pull request.
+
 [mathb.in]: http://mathb.in/
 [asciimath]: http://asciimath.org/
 
