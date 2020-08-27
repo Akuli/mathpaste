@@ -13,10 +13,8 @@ import "../index.html";
 import "../css/index.css";
 import "../pics/circle.png";
 import "../pics/filled-circle.png";
-import "../pics/info.png";
 import "../pics/line.png";
 import "../pics/pen.png";
-import "../pics/save.png";
 import "../pics/1x1-transparent.png";
 
 const editor = new Editor("editor", {
