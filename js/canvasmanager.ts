@@ -1,4 +1,4 @@
-import { RadioClassManager, StrictEventEmitter, xyFromEvent } from "./utils";
+import { RadioClassManager, StrictEventEmitter } from "./utils";
 import { Pen } from "./drawobjects/pen";
 import { Circle } from "./drawobjects/circle";
 
@@ -33,14 +33,28 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     this.registerEventHandlers();
   }
 
-  createButtons<B extends Buttons>(buttons: B): Record<keyof B, HTMLButtonElement> {
-    const result = {} as Record<string, HTMLButtonElement>;
-
-    for (const [type, factory] of Object.entries(buttons)) {
-      result[type] = this.createButton(type, factory);
+  private xyFromEvent(event: MouseEvent): [number, number] | null {
+    // prevent weird bugs
+    if (event.srcElement !== this.canvas) {
+      return null;
     }
 
-    return result as Record<keyof B, HTMLButtonElement>;
+    // there are two properties that give correct values, one is
+    // "experimental" and the other is "non-standard", so i chose the
+    // experimental property
+    // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/offsetX
+    // https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/layerX
+    return [event.offsetX, event.offsetY];
+  }
+
+  createButtons<B extends Buttons>(buttons: B) {
+    const result = {} as Record<keyof B, HTMLButtonElement>;
+
+    for (const [type, factory] of Object.entries(buttons)) {
+      result[type as keyof B] = this.createButton(type, factory);
+    }
+
+    return result;
   }
 
   private registerEventHandlers() {
@@ -48,21 +62,23 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
     this.canvas.addEventListener("mousedown", event => {
       event.preventDefault();
-
       if (this.readOnly) return;
-
       mouseMoved = false;
-
       if (this.currentDrawObjectFactory === null) return;
+
+      const pointOrNull = this.xyFromEvent(event);
+      if (pointOrNull === null) return;
       this.drawing = true;
-      this.objects.push(this.currentDrawObjectFactory(xyFromEvent(event)));
+      this.objects.push(this.currentDrawObjectFactory(pointOrNull!));
     });
 
     this.canvas.addEventListener("mousemove", event => {
       if (!this.drawing) return;
-
       mouseMoved = true;
-      this.objects[this.objects.length - 1].onMouseMove(xyFromEvent(event));
+
+      const pointOrNull = this.xyFromEvent(event);
+      if (pointOrNull === null) return;
+      this.objects[this.objects.length - 1].onMouseMove(pointOrNull!);
       this.draw(this.objects[this.objects.length - 1]);
     });
 
@@ -70,8 +86,11 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     document.addEventListener("mouseup", event => {
       if (this.readOnly) return;
 
-      // Draw a vertex instead of empty stuff.
       if (!mouseMoved) {
+        // Draw a dot instead of empty stuff.
+        const pointOrNull = this.xyFromEvent(event);
+        if (pointOrNull === null) return;
+
         if (this.drawing) this.objects.pop();
         const vertex = new Circle(xyFromEvent(event), true, 2);
         this.objects.push(vertex);
@@ -87,9 +106,6 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   private createButton(type: string, factory: (point: Point) => DrawObject): HTMLButtonElement {
     const elementId = `draw-${type}-button`;
     const element = document.getElementById(elementId)! as HTMLButtonElement;
-
-    // avoid drawing in the canvas
-    element.addEventListener("mouseup", event => event.stopPropagation());
 
     element.addEventListener("click", () => {
       this.selectedManager.addClass(element);

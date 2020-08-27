@@ -47,13 +47,6 @@ export class RadioClassManager extends StrictEventEmitter<RadioClassManagerEvent
   }
 }
 
-// there are two properties that give correct values, one is
-// "experimental" and the other is "non-standard", so i chose the
-// experimental property
-// https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/offsetX
-// https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/layerX
-export const xyFromEvent = (event: MouseEvent): [number, number] => [event.offsetX, event.offsetY];
-
 export class Debouncer {
   private timeoutHandle: any | null = null;
   private promiseResolve: ((value: boolean) => void) | null = null;
