@@ -13,20 +13,19 @@ type ToolButtonSpec = Record<string, (point: Point, color: string) => DrawObject
 export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
-
-  // TODO: is this really needed after c9d6687 ?
   readOnly: boolean = false;
 
   objects: DrawObject[] = [];
-  drawing: boolean = false;
+
+  // null: not currently drawing
+  // something else: drawing in progress, image data was saved before drawing
+  drawingImageData: null | ImageData = null;
 
   private color: string = "black";
   private selectedColorManager: RadioClassManager = new RadioClassManager("selected-drawing-color");
 
   private tool: ((point: Point, color: string) => DrawObject) | null = null;
   private selectedToolManager: RadioClassManager = new RadioClassManager("selected-drawing-tool");
-
-  private imageData: ImageData | null = null;
 
   constructor(canvasId: string) {
     super();
@@ -55,44 +54,40 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     let mouseMoved = false;
 
     this.canvas.addEventListener("mousedown", event => {
-      event.preventDefault();
-      if (this.readOnly) return;
-      mouseMoved = false;
-      if (this.tool === null) return;
-
       const pointOrNull = this.xyFromEvent(event);
-      if (pointOrNull === null) return;
-      this.drawing = true;
+      if (pointOrNull === null || this.tool === null || this.readOnly) return;
+
+      event.preventDefault();
+      mouseMoved = false;
+      this.drawingImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
       this.objects.push(this.tool(pointOrNull!, this.color));
     });
 
     this.canvas.addEventListener("mousemove", event => {
-      if (!this.drawing) return;
+      if (this.drawingImageData === null) return;
       mouseMoved = true;
 
       const pointOrNull = this.xyFromEvent(event);
       if (pointOrNull === null) return;
       this.objects[this.objects.length - 1].onMouseMove(pointOrNull!);
+      this.ctx.putImageData(this.drawingImageData, 0, 0);
       this.draw(this.objects[this.objects.length - 1]);
     });
 
     // document because mouse up outside canvas must also stop drawing
     document.addEventListener("mouseup", event => {
-      if (this.readOnly) return;
+      const pointOrNull = this.xyFromEvent(event);
+      if (pointOrNull === null || this.drawingImageData === null || this.readOnly) return;
 
       if (!mouseMoved) {
         // Draw a dot instead of empty stuff.
-        const pointOrNull = this.xyFromEvent(event);
-        if (pointOrNull === null) return;
-
-        if (this.drawing) this.objects.pop();
+        this.objects.pop();
         const dot = new Circle(pointOrNull!, this.color, true, 2);
         this.objects.push(dot);
         this.draw(dot);
       }
 
-      this.imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      this.drawing = false;
+      this.drawingImageData = null;
     });
   }
 
@@ -125,8 +120,6 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   }
 
   draw(obj: DrawObject) {
-    if (this.imageData !== null) this.ctx.putImageData(this.imageData, 0, 0);
-
     this.ctx.fillStyle = obj.color;
     this.ctx.strokeStyle = obj.color;
 
@@ -145,19 +138,14 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
   redraw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-    this.imageData = null;
     this.objects.forEach(obj => this.draw(obj));
-
-    this.imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
   }
 
   undo() {
-    if (this.objects.length === 0) return;
-
-    this.objects.pop();
-    this.redraw();
-    this.drawing = false;
+    if (this.drawingImageData === null && this.objects.length !== 0) {
+      this.objects.pop();
+      this.redraw();
+    }
   }
 
   getImageString() {

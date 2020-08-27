@@ -120,8 +120,6 @@ const boxes = {
   save: createBox("save"),
 };
 
-shownBoxManager.on("change", () => (cm.readOnly = !shownBoxManager.hasClass(boxes.draw.boxElement)));
-
 /*
 if you think that you can do this in some other way, you are likely wrong.
 
@@ -156,16 +154,17 @@ boxes.save.buttonElement.addEventListener("click", async () => {
 
 document.addEventListener("click", () => shownBoxManager.removeClass());
 
+editor.readOnly = true;
+cm.readOnly = true;
+
 MathJax.Hub.Register.StartupHook("End", async () => {
   MathJax.Hub.processSectionDelay = 0;
-
-  editor.readOnly = true;
-  cm.readOnly = true;
 
   const { math, imageString } = await pm.loadPaste();
   editor.contents = math || "";
   cm.setImageString(imageString || "");
 
   editor.readOnly = false;
+  cm.readOnly = false;
 });
 MathJax.Hub.Configured();
