@@ -8,7 +8,7 @@ interface CanvasManagerEvents {
   change: () => void;
 }
 
-type Buttons = Record<string, (point: Point) => DrawObject>;
+type ToolButtonSpec = Record<string, (point: Point, color: string) => DrawObject>;
 
 export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   canvas: HTMLCanvasElement;
@@ -20,8 +20,11 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   objects: DrawObject[] = [];
   drawing: boolean = false;
 
-  private currentDrawObjectFactory: ((point: Point) => DrawObject) | null = null;
-  private selectedManager: RadioClassManager = new RadioClassManager("selected");
+  private color: string = "black";
+  private selectedColorManager: RadioClassManager = new RadioClassManager("selected-drawing-color");
+
+  private tool: ((point: Point, color: string) => DrawObject) | null = null;
+  private selectedToolManager: RadioClassManager = new RadioClassManager("selected-drawing-tool");
 
   private imageData: ImageData | null = null;
 
@@ -48,16 +51,6 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     return [event.offsetX, event.offsetY];
   }
 
-  createButtons<B extends Buttons>(buttons: B) {
-    const result = {} as Record<keyof B, HTMLButtonElement>;
-
-    for (const [type, factory] of Object.entries(buttons)) {
-      result[type as keyof B] = this.createButton(type, factory);
-    }
-
-    return result;
-  }
-
   private registerEventHandlers() {
     let mouseMoved = false;
 
@@ -65,12 +58,12 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
       event.preventDefault();
       if (this.readOnly) return;
       mouseMoved = false;
-      if (this.currentDrawObjectFactory === null) return;
+      if (this.tool === null) return;
 
       const pointOrNull = this.xyFromEvent(event);
       if (pointOrNull === null) return;
       this.drawing = true;
-      this.objects.push(this.currentDrawObjectFactory(pointOrNull!));
+      this.objects.push(this.tool(pointOrNull!, this.color));
     });
 
     this.canvas.addEventListener("mousemove", event => {
@@ -93,31 +86,49 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
         if (pointOrNull === null) return;
 
         if (this.drawing) this.objects.pop();
-        const vertex = new Circle(xyFromEvent(event), true, 2);
-        this.objects.push(vertex);
-        this.draw(vertex);
+        const dot = new Circle(pointOrNull!, this.color, true, 2);
+        this.objects.push(dot);
+        this.draw(dot);
       }
 
       this.imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-
       this.drawing = false;
     });
   }
 
-  private createButton(type: string, factory: (point: Point) => DrawObject): HTMLButtonElement {
-    const elementId = `draw-${type}-button`;
-    const element = document.getElementById(elementId)! as HTMLButtonElement;
-
+  // TODO: the elements are actually input elements, not button elements
+  private initToolButton(element: HTMLButtonElement, factory: (point: Point, color: string) => DrawObject) {
     element.addEventListener("click", () => {
-      this.selectedManager.addClass(element);
-      this.currentDrawObjectFactory = factory;
+      this.selectedToolManager.addClass(element);
+      this.tool = factory;
     });
+  }
 
-    return element;
+  initToolButtons<S extends ToolButtonSpec>(spec: S) {
+    for (const [id, factory] of Object.entries(spec)) {
+      const button = document.getElementById(id)! as HTMLButtonElement;
+      this.initToolButton(button, factory);
+    }
+  }
+
+  private initColorButton(element: HTMLButtonElement) {
+    element.addEventListener("click", () => {
+      this.selectedColorManager.addClass(element);
+      this.color = element.style.backgroundColor;
+    });
+  }
+
+  initColorButtons(buttonElements: HTMLButtonElement[]) {
+    for (const element of buttonElements) {
+      this.initColorButton(element);
+    }
   }
 
   draw(obj: DrawObject) {
     if (this.imageData !== null) this.ctx.putImageData(this.imageData, 0, 0);
+
+    this.ctx.fillStyle = obj.color;
+    this.ctx.strokeStyle = obj.color;
 
     switch (obj.lineMode) {
       case LineMode.Fill:
@@ -150,19 +161,32 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   }
 
   getImageString() {
-    return this.objects.map(object => object.toStringPart()).join("|");
+    let color = "black";
+    return this.objects.flatMap(obj => {
+      if (obj.color !== color) {
+        color = obj.color;
+        return [ `color=${obj.color}`, obj.toStringPart() ];
+      }
+      return [ obj.toStringPart() ];
+    }).join("|");
   }
 
   setImageString(imageString: string) {
     if (imageString === "") return;
 
+    let color = "black";
     this.objects = imageString.split("|").map(stringPart => {
-      if (stringPart.startsWith("circle;")) {
-        return Circle.fromStringPart(stringPart);
-      } else {
-        return Pen.fromStringPart(stringPart);
+      if (stringPart.startsWith("color=")) {
+        color = stringPart.slice("color=".length);
+        return null;
       }
-    });
+
+      if (stringPart.startsWith("circle;")) {
+        return Circle.fromStringPart(stringPart, color);
+      }
+
+      return Pen.fromStringPart(stringPart, color);
+    }).filter(obj => obj !== null).map(obj => obj!);
 
     this.redraw();
   }

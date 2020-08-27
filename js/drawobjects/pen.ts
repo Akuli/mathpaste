@@ -15,12 +15,10 @@ const POINT_DISTANCE_THRESHOLD: number = 2;
 
 export class Pen implements DrawObject {
   lineMode: LineMode = LineMode.Stroke;
-
   path: Path2D;
-
   points: Point[];
 
-  constructor(startPoint: Point) {
+  constructor(startPoint: Point, public color: string) {
     this.path = new Path2D();
     this.path.moveTo(...startPoint);
     this.points = [startPoint];
@@ -52,10 +50,10 @@ export class Pen implements DrawObject {
     return this.points.map(xy => xy.join(",")).join(";");
   }
 
-  static fromStringPart(stringPart: string): DrawObject {
-    const points = stringPart.split(";").map(xy => xy.split(",").map(value => +value)) as Point[];
+  static fromStringPart(stringPart: string, color: string): DrawObject {
+    const points = stringPart.split(";").map(xy => xy.split(",").map(value => +value) as Point);
 
-    const pen = new Pen(points.shift()!);
+    const pen = new Pen(points.shift()!, color);
     points.forEach(point => pen.addPoint(point));
     return pen;
   }

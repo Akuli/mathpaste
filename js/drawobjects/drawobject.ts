@@ -8,8 +8,8 @@ export enum LineMode {
 export interface DrawObject {
   lineMode: LineMode;
   path: Path2D;
+  color: string;
 
   onMouseMove(point: Point): void;
-
   toStringPart(): string;
 }

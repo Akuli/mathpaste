@@ -4,7 +4,7 @@ export class Circle implements DrawObject {
   lineMode: LineMode;
   path: Path2D;
 
-  constructor(public center: Point, filled: boolean = false, public radius: number = 0) {
+  constructor(public center: Point, public color: string, filled: boolean = false, public radius: number = 0) {
     this.lineMode = filled ? LineMode.Fill : LineMode.Stroke;
 
     this.path = new Path2D();
@@ -24,12 +24,12 @@ export class Circle implements DrawObject {
     return "circle;" + this.center.join(";") + ";" + this.radius + ";" + +!!(this.lineMode === LineMode.Fill);
   }
 
-  static fromStringPart(stringPart: string): DrawObject {
+  static fromStringPart(stringPart: string, color: string): DrawObject {
     const [circleString, centerX, centerY, radius, isFilled] = stringPart.split(";");
     if (circleString !== "circle") {
       throw new Error("does not look like a circle string part: " + stringPart);
     }
 
-    return new Circle([+centerX, +centerY], !!+isFilled, +radius);
+    return new Circle([+centerX, +centerY], color, !!+isFilled, +radius);
   }
 }

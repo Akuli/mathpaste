@@ -50,12 +50,22 @@ body {
     height: 1.2rem;
 }
 
-.pic-button.selected {
-    opacity: 0.8;
+.pic-button.selected-drawing-tool, .pic-button.selected-drawing-color {
+    opacity: 1;
 }
 
 .pic-button:hover {
     opacity: 1;
+}
+
+hr.button-separator {
+    /* let the margin create a gap, don't show anything else */
+    border-style: none;
+}
+
+.color-button {
+    background-clip: content-box;
+    border-radius: 5px;
 }
 
 #button-holder {

@@ -17,6 +17,7 @@ import "../pics/info.png";
 import "../pics/line.png";
 import "../pics/pen.png";
 import "../pics/save.png";
+import "../pics/1x1-transparent.png";
 
 const editor = new Editor("editor", {
   selectionStyle: "text",
@@ -37,13 +38,17 @@ if (query.has("vim")) {
   });
 }
 
-const buttons = cm.createButtons({
-  pen: p => new Pen(p),
-  circle: p => new Circle(p),
-  "filled-circle": p => new Circle(p, true),
-  line: p => new StraightLine(p),
+cm.initToolButtons({
+  "draw-pen-button": (point, color) => new Pen(point, color),
+  "draw-circle-button": (point, color) => new Circle(point, color),
+  "draw-filled-circle-button": (point, color) => new Circle(point, color, true),
+  "draw-line-button": (point, color) => new StraightLine(point, color),
 });
-buttons.pen.click();
+cm.initColorButtons(
+  Array.from(document.getElementsByClassName("color-button")).map(b => b as HTMLButtonElement));
+
+document.getElementById("draw-pen-button")!.click();
+document.getElementById("draw-default-color-button")!.click();
 
 cm.on("change", () => pm.saveImageString(cm.getImageString()));
 
