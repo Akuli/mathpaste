@@ -56,7 +56,7 @@ export class RunOnceAtATime {
   constructor(private func: () => Promise<void>) {}
 
   async run() {
-   if (this.currentlyRunning) {
+    if (this.currentlyRunning) {
       this.runAgain = true;
       return;
     }

@@ -5,12 +5,12 @@ import Renderer from "../js/renderer";
 describe("Renderer", () => {
   let lineContainerNum = 0;
 
-  function createLineContainerAndRenderer(callback: () => [string, number]) {
+  function createLineContainerAndRenderer(callback: () => string) {
     const lineContainer = document.createElement("div");
     lineContainer.id = "lineContainer" + lineContainerNum++;
     document.body.append(lineContainer);
 
-    const renderer = new Renderer(lineContainer.id, callback!);
+    const renderer = new Renderer(lineContainer.id, callback, () => 0);
     renderer.highlightLine = jest.fn((lineNumber: number) => {
       expect(lineNumber).toEqual(0);
     });
@@ -31,7 +31,7 @@ describe("Renderer", () => {
   (global as any).MathJax = { Hub: { Queue: MathjaxHubQueue } };
 
   it("renders as math by default", async () => {
-    const [lineContainer, renderer] = createLineContainerAndRenderer(() => ["alpha + beta", 0]);
+    const [lineContainer, renderer] = createLineContainerAndRenderer(() => "alpha + beta");
     await renderer.render();
     expect(lineContainer.innerHTML).toEqual('<div class="line">`alpha + beta`</div>');
     expect(renderer.highlightLine).toHaveBeenCalledTimes(1);
@@ -39,14 +39,14 @@ describe("Renderer", () => {
   });
 
   it("renders as markdown when prefixed with TEXT_PREFIX", async () => {
-    const [lineContainer, renderer] = createLineContainerAndRenderer(() => [TEXT_PREFIX + "how **bold** of you", 0]);
+    const [lineContainer, renderer] = createLineContainerAndRenderer(() => TEXT_PREFIX + "how **bold** of you");
     await renderer.render();
     expect(lineContainer.innerHTML).toEqual('<div class="line"><p>how <strong>bold</strong> of you</p>\n</div>');
     expect(renderer.highlightLine).toHaveBeenCalledTimes(1);
   });
 
   it("resolves only after math has been typeset", async () => {
-    const [lineContainer, renderer] = createLineContainerAndRenderer(() => ["", 0]);
+    const [lineContainer, renderer] = createLineContainerAndRenderer(() => "");
     delayedCallbacks.add(lineContainer.id);
 
     let timePassed = false;
@@ -65,7 +65,7 @@ describe("Renderer", () => {
 
   it("keeps state consistent even after concurrent calls", async () => {
     let toRender = "";
-    const [lineContainer, renderer] = createLineContainerAndRenderer(() => [toRender, 0]);
+    const [lineContainer, renderer] = createLineContainerAndRenderer(() => toRender);
 
     const actions = [
       () => {

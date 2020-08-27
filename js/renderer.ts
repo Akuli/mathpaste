@@ -15,11 +15,12 @@ export default class Renderer {
 
   private renderRunner: RunOnceAtATime;
 
-  constructor(lineContainerId: string, getContentsAndLineToHighlight: () => [string, number]) {
+  constructor(lineContainerId: string, getContents: () => string, private getHighlightLineIndex: () => number) {
     this.lineContainer = document.getElementById(lineContainerId)!;
-    this.renderRunner = new RunOnceAtATime(async() => await this.renderRaw(...getContentsAndLineToHighlight()));
+    this.renderRunner = new RunOnceAtATime(async () => await this.renderRaw(getContents(), getHighlightLineIndex()));
   }
 
+  // highlights automatically
   async render() {
     await this.renderRunner.run();
   }
@@ -80,6 +81,7 @@ export default class Renderer {
     return new Promise(resolve => MathJax.Hub.Queue(["Typeset", MathJax.Hub, lineElement, () => resolve()]));
   }
 
+  // this function breaks if more than one instance of it runs in parallel
   private async renderRaw(contents: string, lineToHighlight: number): Promise<void> {
     const newLines = contents.split("\n\n");
     const diff = await import(/* webpackPreload: true */ "diff");
@@ -104,8 +106,8 @@ export default class Renderer {
     this.highlightLine(lineToHighlight);
   }
 
-  highlightLine(index: number) {
-    const lineElementToShow = this.elements[index];
+  highlightLine(index?: number) {
+    const lineElementToShow = this.elements[index === undefined ? this.getHighlightLineIndex() : index!];
 
     if (lineElementToShow === undefined) return;
 
