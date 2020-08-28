@@ -13,7 +13,7 @@ describe("CanvasManager", () => {
     expect(cm.objects).toHaveLength(0);
     cm.objects.push(circle);
     expect(cm.objects).toEqual([circle]);
-    cm.undoAll();
+    cm.clear();
     expect(cm.objects).toHaveLength(0);
     cm.undo();
     expect(cm.objects).toEqual([circle]);

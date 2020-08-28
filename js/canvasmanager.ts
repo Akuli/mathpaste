@@ -107,8 +107,8 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     }
   }
 
-  initUndoAllButton(element: HTMLButtonElement) {
-    element.addEventListener("click", () => this.undoAll());
+  initClearButton(element: HTMLButtonElement) {
+    element.addEventListener("click", () => this.clear());
   }
 
   private initColorButton(element: HTMLButtonElement) {
@@ -160,7 +160,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     this.emit("change");
   }
 
-  undoAll() {
+  clear() {
     if (this.drawingImageData !== null || this.objects.length === 0) return;
     this.oldObjects = this.objects.splice(0, this.objects.length);
     this.redraw();

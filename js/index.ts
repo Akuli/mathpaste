@@ -15,7 +15,7 @@ import "../pics/circle.png";
 import "../pics/filled-circle.png";
 import "../pics/line.png";
 import "../pics/pen.png";
-import "../pics/undoall.png";
+import "../pics/clear.png";
 import "../pics/1x1-transparent.png";
 
 const editor = new Editor("editor", {
@@ -44,7 +44,7 @@ cm.initToolButtons({
 });
 cm.initColorButtons(
   Array.from(document.getElementsByClassName("color-button")).map(b => b as HTMLButtonElement));
-cm.initUndoAllButton(document.getElementById("undo-all-button")! as HTMLButtonElement);
+cm.initClearButton(document.getElementById("clear-button")! as HTMLButtonElement);
 
 document.getElementById("draw-pen-button")!.click();
 document.getElementById("draw-default-color-button")!.click();
