@@ -15,6 +15,8 @@ DATABASE_URL = 'https://mathpaste-8cc8e.firebaseio.com'
 # this is much longer in case something very important expires too soon
 DELETION_AGE = timedelta(days=365)
 
+MATHS_TABLE = 'maths-v2'
+
 
 def abort_if_user_says_no(message):
     if input(message + " (y/n) ").lower() != 'y':
@@ -29,14 +31,12 @@ def init_firebase():
     firebase_admin.initialize_app(cred, {'databaseURL': DATABASE_URL})
 
 
-def get_big_maths_dict():
-    print("Getting all maths from DB...")
-    result = firebase_admin.db.reference('maths').get()
-    print("  found %d maths" % len(result))
-    return result
+def download_everything_from_db():
+    print("Downloading everything from DB...")
+    return firebase_admin.db.reference('/').get()
 
 
-def create_backup(big_maths_dict):
+def create_backup(db_contents):
     directory_path = os.path.expanduser('~/mathpaste-backups')
     try:
         os.mkdir(directory_path)
@@ -44,25 +44,25 @@ def create_backup(big_maths_dict):
         pass
 
     file_path = os.path.join(directory_path, datetime.now().strftime('%Y-%m-%dT%H-%M-%S.json'))
-    print("Saving all maths to", file_path, "...")
+    print("Saving DB contents to", file_path, "...")
 
     # 'x' gives error if backup_path exists
     with open(file_path, 'x') as file:
         # there is an "Export JSON" button in firebase console
         # this dumps using the same format
-        json.dump({'maths': big_maths_dict}, file)
+        json.dump(db_contents, file)
 
 
-def which_maths_to_delete(big_maths_dict):
+def which_maths_to_delete(db_contents):
     print("Figuring out which maths to delete...")
 
     now = datetime.now()
     ids_to_delete = []
 
-    for math_id, value_dict in big_maths_dict.items():
+    for math_id, value_dict in db_contents[MATHS_TABLE].items():
         # the timestamp is in milliseconds since epoch
         # datetime module wants seconds since epoch so we /1000
-        math_time = datetime.fromtimestamp(value_dict['timestamp'] / 1000)
+        math_time = datetime.fromtimestamp(value_dict['content']['timestamp'] / 1000)
         if math_time > now:
             print("WARNING: timestamp of math %s is in the future" % math_id)
         if math_time < now - DELETION_AGE:
@@ -71,32 +71,27 @@ def which_maths_to_delete(big_maths_dict):
     return ids_to_delete
 
 
-def confirm_deletion(big_maths_dict, ids_to_delete):
-    print("{} maths ({:.1f}% of all maths) would get deleted.".format(
-        len(ids_to_delete),
-        len(ids_to_delete) / len(big_maths_dict) * 100,
-    ))
+def confirm_deletion(db_contents, ids_to_delete):
+    print(f"{len(ids_to_delete)} maths out of {len(db_contents[MATHS_TABLE])} total would get deleted.")
     abort_if_user_says_no("Do you want to delete the old maths?")
 
 
 def delete_maths(ids_to_delete):
     for count, math_id in enumerate(ids_to_delete, start=1):
-        print("Deleting math {} ({}/{})...".format(
-            math_id, count, len(ids_to_delete)))
-        firebase_admin.db.reference('/maths/' + math_id).delete()
+        path = f'/{MATHS_TABLE}/{math_id}'
+        print(f"Deleting {path} ({count}/{len(ids_to_delete)})...")
+        firebase_admin.db.reference(path).delete()
 
 
 def main():
     init_firebase()
 
-    big_maths_dict = get_big_maths_dict()
-    create_backup(big_maths_dict)
-    ids_to_delete = which_maths_to_delete(big_maths_dict)
-
+    db_contents = download_everything_from_db()
+    create_backup(db_contents)
+    ids_to_delete = which_maths_to_delete(db_contents)
     print()
-
     if ids_to_delete:
-        confirm_deletion(big_maths_dict, ids_to_delete)
+        confirm_deletion(db_contents, ids_to_delete)
         delete_maths(ids_to_delete)
         print("Done.")
     else:
