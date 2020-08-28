@@ -16,6 +16,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   readOnly: boolean = false;
 
   objects: DrawObject[] = [];
+  private oldObjects: DrawObject[] | null = null;
 
   // null: not currently drawing
   // something else: drawing in progress, image data was saved before drawing
@@ -106,6 +107,10 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     }
   }
 
+  initUndoAllButton(element: HTMLButtonElement) {
+    element.addEventListener("click", () => this.undoAll());
+  }
+
   private initColorButton(element: HTMLButtonElement) {
     element.addEventListener("click", () => {
       this.selectedColorManager.addClass(element);
@@ -142,10 +147,24 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   }
 
   undo() {
-    if (this.drawingImageData === null && this.objects.length !== 0) {
+    if (this.drawingImageData !== null) return;
+    if (this.objects.length !== 0) {
       this.objects.pop();
-      this.redraw();
+    } else if (this.oldObjects !== null) {
+      this.objects = this.oldObjects;
+      this.oldObjects = null;
+    } else {
+      return;
     }
+    this.redraw();
+    this.emit("change");
+  }
+
+  undoAll() {
+    if (this.drawingImageData !== null || this.objects.length === 0) return;
+    this.oldObjects = this.objects.splice(0, this.objects.length);
+    this.redraw();
+    this.emit("change");
   }
 
   getImageString() {
