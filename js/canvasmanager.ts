@@ -160,22 +160,23 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   }
 
   setImageString(imageString: string) {
-    if (imageString === "") return;
+    if (imageString === "") {
+      this.objects = [];
+    } else {
+      let color = "black";
+      this.objects = imageString.split("|").map(stringPart => {
+        if (stringPart.startsWith("color=")) {
+          color = stringPart.slice("color=".length);
+          return null;
+        }
 
-    let color = "black";
-    this.objects = imageString.split("|").map(stringPart => {
-      if (stringPart.startsWith("color=")) {
-        color = stringPart.slice("color=".length);
-        return null;
-      }
+        if (stringPart.startsWith("circle;")) {
+          return Circle.fromStringPart(stringPart, color);
+        }
 
-      if (stringPart.startsWith("circle;")) {
-        return Circle.fromStringPart(stringPart, color);
-      }
-
-      return Pen.fromStringPart(stringPart, color);
-    }).filter(obj => obj !== null).map(obj => obj!);
-
+        return Pen.fromStringPart(stringPart, color);
+      }).filter(obj => obj !== null).map(obj => obj!);
+    }
     this.redraw();
   }
 

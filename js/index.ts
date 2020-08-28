@@ -159,12 +159,13 @@ cm.readOnly = true;
 
 MathJax.Hub.Register.StartupHook("End", async () => {
   MathJax.Hub.processSectionDelay = 0;
-
-  const { math, imageString } = await pm.loadPaste();
-  editor.contents = math || "";
-  cm.setImageString(imageString || "");
-
-  editor.readOnly = false;
-  cm.readOnly = false;
+  try {
+    const { math, imageString } = await pm.loadPaste();
+    editor.contents = math || "";
+    cm.setImageString(imageString || "");
+  } finally {
+    editor.readOnly = false;
+    cm.readOnly = false;
+  }
 });
 MathJax.Hub.Configured();
