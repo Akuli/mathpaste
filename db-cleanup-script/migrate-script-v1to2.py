@@ -19,24 +19,24 @@ legacy_maths = firebase_admin.db.reference('maths').get()
 print("getting all new maths")
 new_maths = firebase_admin.db.reference('maths-v2').get()
 
-for index, (math_id, math_dict) in enumerate(legacy_maths.items(), start=1):
+for index, (math_id, math_dict) in enumerate(sorted(legacy_maths.items()), start=1):
     print(f"processing {math_id} ({index}/{len(legacy_maths)})")
     if 'encryptedValue' not in math_dict:
-        print("  no encryptedValue (very legacy)")
+        print("  no encryption used (very legacy)")
         continue
 
-    assert 'timestamp' in math_dict
+    assert math_dict.keys() == {'timestamp', 'encryptedValue'}
+    assert isinstance(math_dict['timestamp'], int)
+    assert isinstance(math_dict['encryptedValue'], str)
 
     if math_id in new_maths:
+        assert new_maths[math_id]['content'] == math_dict
         print("  already copied")
         continue
 
-    # add 'continue' here to figure out correct value of total or to dry-run
-
     print("  copying")
-    new_ref = firebase_admin.db.reference('/maths-v2/' + math_id)
-    assert new_ref.get() is None
+    new_ref = firebase_admin.db.reference(f'/maths-v2/{math_id}')
     new_ref.set({
-        'content': math_dict['encryptedValue'],
+        'content': math_dict,
         'owner': ''.join(random.SystemRandom().choices(string.ascii_letters, k=50)),
     })
