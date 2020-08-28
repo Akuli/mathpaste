@@ -37,16 +37,17 @@ def get_big_maths_dict():
 
 
 def create_backup(big_maths_dict):
+    directory_path = os.path.expanduser('~/mathpaste-backups')
     try:
-        os.mkdir('backups')
+        os.mkdir(directory_path)
     except FileExistsError:
         pass
 
-    backup_path = datetime.now().strftime('backups/%Y-%m-%dT%H-%M-%S.json')
-    print("Saving all maths to", backup_path, "...")
+    file_path = os.path.join(directory_path, datetime.now().strftime('%Y-%m-%dT%H-%M-%S.json'))
+    print("Saving all maths to", file_path, "...")
 
     # 'x' gives error if backup_path exists
-    with open(backup_path, 'x') as file:
+    with open(file_path, 'x') as file:
         # there is an "Export JSON" button in firebase console
         # this dumps using the same format
         json.dump({'maths': big_maths_dict}, file)
