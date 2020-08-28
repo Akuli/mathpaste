@@ -30,7 +30,7 @@ $ source env/bin/activate
 
 Next you need to download the credentials for accessing Firebase. Do it like this:
 
-1. Go to [Firebase console](console.firebase.google.com).
+1. Go to [Firebase console](https://console.firebase.google.com).
 2. Click MathPaste.
 3. Click the setting icon next to "Project overview".
 4. Click "Project settings" in the menu that appears.

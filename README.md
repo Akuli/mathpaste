@@ -62,14 +62,6 @@ If for some reason you want a source-map for better debugging, you can use
 
     $ npm run start --devtool source-map
 
-If you want to distribute this somewhere, you must run
-
-    $ npm run build
-
-Then, `dist/` will contain the "compiled" webapp which you can put on your
-server or deploy to gh-pages with `deploy.sh`. You can run `deploy.sh`
-without arguments.
-
 Types are not checked by `npm run build` or `npm run start`. You can check
 types either by utilizing a language server in your editor, which is out of
 the scope of this README, or by running
@@ -86,6 +78,17 @@ There are also some tests in the `tests/` subdirectory. You can run them like th
 
 All these checks run automatically in GitHub Actions
 when you push to github or create a pull request.
+
+Avoid pushing new commits directly to `master`.
+Instead, first push your changes in some other branch so that CI runs.
+Then you can merge the changes to master.
+
+Run these commands to publish from `master` to github.io:
+
+    $ git checkout master
+    $ git merge my-feature-branch
+    $ npm run build
+    $ ./deploy.sh
 
 [mathb.in]: http://mathb.in/
 [asciimath]: http://asciimath.org/
