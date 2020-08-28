@@ -46,7 +46,6 @@ cm.initColorButtons(
   Array.from(document.getElementsByClassName("color-button")).map(b => b as HTMLButtonElement));
 cm.initUndoAllButton(document.getElementById("undo-all-button")! as HTMLButtonElement);
 
-
 document.getElementById("draw-pen-button")!.click();
 document.getElementById("draw-default-color-button")!.click();
 
