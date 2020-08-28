@@ -60,7 +60,7 @@ Then visiting http://localhost:8080/
 
 If for some reason you want a source-map for better debugging, you can use
 
-    $ npm run start --devtool sourcemap
+    $ npm run start --devtool source-map
 
 If you want to distribute this somewhere, you must run
 
