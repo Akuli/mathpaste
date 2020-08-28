@@ -148,7 +148,10 @@ document.addEventListener("keydown", event => {
 });
 
 boxes.save.buttonElement.addEventListener("click", async () => {
-  window.location.hash = await pm.uploadPaste(editor.contents, cm.getImageString());
+  window.location.hash = await pm.uploadPaste({
+    math: editor.contents,
+    imageString: cm.getImageString(),
+  });
   (document.getElementById("save-url")! as HTMLInputElement).value = window.location.href;
 });
 
