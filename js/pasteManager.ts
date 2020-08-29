@@ -5,16 +5,6 @@ these are the rules i use:
 
 {
   "rules": {
-    // Legacy data (read/add only)
-    "maths": {
-      "$math": {
-        // 30 days = 2592000000ms
-        ".read": "data.child('timestamp').val() > (now - 2592000000)",
-        ".validate": "newData.hasChildren(['timestamp']) && newData.child('timestamp').isNumber()",
-        ".write": "!data.exists()"
-      }
-    },
-    // New data (owner can modify)
     "maths-v2": {
       "$math": {
         ".read": "false",
