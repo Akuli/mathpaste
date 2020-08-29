@@ -55,6 +55,10 @@ editor.on("change", (_, changeType) => {
   if (changeType === ChangeType.UserInput) window.location.hash = "";
 });
 
+cm.on("change", (changeType) => {
+  if (changeType === ChangeType.UserInput) window.location.hash = "";
+});
+
 editor.on("change", async (contents: string) => {
   if (contents.split("\n\n").some(line => line.startsWith(TEXT_PREFIX))) {
     await import("./modes/literate_asciimath");
