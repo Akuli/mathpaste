@@ -15,7 +15,7 @@ import "../pics/circle.png";
 import "../pics/filled-circle.png";
 import "../pics/line.png";
 import "../pics/pen.png";
-import "../pics/clear.png";
+import "../pics/trash.png";
 import "../pics/1x1-transparent.png";
 
 const editor = new Editor("editor", {
