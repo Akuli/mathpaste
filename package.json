@@ -43,6 +43,7 @@
     "core-js": "^3.6.5",
     "diff": "^4.0.2",
     "firebase": "^7.19.1",
+    "jest-canvas-mock": "^2.2.0",
     "lz-string": "^1.4.4",
     "marked-ts": "^1.0.0-beta.5",
     "scroll-into-view-if-needed": "^2.2.25",
