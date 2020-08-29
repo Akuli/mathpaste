@@ -87,6 +87,7 @@ Run these commands to publish from `master` to github.io:
 
     $ git checkout master
     $ git merge my-feature-branch
+    $ git push origin master
     $ npm run build
     $ ./deploy.sh
 
