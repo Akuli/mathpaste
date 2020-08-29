@@ -5,6 +5,10 @@ import { Circle } from "./drawobjects/circle";
 import { Point, LineMode, DrawObject } from "./drawobjects/drawobject";
 
 interface CanvasManagerEvents {
+  /*
+   * NB: this event is emitted only when the user changes something, not when
+   * the image string is set
+   */
   change: () => void;
 }
 
@@ -70,9 +74,10 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
       const pointOrNull = this.xyFromEvent(event);
       if (pointOrNull === null) return;
-      this.objects[this.objects.length - 1].onMouseMove(pointOrNull!);
+      this.objects[this.objects.length - 1].onMouseMove(pointOrNull);
       this.ctx.putImageData(this.drawingImageData, 0, 0);
       this.draw(this.objects[this.objects.length - 1]);
+      this.emit("change");
     });
 
     // document because mouse up outside canvas must also stop drawing
@@ -86,6 +91,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
         const dot = new Circle(pointOrNull!, this.color, true, 2);
         this.objects.push(dot);
         this.draw(dot);
+        this.emit("change");
       }
 
       this.drawingImageData = null;
@@ -137,8 +143,6 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
         this.ctx.stroke(obj.path);
         break;
     }
-
-    this.emit("change");
   }
 
   redraw() {
