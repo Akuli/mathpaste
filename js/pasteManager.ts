@@ -109,7 +109,7 @@ export default class PasteManager {
     // but the empty string is not valid LZString utf16 compressed stuff
     return {
       math: value.content,
-      imageString: value.image ? LZString.decompressFromUTF16(value.image) : "",
+      imageString: value.image ? LZString.decompressFromUTF16(value.image)! : "",
     };
   }
 
