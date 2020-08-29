@@ -5,6 +5,10 @@ import { Circle } from "./drawobjects/circle";
 import { Point, LineMode, DrawObject } from "./drawobjects/drawobject";
 
 interface CanvasManagerEvents {
+  /*
+   * NB: this event is emitted only when the user changes something, not when
+   * the image string is set
+   */
   change: () => void;
 }
 
