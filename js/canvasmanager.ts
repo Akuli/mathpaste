@@ -3,9 +3,10 @@ import { Pen } from "./drawobjects/pen";
 import { Circle } from "./drawobjects/circle";
 
 import { Point, LineMode, DrawObject } from "./drawobjects/drawobject";
+import { ChangeType } from "./editor";
 
 interface CanvasManagerEvents {
-  change: () => void;
+  change: (changeType: ChangeType) => void;
 }
 
 type ToolButtonSpec = Record<string, (point: Point, color: string) => DrawObject>;
@@ -70,9 +71,10 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
       const pointOrNull = this.xyFromEvent(event);
       if (pointOrNull === null) return;
-      this.objects[this.objects.length - 1].onMouseMove(pointOrNull!);
+      this.objects[this.objects.length - 1].onMouseMove(pointOrNull);
       this.ctx.putImageData(this.drawingImageData, 0, 0);
       this.draw(this.objects[this.objects.length - 1]);
+      this.emit("change", ChangeType.UserInput);
     });
 
     // document because mouse up outside canvas must also stop drawing
@@ -86,6 +88,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
         const dot = new Circle(pointOrNull!, this.color, true, 2);
         this.objects.push(dot);
         this.draw(dot);
+        this.emit("change", ChangeType.UserInput);
       }
 
       this.drawingImageData = null;
@@ -137,8 +140,6 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
         this.ctx.stroke(obj.path);
         break;
     }
-
-    this.emit("change");
   }
 
   redraw() {
@@ -157,14 +158,14 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
       return;
     }
     this.redraw();
-    this.emit("change");
+    this.emit("change", ChangeType.UserInput);
   }
 
   clear() {
     if (this.drawingImageData !== null || this.objects.length === 0) return;
     this.oldObjects = this.objects.splice(0, this.objects.length);
     this.redraw();
-    this.emit("change");
+    this.emit("change", ChangeType.UserInput);
   }
 
   getImageString() {
@@ -197,6 +198,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
       }).filter(obj => obj !== null).map(obj => obj!);
     }
     this.redraw();
+    this.emit("change", ChangeType.SetContents);
   }
 
   getDataUrl() {
