@@ -1,4 +1,3 @@
-/* tslint:disable */
 /*
 select "Database" at left in Firebase, go to the "Rules" tab
 these are the rules i use:
@@ -28,7 +27,6 @@ decryption key is NEVER sent to the database so database access doesn't mean you
 a paste can be modified only by the anonymous user who created the paste (aka "owner" of paste)
 to avoid pretending that you own a paste, it's not possible to read the owner
 */
-/* tslint:enable */
 
 import * as LZString from "lz-string";
 import * as firebase from "firebase/app";
@@ -77,6 +75,7 @@ export default class PasteManager {
       return null;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [hashtagSaved, pasteId, cryptoKey] = hash.split(":");
     return await this.getPasteFromFirebase(pasteId, cryptoKey);
   }
