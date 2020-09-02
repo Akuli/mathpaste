@@ -1,4 +1,4 @@
-import * as ace from "ace-builds";
+import * as ace from "brace";
 
 export type HighlightStateTransition = {
   token: string;
