@@ -31,7 +31,7 @@ const pm = new PasteManager();
 
 const query = new URLSearchParams(window.location.search);
 if (query.has("vim")) {
-  import("brace/keybinding/vim").then(() => {
+  import("ace-builds/src-min-noconflict/keybinding-vim").then(() => {
     editor.keyboardHandler = "ace/keyboard/vim";
   });
 }
