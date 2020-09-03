@@ -127,8 +127,8 @@ const boxes = {
 /* this used to be hard but new ace just seems to make it work */
 document.addEventListener("keydown", event => {
   if (event.key === "z" && event.ctrlKey && shownBoxManager.hasClass(boxes.draw.boxElement)) {
-      cm.undo();
-    }
+    cm.undo();
+  }
 });
 
 boxes.save.buttonElement.addEventListener("click", async () => {
