@@ -14,13 +14,34 @@ interface CanvasManagerEvents {
 
 type ToolButtonSpec = Record<string, (point: Point, color: string) => DrawObject>;
 
+interface Event {
+  undo: (cm: CanvasManager) => void,
+}
+
+class DrawEvent implements Event {
+  undo(cm: CanvasManager): void {
+    console.assert(cm.objects.length !== 0, "undoing draw with empty objects");
+    cm.objects.pop();
+  }
+}
+
+class ClearEvent implements Event {
+  constructor(private objects: DrawObject[]) {}
+
+  undo(cm: CanvasManager): void {
+    console.assert(cm.objects.length === 0, "undoing clear without empty objects");
+    cm.objects = this.objects;
+  }
+}
+
 export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   readOnly: boolean = false;
 
   objects: DrawObject[] = [];
-  private oldObjects: DrawObject[] | null = null;
+
+  private events: Event[] = [];
 
   // null: not currently drawing
   // something else: drawing in progress, image data was saved before drawing
@@ -66,6 +87,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
       mouseMoved = false;
       this.drawingImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
       this.objects.push(this.tool(pointOrNull!, this.color));
+      this.events.push(new DrawEvent());
     });
 
     this.canvas.addEventListener("mousemove", event => {
@@ -152,21 +174,15 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
   undo() {
     if (this.drawingImageData !== null) return;
-    if (this.objects.length !== 0) {
-      this.objects.pop();
-    } else if (this.oldObjects !== null) {
-      this.objects = this.oldObjects;
-      this.oldObjects = null;
-    } else {
-      return;
-    }
+    if (this.events.length === 0) return;
+    this.events.pop()?.undo(this);
     this.redraw();
     this.emit("change");
   }
 
   clear() {
     if (this.drawingImageData !== null || this.objects.length === 0) return;
-    this.oldObjects = this.objects.splice(0, this.objects.length);
+    this.events.push(new ClearEvent(this.objects.splice(0, this.objects.length)));
     this.redraw();
     this.emit("change");
   }
@@ -185,6 +201,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   setImageString(imageString: string) {
     if (imageString === "") {
       this.objects = [];
+      this.events = [];
     } else {
       let color = "black";
       this.objects = imageString.split("|").map(stringPart => {
@@ -199,6 +216,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
         return Pen.fromStringPart(stringPart, color);
       }).filter(obj => obj !== null).map(obj => obj!);
+      this.events = this.objects.map(() => new DrawEvent());
     }
     this.redraw();
   }
