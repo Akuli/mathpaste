@@ -1,12 +1,12 @@
-import { CanvasManager } from "./canvasmanager";
+import { CanvasManager } from "./canvasmanager/canvasmanager";
 import { Editor, ChangeType } from "./editor";
 import Renderer from "./renderer";
 import PasteManager from "./pasteManager";
 import { RadioClassManager } from "./utils";
 import { TEXT_PREFIX } from "./consts";
 
-import { Pen, StraightLine } from "./drawobjects/pen";
-import { Circle } from "./drawobjects/circle";
+import { Pen, StraightLine } from "./canvasmanager/drawobjects/pen";
+import { Circle } from "./canvasmanager/drawobjects/circle";
 
 // files included in the output
 import "../index.html";

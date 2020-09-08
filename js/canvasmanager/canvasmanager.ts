@@ -1,8 +1,9 @@
-import { RadioClassManager, StrictEventEmitter } from "./utils";
+import { RadioClassManager, StrictEventEmitter } from "../utils";
 import { Pen } from "./drawobjects/pen";
 import { Circle } from "./drawobjects/circle";
 
 import { Point, LineMode, DrawObject } from "./drawobjects/drawobject";
+import { Event, DrawEvent, ClearEvent } from "./events";
 
 interface CanvasManagerEvents {
   /*
@@ -12,27 +13,8 @@ interface CanvasManagerEvents {
   change: () => void;
 }
 
-type ToolButtonSpec = Record<string, (point: Point, color: string) => DrawObject>;
-
-interface Event {
-  undo: (cm: CanvasManager) => void,
-}
-
-class DrawEvent implements Event {
-  undo(cm: CanvasManager): void {
-    console.assert(cm.objects.length !== 0, "undoing draw with empty objects");
-    cm.objects.pop();
-  }
-}
-
-class ClearEvent implements Event {
-  constructor(private objects: DrawObject[]) {}
-
-  undo(cm: CanvasManager): void {
-    console.assert(cm.objects.length === 0, "undoing clear without empty objects");
-    cm.objects = this.objects;
-  }
-}
+type Tool = (point: Point, color: string) => DrawObject;
+type ToolButtonSpec = Record<string, Tool>;
 
 export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   canvas: HTMLCanvasElement;
@@ -50,7 +32,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   private color: string = "black";
   private selectedColorManager: RadioClassManager = new RadioClassManager("selected-drawing-color");
 
-  private tool: ((point: Point, color: string) => DrawObject) | null = null;
+  private tool: Tool | null = null;
   private selectedToolManager: RadioClassManager = new RadioClassManager("selected-drawing-tool");
 
   constructor(canvasId: string) {
