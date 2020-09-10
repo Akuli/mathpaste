@@ -127,7 +127,12 @@ const boxes = {
 /*
  * To avoid browser-compatibility shenanigans and the like, we chose to avoid
  * ace's handling of Ctrl-Z and instead register our own, document-level,
- * handler that takes into account the currently shown box
+ * handler that takes into account the currently shown box.
+ *
+ * Though the resulting code may look simple, the process that it took us to
+ * arrive at it was not. *Please* if you come across this code and desire to
+ * change it, make sure you understand the nuances of both DOM events and how
+ * ace itself works.
  */
 editor.addKeyFilter((event) => event.key === "z" && event.ctrlKey);
 document.addEventListener("keydown", event => {
