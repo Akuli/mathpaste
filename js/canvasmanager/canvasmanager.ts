@@ -3,7 +3,6 @@ import { Pen } from "./drawobjects/pen";
 import { Circle } from "./drawobjects/circle";
 
 import { Point, LineMode, DrawObject } from "./drawobjects/drawobject";
-import { Event, DrawEvent, ClearEvent } from "./events";
 
 interface CanvasManagerEvents {
   /*
@@ -11,6 +10,26 @@ interface CanvasManagerEvents {
    * the image string is set
    */
   change: () => void;
+}
+
+interface Event {
+  undo: (cm: CanvasManager) => void;
+}
+
+class DrawEvent implements Event {
+  undo(cm: CanvasManager): void {
+    console.assert(cm.objects.length !== 0, "undoing draw with empty objects");
+    cm.objects.pop();
+  }
+}
+
+class ClearEvent implements Event {
+  constructor(private objects: DrawObject[]) { }
+
+  undo(cm: CanvasManager): void {
+    console.assert(cm.objects.length === 0, "undoing clear without empty objects");
+    cm.objects = this.objects;
+  }
 }
 
 type Tool = (point: Point, color: string) => DrawObject;
