@@ -1,4 +1,4 @@
-import { CanvasManager } from "./canvasmanager";
+import { CanvasManager, DrawingTool, Rubber } from "./canvasmanager";
 import { Editor, ChangeType } from "./editor";
 import Renderer from "./renderer";
 import PasteManager from "./pasteManager";
@@ -37,10 +37,11 @@ if (query.has("vim")) {
 }
 
 cm.initToolButtons({
-  "draw-pen-button": (point, color) => new Pen(point, color),
-  "draw-circle-button": (point, color) => new Circle(point, color),
-  "draw-filled-circle-button": (point, color) => new Circle(point, color, true),
-  "draw-line-button": (point, color) => new StraightLine(point, color),
+  "draw-pen-button": new DrawingTool((point, color) => new Pen(point, color)),
+  "draw-circle-button": new DrawingTool((point, color) => new Circle(point, color)),
+  "draw-filled-circle-button": new DrawingTool((point, color) => new Circle(point, color, true)),
+  "draw-line-button": new DrawingTool((point, color) => new StraightLine(point, color)),
+  "draw-rubber-button": new Rubber(),
 });
 cm.initColorButtons(
   Array.from(document.getElementsByClassName("color-button")).map(b => b as HTMLButtonElement));

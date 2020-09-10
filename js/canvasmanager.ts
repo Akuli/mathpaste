@@ -23,6 +23,14 @@ class DrawEvent implements Event {
   }
 }
 
+class RubberEvent implements Event {
+  constructor(private index: number, private object: DrawObject) { }
+
+  undo(cm: CanvasManager): void {
+    cm.objects.splice(this.index, 0, this.object);
+  }
+}
+
 class ClearEvent implements Event {
   constructor(private objects: DrawObject[]) { }
 
@@ -32,7 +40,56 @@ class ClearEvent implements Event {
   }
 }
 
-type Tool = (point: Point, color: string) => DrawObject;
+interface Tool {
+  onMouseDown(cm: CanvasManager, point: Point): Event[];
+  onMouseMove(cm: CanvasManager, point: Point): Event[];
+}
+
+export class DrawingTool implements Tool {
+  constructor(private createDrawObject: (point: Point, color: string) => DrawObject) { }
+
+  onMouseDown(cm: CanvasManager, point: Point): Event[] {
+    cm.objects.push(this.createDrawObject(point, cm.color));
+    cm.emit("change");
+    return [new DrawEvent()];
+  }
+
+  onMouseMove(cm: CanvasManager, point: Point): Event[] {
+    cm.objects[cm.objects.length - 1].onMouseMove(point);
+    cm.ctx.putImageData(cm.drawingImageData!, 0, 0);
+    cm.draw(cm.objects[cm.objects.length - 1]);
+    cm.emit("change");
+    return [];
+  }
+}
+
+export class Rubber implements Tool {
+  onMouseDown(cm: CanvasManager, point: Point): Event[] {
+    const rubberSize = 5;
+
+    const objectsToDelete = (
+      cm.objects
+      .map((object, index) => ({object, index}))
+      .filter(({object}) => object.distanceToPoint(point) < rubberSize)
+    );
+
+    const indexesToDelete = new Set(objectsToDelete.map(({index}) => index));
+    cm.objects = cm.objects.filter((object, index) => !indexesToDelete.has(index));
+    if (indexesToDelete.size !== 0) {
+      cm.redraw();
+      cm.emit("change");
+    }
+
+    const rubberEvents = objectsToDelete.map(({object, index}) => new RubberEvent(index, object))
+    rubberEvents.reverse();   // avoid messing up indexes
+    return rubberEvents;
+  }
+
+  onMouseMove(cm: CanvasManager, point: Point): Event[] {
+    return this.onMouseDown(cm, point);
+  }
+}
+
 type ToolButtonSpec = Record<string, Tool>;
 
 export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
@@ -48,7 +105,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   // something else: drawing in progress, image data was saved before drawing
   drawingImageData: null | ImageData = null;
 
-  private color: string = "black";
+  color: string = "black";
   private selectedColorManager: RadioClassManager = new RadioClassManager("selected-drawing-color");
 
   private tool: Tool | null = null;
@@ -81,37 +138,33 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     let mouseMoved = false;
 
     this.canvas.addEventListener("mousedown", event => {
-      const pointOrNull = this.xyFromEvent(event);
-      if (pointOrNull === null || this.tool === null || this.readOnly) return;
+      const point = this.xyFromEvent(event);
+      if (point === null || this.tool === null || this.readOnly) return;
 
       event.preventDefault();
       mouseMoved = false;
       this.drawingImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      this.objects.push(this.tool(pointOrNull!, this.color));
-      this.events.push(new DrawEvent());
+      this.events.push(...this.tool.onMouseDown(this, point));
     });
 
     this.canvas.addEventListener("mousemove", event => {
       if (this.drawingImageData === null) return;
       mouseMoved = true;
 
-      const pointOrNull = this.xyFromEvent(event);
-      if (pointOrNull === null) return;
-      this.objects[this.objects.length - 1].onMouseMove(pointOrNull);
-      this.ctx.putImageData(this.drawingImageData, 0, 0);
-      this.draw(this.objects[this.objects.length - 1]);
-      this.emit("change");
+      const point = this.xyFromEvent(event);
+      if (point === null) return;
+      this.events.push(...this.tool!.onMouseMove(this, point));
     });
 
     // document because mouse up outside canvas must also stop drawing
     document.addEventListener("mouseup", event => {
-      const pointOrNull = this.xyFromEvent(event);
-      if (pointOrNull === null || this.drawingImageData === null || this.readOnly) return;
+      const point = this.xyFromEvent(event);
+      if (point === null || this.drawingImageData === null || this.readOnly) return;
 
-      if (!mouseMoved) {
+      if (!mouseMoved && (this.tool instanceof DrawingTool)) {
         // Draw a dot instead of empty stuff.
         this.objects.pop();
-        const dot = new Circle(pointOrNull!, this.color, true, 2);
+        const dot = new Circle(point!, this.color, true, 2);
         this.objects.push(dot);
         this.draw(dot);
         this.emit("change");
@@ -122,17 +175,17 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   }
 
   // TODO: the elements are actually input elements, not button elements
-  private initToolButton(element: HTMLButtonElement, factory: (point: Point, color: string) => DrawObject) {
+  private initToolButton(element: HTMLButtonElement, tool: Tool) {
     element.addEventListener("click", () => {
       this.selectedToolManager.addClass(element);
-      this.tool = factory;
+      this.tool = tool;
     });
   }
 
   initToolButtons<S extends ToolButtonSpec>(spec: S) {
-    for (const [id, factory] of Object.entries(spec)) {
+    for (const [id, tool] of Object.entries(spec)) {
       const button = document.getElementById(id)! as HTMLButtonElement;
-      this.initToolButton(button, factory);
+      this.initToolButton(button, tool);
     }
   }
 
