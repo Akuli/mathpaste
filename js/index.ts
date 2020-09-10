@@ -124,10 +124,19 @@ const boxes = {
   save: createBox("save"),
 };
 
-/* this used to be hard but new ace just seems to make it work */
+/*
+ * To avoid browser-compatibility shenanigans and the like, we chose to avoid
+ * ace's handling of Ctrl-Z and instead register our own, document-level,
+ * handler that takes into account the currently shown box
+ */
+editor.addKeyFilter((event) => event.key === "z" && event.ctrlKey);
 document.addEventListener("keydown", event => {
-  if (event.key === "z" && event.ctrlKey && shownBoxManager.hasClass(boxes.draw.boxElement)) {
-    cm.undo();
+  if (event.key === "z" && event.ctrlKey) {
+    if (shownBoxManager.hasClass(boxes.draw.boxElement)) {
+      cm.undo();
+    } else {
+      editor.undo();
+    }
   }
 });
 

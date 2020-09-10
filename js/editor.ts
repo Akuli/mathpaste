@@ -27,8 +27,25 @@ export class Editor extends StrictEventEmitter<EditorEvents>() {
     this.registerEventHandlers();
   }
 
-  deleteKeybinding(binding: string) {
-    delete (this.editor.getKeyboardHandler() as any).commandKeyBinding[binding];
+  /**
+   * Add a filter for a certain event that allows you to prevent ace's default behavior
+   */
+  addKeyFilter(filter: (event: KeyboardEvent) => boolean) {
+    /* the type definitions for this function are just blatantly wrong, so we'll ignore them */
+    (this.editor.keyBinding.addKeyboardHandler as any)((
+      _data: unknown,
+      _hashId: unknown,
+      _keyString: unknown,
+      _keyCode: unknown,
+      event: KeyboardEvent | undefined
+    ) =>
+      /*
+       * the way ace's keyboard handlers work is that if they return a falsy
+       * value, they're "ignored", and if they return an object with the
+       * command key set to the string "null", the key is "eaten"
+       */
+      event && filter(event) ? { command: "null" } : false
+    );
   }
 
   undo() {
