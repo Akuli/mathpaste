@@ -69,8 +69,8 @@ export class Rubber implements Tool {
 
     const objectsToDelete = (
       cm.objects
-      .map((object, index) => ({object, index}))
-      .filter(({object}) => object.distanceToPoint(point) < rubberSize)
+        .map((object, index) => ({object, index}))
+        .filter(({object}) => object.distanceToPoint(point) < rubberSize)
     );
 
     const indexesToDelete = new Set(objectsToDelete.map(({index}) => index));

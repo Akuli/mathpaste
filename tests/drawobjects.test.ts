@@ -1,4 +1,3 @@
-import { CanvasManager } from "../js/canvasmanager";
 import { Circle } from "../js/drawobjects/circle";
 import { Pen } from "../js/drawobjects/pen";
 
