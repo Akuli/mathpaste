@@ -9,9 +9,41 @@ that was still true after compressing with lzstring, with almost nothing drawn
 on the canvas and with lots of stuff drawn
 */
 
-import { Point, LineMode, DrawObject } from "./drawobject";
+import { Point, distance, LineMode, DrawObject } from "./drawobject";
 
 const POINT_DISTANCE_THRESHOLD: number = 2;
+
+const dotProduct = (a: Point, b: Point) => a[0]*b[0] + a[1]*b[1];
+const addVectors = (a: Point, b: Point) => [a[0] + b[0], a[1] + b[1]] as [number, number];
+const subVectors = (a: Point, b: Point) => [a[0] - b[0], a[1] - b[1]] as [number, number];
+
+/*
+If a point directly lines up with line AB, like this
+
+
+      point
+
+  A----------------B
+
+then returns distance between line and point. Otherwise returns null.
+*/
+function distanceBetweenLineSegmentAndPoint(A: Point, B: Point, point: Point): number | null {
+  const aToB = subVectors(B, A);
+  const aToPoint = subVectors(point, A);
+  const dot = dotProduct(aToB, aToPoint);
+  const abDistanceSquared = dotProduct(aToB, aToB);
+  if (dot <= 0 || dot >= abDistanceSquared) {
+    return null;
+  }
+
+  // project aToPoint onto aToB
+  const projectionVector = [
+    dot / abDistanceSquared * aToB[0],
+    dot / abDistanceSquared * aToB[1],
+  ] as [number, number];
+  const projectedPoint = addVectors(A, projectionVector);
+  return distance(projectedPoint, point);
+}
 
 export class Pen implements DrawObject {
   lineMode: LineMode = LineMode.Stroke;
@@ -24,11 +56,9 @@ export class Pen implements DrawObject {
     this.points = [startPoint];
   }
 
-  private shouldAdd([x, y]: Point): boolean {
+  private shouldAdd(point: Point): boolean {
     if (this.points.length > 0) {
-      const [lx, ly] = this.points[this.points.length - 1];
-
-      return Math.hypot(x - lx, y - ly) >= POINT_DISTANCE_THRESHOLD;
+      return distance(point, this.points[this.points.length - 1]) >= POINT_DISTANCE_THRESHOLD;
     } else {
       return true;
     }
@@ -43,6 +73,17 @@ export class Pen implements DrawObject {
 
   onMouseMove(point: Point) {
     this.addPoint(point);
+  }
+
+  distanceToPoint(point: Point) {
+    let smallestDist = Math.min(...this.points.map(p => distance(p, point)));
+    for (let i = 1; i < this.points.length; i++) {
+      const currentDist = distanceBetweenLineSegmentAndPoint(this.points[i-1], this.points[i], point);
+      if (currentDist !== null) {
+        smallestDist = Math.min(smallestDist, currentDist);
+      }
+    }
+    return smallestDist;
   }
 
   // like 'x1,y1;x2,y2;...' where xs and ys are integers

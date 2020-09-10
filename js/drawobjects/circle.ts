@@ -1,4 +1,4 @@
-import { Point, LineMode, DrawObject } from "./drawobject";
+import { Point, distance, LineMode, DrawObject } from "./drawobject";
 
 export class Circle implements DrawObject {
   lineMode: LineMode;
@@ -12,9 +12,16 @@ export class Circle implements DrawObject {
   }
 
   onMouseMove(xy: Point) {
-    this.radius = Math.round(Math.hypot(this.center[0] - xy[0], this.center[1] - xy[1]));
+    this.radius = Math.round(distance(this.center, xy));
     this.path = new Path2D();
     this.path.arc(this.center[0], this.center[1], this.radius, 0, 2 * Math.PI);
+  }
+
+  distanceToPoint(point: Point) {
+    if (this.lineMode === LineMode.Fill) {
+      return Math.max(distance(this.center, point) - this.radius, 0);
+    }
+    return Math.abs(distance(this.center, point) - this.radius);
   }
 
   // 'circle;x;y;r;1' is a filled circle centered at (x,y) with radius r
