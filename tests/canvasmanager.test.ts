@@ -1,5 +1,5 @@
-import { CanvasManager } from "../js/canvasmanager/canvasmanager";
-import { Circle } from "../js/canvasmanager/drawobjects/circle";
+import { CanvasManager } from "../js/canvasmanager";
+import { Circle } from "../js/drawobjects/circle";
 
 describe("CanvasManager", () => {
   it("can undo clearing the canvas", () => {

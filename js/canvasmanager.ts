@@ -1,4 +1,4 @@
-import { RadioClassManager, StrictEventEmitter } from "../utils";
+import { RadioClassManager, StrictEventEmitter } from "./utils";
 import { Pen } from "./drawobjects/pen";
 import { Circle } from "./drawobjects/circle";
 
