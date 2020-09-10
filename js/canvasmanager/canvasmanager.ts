@@ -183,7 +183,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
   clear() {
     if (this.drawingImageData !== null || this.objects.length === 0) return;
-    this.events.push(new ClearEvent(this.objects.splice(0, this.objects.length)));
+    this.events.push(new ClearEvent(this.objects.splice(0)));
     this.redraw();
     this.emit("change");
   }
