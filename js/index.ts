@@ -31,7 +31,7 @@ const pm = new PasteManager();
 
 const query = new URLSearchParams(window.location.search);
 if (query.has("vim")) {
-  import("brace/keybinding/vim").then(() => {
+  import("ace-builds/src-min-noconflict/keybinding-vim").then(() => {
     editor.keyboardHandler = "ace/keyboard/vim";
   });
 }
@@ -126,22 +126,16 @@ const boxes = {
 };
 
 /*
-if you think that you can do this in some other way, you are likely wrong.
-
-Myst tried to do it 2 times, and both failed. The issues were difficult to
-reproduce. For example, last time I wrote something to the editor, then opened
-the draw area. I pressed ctrl+z, and it undid in the draw area as expected.
-Then I pressed ctrl+z again and it undid in the editor instead of the draw
-area, even though the draw area was open and I hadn't touched the editor in any
-way (wtf). The bug reproduced many times again, so to undo many times in the
-draw area, I had to open the draw area, ctrl+z, close draw are, open draw area,
-ctrl+z, close draw area etc many times. A little while later I tried the same
-thing again and I couldn't reproduce the problem (wut).
-
-PLEASE DON'T REWRITE THIS VERY DIFFERENTLY unless you truly understand what is
-going on, unlike anyone else who has worked on mathpaste so far!
-*/
-editor.deleteKeybinding("ctrl-z");
+ * To avoid browser-compatibility shenanigans and the like, we chose to avoid
+ * ace's handling of Ctrl-Z and instead register our own, document-level,
+ * handler that takes into account the currently shown box.
+ *
+ * Though the resulting code may look simple, the process that it took us to
+ * arrive at it was not. *Please* if you come across this code and desire to
+ * change it, make sure you understand the nuances of both DOM events and how
+ * ace itself works.
+ */
+editor.addKeyFilter((event) => event.key === "z" && event.ctrlKey);
 document.addEventListener("keydown", event => {
   if (event.key === "z" && event.ctrlKey) {
     if (shownBoxManager.hasClass(boxes.draw.boxElement)) {

@@ -1,5 +1,5 @@
-import * as ace from "brace";
-import "brace/theme/tomorrow_night_eighties";
+import * as ace from "ace-builds";
+import "ace-builds/src-min-noconflict/theme-tomorrow_night_eighties";
 
 import { StrictEventEmitter } from "./utils";
 
@@ -12,11 +12,11 @@ export enum ChangeType {
 
 interface EditorEvents {
   change: (contents: string, changeType: ChangeType) => void;
-  cursorMoved: (position: ace.Position, contents: string) => void;
+  cursorMoved: (position: ace.Ace.Point, contents: string) => void;
 }
 
 export class Editor extends StrictEventEmitter<EditorEvents>() {
-  private editor: ace.Editor;
+  private editor: ace.Ace.Editor;
   private isSettingContents: boolean = false;
 
   constructor(editorId: string, options: any) {
@@ -27,8 +27,25 @@ export class Editor extends StrictEventEmitter<EditorEvents>() {
     this.registerEventHandlers();
   }
 
-  deleteKeybinding(binding: string) {
-    delete (this.editor.getKeyboardHandler() as any).commandKeyBinding[binding];
+  /**
+   * Add a filter for a certain event that allows you to prevent ace's default behavior
+   */
+  addKeyFilter(filter: (event: KeyboardEvent) => boolean) {
+    /* the type definitions for this function are just blatantly wrong, so we'll ignore them */
+    (this.editor.keyBinding.addKeyboardHandler as any)((
+      _data: unknown,
+      _hashId: unknown,
+      _keyString: unknown,
+      _keyCode: unknown,
+      event: KeyboardEvent | undefined
+    ) =>
+      /*
+       * the way ace's keyboard handlers work is that if they return a falsy
+       * value, they're "ignored", and if they return an object with the
+       * command key set to the string "null", the key is "eaten"
+       */
+      event && filter(event) ? { command: "null" } : false
+    );
   }
 
   undo() {
@@ -38,7 +55,7 @@ export class Editor extends StrictEventEmitter<EditorEvents>() {
   private registerEventHandlers() {
     const session = this.editor.getSession();
 
-    session.on("change", () => {
+    this.editor.on("change", () => {
       this.emit("change", this.contents, this.isSettingContents ? ChangeType.SetContents : ChangeType.UserInput);
     });
 
