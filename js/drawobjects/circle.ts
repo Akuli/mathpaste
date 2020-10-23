@@ -17,11 +17,16 @@ export class Circle implements DrawObject {
     this.path.arc(this.center[0], this.center[1], this.radius, 0, 2 * Math.PI);
   }
 
+  // this is public only because tests need it
   distanceToPoint(point: Point) {
     if (this.lineMode === LineMode.Fill) {
       return Math.max(distance(this.center, point) - this.radius, 0);
     }
     return Math.abs(distance(this.center, point) - this.radius);
+  }
+
+  getErasingObjects(eraserCenter: Point, eraserRadius: number): DrawObject[] {
+    return (this.distanceToPoint(eraserCenter) < eraserRadius) ? [] : [this];
   }
 
   // 'circle;x;y;r;1' is a filled circle centered at (x,y) with radius r

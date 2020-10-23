@@ -75,7 +75,7 @@ export class Pen implements DrawObject {
     this.addPoint(point);
   }
 
-  distanceToPoint(point: Point) {
+  private distanceToPoint(point: Point) {
     let smallestDist = Math.min(...this.points.map(p => distance(p, point)));
     for (let i = 1; i < this.points.length; i++) {
       const currentDist = distanceBetweenLineSegmentAndPoint(this.points[i-1], this.points[i], point);
@@ -84,6 +84,10 @@ export class Pen implements DrawObject {
       }
     }
     return smallestDist;
+  }
+
+  getErasingObjects(eraserCenter: Point, eraserRadius: number): DrawObject[] {
+    return (this.distanceToPoint(eraserCenter) < eraserRadius) ? [] : [this];
   }
 
   // like 'x1,y1;x2,y2;...' where xs and ys are integers

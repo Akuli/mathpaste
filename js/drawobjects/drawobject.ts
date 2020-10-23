@@ -15,6 +15,8 @@ export interface DrawObject {
   color: string;
 
   onMouseMove(point: Point): void;
-  distanceToPoint(point: Point): number;
   toStringPart(): string;
+
+  // return value is list of objects to replace this with
+  getErasingObjects(eraserCenter: Point, eraserRadius: number): DrawObject[];
 }

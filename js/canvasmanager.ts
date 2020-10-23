@@ -44,28 +44,30 @@ export class DrawingTool implements Tool {
 
 export class Eraser implements Tool {
   onMouseDown(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
-    const eraserSize = 5;
+    const eraserSize = 50;
 
-    const objectsToDelete = (
+    const changes = (
       cm.objects
-        .map((object, index) => ({object, index}))
-        .filter(({object}) => object.distanceToPoint(point) < eraserSize)
+        .map((object, index) => ({
+          object, index,
+          replaceWith: object.getErasingObjects(point, eraserSize),
+        }))
+        .filter(({object, replaceWith}) => replaceWith.length !== 1 || replaceWith[0] !== object)
     );
-
-    const indexesToDelete = new Set(objectsToDelete.map(({index}) => index));
-    cm.objects = cm.objects.filter((object, index) => !indexesToDelete.has(index));
-    if (indexesToDelete.size !== 0) {
-      cm.redraw();
-      cm.emit("change");
+    if (changes.length === 0) {
+      return [];
     }
 
-    const eraserEvents = objectsToDelete.map(({object, index}) => ({
-      startIndex: index,
-      deleteCount: 0,
-      objectsToInsert: [object],
+    changes.reverse();   // avoid messing up indexes
+    changes.forEach(change => cm.objects.splice(change.index, 1, ...change.replaceWith));
+    cm.redraw();
+    cm.emit("change");
+
+    return changes.map(change => ({
+      startIndex: change.index,
+      deleteCount: change.replaceWith.length,
+      objectsToInsert: [change.object],
     }));
-    eraserEvents.reverse();   // avoid messing up indexes
-    return eraserEvents;
   }
 
   onMouseMove(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
