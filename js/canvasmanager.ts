@@ -42,14 +42,14 @@ export class DrawingTool implements Tool {
   }
 }
 
-export class Rubber implements Tool {
+export class Eraser implements Tool {
   onMouseDown(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
-    const rubberSize = 5;
+    const eraserSize = 5;
 
     const objectsToDelete = (
       cm.objects
         .map((object, index) => ({object, index}))
-        .filter(({object}) => object.distanceToPoint(point) < rubberSize)
+        .filter(({object}) => object.distanceToPoint(point) < eraserSize)
     );
 
     const indexesToDelete = new Set(objectsToDelete.map(({index}) => index));
@@ -59,13 +59,13 @@ export class Rubber implements Tool {
       cm.emit("change");
     }
 
-    const rubberEvents = objectsToDelete.map(({object, index}) => ({
+    const eraserEvents = objectsToDelete.map(({object, index}) => ({
       startIndex: index,
       deleteCount: 0,
       objectsToInsert: [object],
     }));
-    rubberEvents.reverse();   // avoid messing up indexes
-    return rubberEvents;
+    eraserEvents.reverse();   // avoid messing up indexes
+    return eraserEvents;
   }
 
   onMouseMove(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
