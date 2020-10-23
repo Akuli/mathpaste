@@ -12,49 +12,28 @@ interface CanvasManagerEvents {
   change: () => void;
 }
 
-interface Event {
-  undo: (cm: CanvasManager) => void;
-}
-
-class DrawEvent implements Event {
-  undo(cm: CanvasManager): void {
-    console.assert(cm.objects.length !== 0, "undoing draw with empty objects");
-    cm.objects.pop();
-  }
-}
-
-class RubberEvent implements Event {
-  constructor(private index: number, private object: DrawObject) { }
-
-  undo(cm: CanvasManager): void {
-    cm.objects.splice(this.index, 0, this.object);
-  }
-}
-
-class ClearEvent implements Event {
-  constructor(private objects: DrawObject[]) { }
-
-  undo(cm: CanvasManager): void {
-    console.assert(cm.objects.length === 0, "undoing clear without empty objects");
-    cm.objects = this.objects;
-  }
-}
+type Splice<T> = {
+  startIndex: number;    // negative for relative to end of array
+  deleteCount: number;
+  objectsToInsert: T[];
+};
 
 interface Tool {
-  onMouseDown(cm: CanvasManager, point: Point): Event[];
-  onMouseMove(cm: CanvasManager, point: Point): Event[];
+  // returned splices represent what undoing does
+  onMouseDown(cm: CanvasManager, point: Point): Splice<DrawObject>[];
+  onMouseMove(cm: CanvasManager, point: Point): Splice<DrawObject>[];
 }
 
 export class DrawingTool implements Tool {
   constructor(private createDrawObject: (point: Point, color: string) => DrawObject) { }
 
-  onMouseDown(cm: CanvasManager, point: Point): Event[] {
+  onMouseDown(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
     cm.objects.push(this.createDrawObject(point, cm.color));
     cm.emit("change");
-    return [new DrawEvent()];
+    return [{ startIndex: -1, deleteCount: 1, objectsToInsert: [] }];
   }
 
-  onMouseMove(cm: CanvasManager, point: Point): Event[] {
+  onMouseMove(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
     cm.objects[cm.objects.length - 1].onMouseMove(point);
     cm.ctx.putImageData(cm.drawingImageData!, 0, 0);
     cm.draw(cm.objects[cm.objects.length - 1]);
@@ -64,7 +43,7 @@ export class DrawingTool implements Tool {
 }
 
 export class Rubber implements Tool {
-  onMouseDown(cm: CanvasManager, point: Point): Event[] {
+  onMouseDown(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
     const rubberSize = 5;
 
     const objectsToDelete = (
@@ -80,12 +59,16 @@ export class Rubber implements Tool {
       cm.emit("change");
     }
 
-    const rubberEvents = objectsToDelete.map(({object, index}) => new RubberEvent(index, object))
+    const rubberEvents = objectsToDelete.map(({object, index}) => ({
+      startIndex: index,
+      deleteCount: 0,
+      objectsToInsert: [object],
+    }));
     rubberEvents.reverse();   // avoid messing up indexes
     return rubberEvents;
   }
 
-  onMouseMove(cm: CanvasManager, point: Point): Event[] {
+  onMouseMove(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
     return this.onMouseDown(cm, point);
   }
 }
@@ -99,7 +82,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
   objects: DrawObject[] = [];
 
-  private events: Event[] = [];
+  private undoSplices: Splice<DrawObject>[] = [];
 
   // null: not currently drawing
   // something else: drawing in progress, image data was saved before drawing
@@ -144,7 +127,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
       event.preventDefault();
       mouseMoved = false;
       this.drawingImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      this.events.push(...this.tool.onMouseDown(this, point));
+      this.undoSplices.push(...this.tool.onMouseDown(this, point));
     });
 
     this.canvas.addEventListener("mousemove", event => {
@@ -153,7 +136,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
       const point = this.xyFromEvent(event);
       if (point === null) return;
-      this.events.push(...this.tool!.onMouseMove(this, point));
+      this.undoSplices.push(...this.tool!.onMouseMove(this, point));
     });
 
     // document because mouse up outside canvas must also stop drawing
@@ -228,15 +211,16 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
   undo() {
     if (this.drawingImageData !== null) return;
-    if (this.events.length === 0) return;
-    this.events.pop()?.undo(this);
+    if (this.undoSplices.length === 0) return;
+    const undoSplice = this.undoSplices.pop()!;
+    this.objects.splice(undoSplice.startIndex, undoSplice.deleteCount, ...undoSplice.objectsToInsert);
     this.redraw();
     this.emit("change");
   }
 
   clear() {
     if (this.drawingImageData !== null || this.objects.length === 0) return;
-    this.events.push(new ClearEvent(this.objects.splice(0)));
+    this.undoSplices.push({ startIndex: 0, deleteCount: 0, objectsToInsert: this.objects.splice(0) });
     this.redraw();
     this.emit("change");
   }
@@ -255,7 +239,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   setImageString(imageString: string) {
     if (imageString === "") {
       this.objects = [];
-      this.events = [];
+      this.undoSplices = [];
     } else {
       let color = "black";
       this.objects = imageString.split("|").map(stringPart => {
@@ -270,7 +254,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
         return Pen.fromStringPart(stringPart, color);
       }).filter(obj => obj !== null).map(obj => obj!);
-      this.events = this.objects.map(() => new DrawEvent());
+      this.undoSplices = this.objects.map(() => ({ startIndex: -1, deleteCount: 1, objectsToInsert: [] }));
     }
     this.redraw();
   }
