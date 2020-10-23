@@ -19,7 +19,6 @@ type Splice<T> = {
 };
 
 interface Tool {
-  // returned splices represent what undoing does
   onMouseDown(cm: CanvasManager, point: Point): Splice<DrawObject>[];
   onMouseMove(cm: CanvasManager, point: Point): Splice<DrawObject>[];
 }
@@ -58,7 +57,6 @@ export class Eraser implements Tool {
       return [];
     }
 
-    changes.reverse();   // avoid messing up indexes
     changes.forEach(change => cm.objects.splice(change.index, 1, ...change.replaceWith));
     cm.redraw();
     cm.emit("change");
@@ -84,7 +82,8 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
   objects: DrawObject[] = [];
 
-  private undoSplices: Splice<DrawObject>[] = [];
+  // each splice list should have smallest index first, it will be handled when undoing
+  private undoSpliceLists: Splice<DrawObject>[][] = [];
 
   // null: not currently drawing
   // something else: drawing in progress, image data was saved before drawing
@@ -129,7 +128,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
       event.preventDefault();
       mouseMoved = false;
       this.drawingImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      this.undoSplices.push(...this.tool.onMouseDown(this, point));
+      this.undoSpliceLists.push(this.tool.onMouseDown(this, point));
     });
 
     this.canvas.addEventListener("mousemove", event => {
@@ -138,7 +137,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
       const point = this.xyFromEvent(event);
       if (point === null) return;
-      this.undoSplices.push(...this.tool!.onMouseMove(this, point));
+      this.undoSpliceLists[this.undoSpliceLists.length - 1].push(...this.tool!.onMouseMove(this, point));
     });
 
     // document because mouse up outside canvas must also stop drawing
@@ -213,16 +212,17 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
   undo() {
     if (this.drawingImageData !== null) return;
-    if (this.undoSplices.length === 0) return;
-    const undoSplice = this.undoSplices.pop()!;
-    this.objects.splice(undoSplice.startIndex, undoSplice.deleteCount, ...undoSplice.objectsToInsert);
+    if (this.undoSpliceLists.length === 0) return;
+    for (const undoSplice of this.undoSpliceLists.pop()!.slice(0).reverse()) {
+      this.objects.splice(undoSplice.startIndex, undoSplice.deleteCount, ...undoSplice.objectsToInsert);
+    }
     this.redraw();
     this.emit("change");
   }
 
   clear() {
     if (this.drawingImageData !== null || this.objects.length === 0) return;
-    this.undoSplices.push({ startIndex: 0, deleteCount: 0, objectsToInsert: this.objects.splice(0) });
+    this.undoSpliceLists.push([{ startIndex: 0, deleteCount: 0, objectsToInsert: this.objects.splice(0) }]);
     this.redraw();
     this.emit("change");
   }
@@ -241,7 +241,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   setImageString(imageString: string) {
     if (imageString === "") {
       this.objects = [];
-      this.undoSplices = [];
+      this.undoSpliceLists = [];
     } else {
       let color = "black";
       this.objects = imageString.split("|").map(stringPart => {
@@ -256,7 +256,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
         return Pen.fromStringPart(stringPart, color);
       }).filter(obj => obj !== null).map(obj => obj!);
-      this.undoSplices = this.objects.map(() => ({ startIndex: -1, deleteCount: 1, objectsToInsert: [] }));
+      this.undoSpliceLists = this.objects.map(() => [{ startIndex: -1, deleteCount: 1, objectsToInsert: [] }]);
     }
     this.redraw();
   }
