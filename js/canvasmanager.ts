@@ -42,14 +42,14 @@ export class DrawingTool implements Tool {
 }
 
 export class Eraser implements Tool {
-  onMouseDown(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
-    const eraserSize = 50;
+  constructor(private radius: number = 50) {}
 
+  onMouseDown(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
     const changes = (
       cm.objects
         .map((object, index) => ({
           object, index,
-          replaceWith: object.getErasingObjects(point, eraserSize),
+          replaceWith: object.getErasingObjects(point, this.radius),
         }))
         .filter(({object, replaceWith}) => replaceWith.length !== 1 || replaceWith[0] !== object)
     );
@@ -57,7 +57,8 @@ export class Eraser implements Tool {
       return [];
     }
 
-    changes.forEach(change => cm.objects.splice(change.index, 1, ...change.replaceWith));
+    const n = cm.objects.length;
+    changes.slice(0).reverse().forEach(change => cm.objects.splice(change.index, 1, ...change.replaceWith));
     cm.redraw();
     cm.emit("change");
 

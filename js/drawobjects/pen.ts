@@ -18,6 +18,49 @@ const addVectors = (a: Point, b: Point) => [a[0] + b[0], a[1] + b[1]] as [number
 const subVectors = (a: Point, b: Point) => [a[0] - b[0], a[1] - b[1]] as [number, number];
 
 /*
+The set interval1 \ interval2 is a union of 0, 1 or 2 intervals.
+This returns the end points of those intervals.
+Exported because tests.
+*/
+export function intervalSetDifference(interval1: [number, number], interval2: [number, number]): [number, number][] {
+  let [a1, b1] = interval1;
+  let [a2, b2] = interval2;
+  return [
+    [a1, Math.min(a2, b1)] as [number, number],
+    [Math.max(a1, b2), b1] as [number, number],
+  ].filter(([start, end]) => start < end);
+}
+
+// Return the parts of line segment between A and B that are outside a circle
+function splitLineSegmentWithCircle(A: Point, B: Point, center: Point, radius: number): [Point, Point][] {
+  // We represent the line as f(t) = A + (B-A)t, where 0 <= t <= 1
+  function f(t: number): Point {
+    return addVectors(A, subVectors(B, A).map(coordinate => coordinate*t) as [number, number]);
+  }
+
+  /*
+  Line and circle intersect when distance(f(t) - center) = radius
+  With dot products, we can rewrite that as dotProduct(f(t) - center, f(t) - center) = radius^2
+  After expanding, we can solve t with the quadratic formula
+  */
+  const AC = subVectors(A, center);
+  const BA = subVectors(B, A);
+  const ACBA = dotProduct(AC, BA);
+  const ACAC = dotProduct(AC, AC);
+  const BABA = dotProduct(BA, BA);
+
+  const squareRoot = Math.sqrt(ACBA*ACBA - ACAC*BABA + BABA*radius*radius);
+  if (isNaN(squareRoot)) {
+    // No intersection points of circle and line
+    return [[A, B]];
+  }
+  const tMin = (-ACBA - squareRoot)/BABA;
+  const tMax = (-ACBA + squareRoot)/BABA;
+  const result = intervalSetDifference([0, 1], [tMin, tMax]).map(tInterval => tInterval.map(t => f(t)) as [Point, Point]);
+  return result;
+}
+
+/*
 If a point directly lines up with line AB, like this
 
 
@@ -65,29 +108,50 @@ export class Pen implements DrawObject {
   }
 
   addPoint(point: Point) {
-    if (this.shouldAdd(point)) {
-      this.path.lineTo(...point);
-      this.points.push(point);
-    }
+    this.path.lineTo(...point);
+    this.points.push(point);
   }
 
   onMouseMove(point: Point) {
-    this.addPoint(point);
+    if (this.shouldAdd(point)) {
+      this.addPoint(point);
+    }
   }
 
-  private distanceToPoint(point: Point) {
+  private smallestDistanceToPoint(point: Point) {
     let smallestDist = Math.min(...this.points.map(p => distance(p, point)));
     for (let i = 1; i < this.points.length; i++) {
-      const currentDist = distanceBetweenLineSegmentAndPoint(this.points[i-1], this.points[i], point);
-      if (currentDist !== null) {
-        smallestDist = Math.min(smallestDist, currentDist);
+      const segmentDist = distanceBetweenLineSegmentAndPoint(this.points[i-1], this.points[i], point);
+      if (segmentDist !== null) {
+        smallestDist = Math.min(smallestDist, segmentDist);
       }
     }
     return smallestDist;
   }
 
   getErasingObjects(eraserCenter: Point, eraserRadius: number): DrawObject[] {
-    return (this.distanceToPoint(eraserCenter) < eraserRadius) ? [] : [this];
+    if (this.smallestDistanceToPoint(eraserCenter) > eraserRadius) {
+      return [this];
+    }
+
+    const lineSegments: [Point, Point][] = [];
+    for (let i = 1; i < this.points.length; i++) {
+      lineSegments.push(...splitLineSegmentWithCircle(this.points[i-1], this.points[i], eraserCenter, eraserRadius));
+    }
+    if (lineSegments.length === 0) {
+      return [];
+    }
+
+    const resultLines = [new Pen(lineSegments[0][0], this.color)];
+    for (const [start, end] of lineSegments) {
+      let lastLine = resultLines[resultLines.length - 1];
+      if (start + '' !== lastLine.points[lastLine.points.length - 1] + '') {
+        lastLine = new Pen(start, this.color);
+        resultLines.push(lastLine);
+      }
+      lastLine.addPoint(end);
+    }
+    return resultLines;
   }
 
   // like 'x1,y1;x2,y2;...' where xs and ys are integers
