@@ -135,11 +135,12 @@ const boxes = {
  * change it, make sure you understand the nuances of both DOM events and how
  * ace itself works.
  */
-editor.addKeyFilter((event) => event.key === "z" && event.ctrlKey);
+editor.addKeyFilter((event) => event.key === "z" && event.ctrlKey && shownBoxManager.hasClass(boxes.draw.boxElement));
 document.addEventListener("keydown", event => {
   if (event.key === "z" && event.ctrlKey) {
     if (shownBoxManager.hasClass(boxes.draw.boxElement)) {
       cm.undo();
+      event.preventDefault();
     } else {
       editor.undo();
     }

@@ -88,7 +88,7 @@ export default class PasteManager {
     const fb = await this.getFirebaseApp();
     const ref = fb.database().ref(`maths-v2/${pasteId}/content/encryptedValue`);
     const encryptedValue = (await ref.once("value")).val();
-    const value = new SimpleCrypto(cryptoKey).decrypt(encryptedValue, true) as {
+    const value = new SimpleCrypto(cryptoKey).decrypt(encryptedValue) as {
       content: string,
       image: string,
     };
