@@ -57,7 +57,6 @@ export class Eraser implements Tool {
       return [];
     }
 
-    const n = cm.objects.length;
     changes.slice(0).reverse().forEach(change => cm.objects.splice(change.index, 1, ...change.replaceWith));
     cm.redraw();
     cm.emit("change");

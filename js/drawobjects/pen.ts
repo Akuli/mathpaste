@@ -23,8 +23,8 @@ This returns the end points of those intervals.
 Exported because tests.
 */
 export function intervalSetDifference(interval1: [number, number], interval2: [number, number]): [number, number][] {
-  let [a1, b1] = interval1;
-  let [a2, b2] = interval2;
+  const [a1, b1] = interval1;
+  const [a2, b2] = interval2;
   return [
     [a1, Math.min(a2, b1)] as [number, number],
     [Math.max(a1, b2), b1] as [number, number],
@@ -145,7 +145,7 @@ export class Pen implements DrawObject {
     const resultLines = [new Pen(lineSegments[0][0], this.color)];
     for (const [start, end] of lineSegments) {
       let lastLine = resultLines[resultLines.length - 1];
-      if (start + '' !== lastLine.points[lastLine.points.length - 1] + '') {
+      if (start + "" !== lastLine.points[lastLine.points.length - 1] + "") {
         lastLine = new Pen(start, this.color);
         resultLines.push(lastLine);
       }

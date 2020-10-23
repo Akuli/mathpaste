@@ -32,7 +32,7 @@ describe("Pen", () => {
     const cm = new CanvasManager("canvas");
     const eraser = new Eraser(100);
 
-    const longLine = new Pen([0, 0], 'black');
+    const longLine = new Pen([0, 0], "black");
     longLine.addPoint([400, 0]);
 
     cm.objects.push(longLine);
