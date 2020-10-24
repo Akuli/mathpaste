@@ -71,6 +71,12 @@ export class Eraser implements Tool {
   onMouseMove(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
     return this.onMouseDown(cm, point);
   }
+
+  updateIndicator(indicator: HTMLDivElement, mouseLocation: Point) {
+    indicator.style.setProperty("--mouse-x", mouseLocation[0] + "px");
+    indicator.style.setProperty("--mouse-y", mouseLocation[1] + "px");
+    indicator.style.setProperty("--radius", this.radius + "px");
+  }
 }
 
 type ToolButtonSpec = Record<string, Tool>;
@@ -95,12 +101,15 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   private tool: Tool | null = null;
   private selectedToolManager: RadioClassManager = new RadioClassManager("selected-drawing-tool");
 
+  private eraserIndicator: HTMLDivElement;
+
   constructor(canvasId: string) {
     super();
 
     this.canvas = document.getElementById(canvasId)! as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d")!;
 
+    this.eraserIndicator = document.getElementById("draw-eraser-indicator") as HTMLDivElement;
     this.registerEventHandlers();
   }
 
@@ -132,11 +141,15 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     });
 
     this.canvas.addEventListener("mousemove", event => {
-      if (this.drawingImageData === null) return;
-      mouseMoved = true;
-
       const point = this.xyFromEvent(event);
       if (point === null) return;
+
+      if (this.tool instanceof Eraser) {
+        (this.tool as Eraser).updateIndicator(this.eraserIndicator, point);
+      }
+
+      if (this.drawingImageData === null) return;
+      mouseMoved = true;
       this.undoSpliceLists[this.undoSpliceLists.length - 1].push(...this.tool!.onMouseMove(this, point));
     });
 
@@ -163,6 +176,11 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     element.addEventListener("click", () => {
       this.selectedToolManager.addClass(element);
       this.tool = tool;
+      if (this.tool instanceof Eraser) {
+        this.eraserIndicator.classList.remove("hidden");
+      } else {
+        this.eraserIndicator.classList.add("hidden");
+      }
     });
   }
 

@@ -87,7 +87,10 @@
                 <hr class="button-separator" />
                 <input type="image" title="Clear" class="pic-button" id="clear-button" src="pics/trash.png " />
             </div>
-            <canvas width="600" height="400" id="draw-canvas"></canvas>
+            <div id="canvas-container">
+                <canvas width="600" height="400" id="draw-canvas"></canvas>
+                <div id="draw-eraser-indicator" class="hidden"></div>
+            </div>
         </div>
 
         <div class="popup-box" id="save-box">
