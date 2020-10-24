@@ -42,7 +42,7 @@ export class DrawingTool implements Tool {
 }
 
 export class Eraser implements Tool {
-  constructor(private radius: number = 50) {}
+  constructor(private radius: number) {}
 
   onMouseDown(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
     const changes = (
