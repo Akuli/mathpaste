@@ -18,21 +18,22 @@ const addVectors = (a: Point, b: Point) => [a[0] + b[0], a[1] + b[1]] as [number
 const subVectors = (a: Point, b: Point) => [a[0] - b[0], a[1] - b[1]] as [number, number];
 
 /*
-The set interval1 \ interval2 is a union of 0, 1 or 2 intervals.
+The set [a1,b1] \ [a2,b2] is a union of 0, 1 or 2 intervals.
 This returns the end points of those intervals.
 Exported because tests.
 */
-export function intervalSetDifference(interval1: [number, number], interval2: [number, number]): [number, number][] {
-  const [a1, b1] = interval1;
-  const [a2, b2] = interval2;
+export function intervalSetDifference([a1, b1]: [number, number], [a2, b2]: [number, number]): [number, number][] {
   return [
     [a1, Math.min(a2, b1)] as [number, number],
     [Math.max(a1, b2), b1] as [number, number],
   ].filter(([start, end]) => start < end);
 }
 
-// Return the parts of line segment between A and B that are outside a circle
-function splitLineSegmentWithCircle(A: Point, B: Point, center: Point, radius: number): [Point, Point][] {
+/*
+Return the parts of line segment between A and B that are outside a circle.
+If circle does not touch line segment at all, returns null.
+*/
+function splitLineSegmentWithCircle(A: Point, B: Point, center: Point, radius: number): [Point, Point][] | null {
   // We represent the line as f(t) = A + (B-A)t, where 0 <= t <= 1
   function f(t: number): Point {
     return addVectors(A, subVectors(B, A).map(coordinate => coordinate*t) as [number, number]);
@@ -52,40 +53,16 @@ function splitLineSegmentWithCircle(A: Point, B: Point, center: Point, radius: n
   const squareRoot = Math.sqrt(ACBA*ACBA - ACAC*BABA + BABA*radius*radius);
   if (isNaN(squareRoot)) {
     // No intersection points of circle and line
-    return [[A, B]];
+    return null;
   }
   const tMin = (-ACBA - squareRoot)/BABA;
   const tMax = (-ACBA + squareRoot)/BABA;
+
   const result = intervalSetDifference([0, 1], [tMin, tMax]).map(tInterval => tInterval.map(t => f(t)) as [Point, Point]);
-  return result;
-}
-
-/*
-If a point directly lines up with line AB, like this
-
-
-      point
-
-  A----------------B
-
-then returns distance between line and point. Otherwise returns null.
-*/
-function distanceBetweenLineSegmentAndPoint(A: Point, B: Point, point: Point): number | null {
-  const aToB = subVectors(B, A);
-  const aToPoint = subVectors(point, A);
-  const dot = dotProduct(aToB, aToPoint);
-  const abDistanceSquared = dotProduct(aToB, aToB);
-  if (dot <= 0 || dot >= abDistanceSquared) {
+  if (result + "" == [[A, B]] + "") {
     return null;
   }
-
-  // project aToPoint onto aToB
-  const projectionVector = [
-    dot / abDistanceSquared * aToB[0],
-    dot / abDistanceSquared * aToB[1],
-  ] as [number, number];
-  const projectedPoint = addVectors(A, projectionVector);
-  return distance(projectedPoint, point);
+  return result;
 }
 
 export class Pen implements DrawObject {
@@ -118,28 +95,28 @@ export class Pen implements DrawObject {
     }
   }
 
-  private smallestDistanceToPoint(point: Point) {
-    let smallestDist = Math.min(...this.points.map(p => distance(p, point)));
+  getErasingObjects(eraserCenter: Point, eraserRadius: number): DrawObject[] {
+    const lineSegments: [Point, Point][] = [];
+    let somethingChanged = false;
+
     for (let i = 1; i < this.points.length; i++) {
-      const segmentDist = distanceBetweenLineSegmentAndPoint(this.points[i-1], this.points[i], point);
-      if (segmentDist !== null) {
-        smallestDist = Math.min(smallestDist, segmentDist);
+      const start = this.points[i-1];
+      const end = this.points[i];
+
+      const newSegments = splitLineSegmentWithCircle(start, end, eraserCenter, eraserRadius)
+      if (newSegments === null) {
+        lineSegments.push([start, end]);
+      } else {
+        lineSegments.push(...newSegments);
+        somethingChanged = true;
       }
     }
-    return smallestDist;
-  }
 
-  getErasingObjects(eraserCenter: Point, eraserRadius: number): DrawObject[] {
-    if (this.smallestDistanceToPoint(eraserCenter) > eraserRadius) {
-      return [this];
-    }
-
-    const lineSegments: [Point, Point][] = [];
-    for (let i = 1; i < this.points.length; i++) {
-      lineSegments.push(...splitLineSegmentWithCircle(this.points[i-1], this.points[i], eraserCenter, eraserRadius));
-    }
     if (lineSegments.length === 0) {
       return [];
+    }
+    if (!somethingChanged) {
+      return [this];
     }
 
     const resultLines = [new Pen(lineSegments[0][0], this.color)];
