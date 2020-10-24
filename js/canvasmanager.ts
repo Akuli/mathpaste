@@ -57,7 +57,8 @@ export class Eraser implements Tool {
       return [];
     }
 
-    changes.slice(0).reverse().forEach(change => cm.objects.splice(change.index, 1, ...change.replaceWith));
+    changes.reverse();
+    changes.forEach(change => cm.objects.splice(change.index, 1, ...change.replaceWith));
     cm.redraw();
     cm.emit("change");
 
@@ -88,7 +89,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
   objects: DrawObject[] = [];
 
-  // each splice list should have smallest index first, it will be handled when undoing
+  // each splice list should be in the order that changes happened (will be reversed when undoing)
   private undoSpliceLists: Splice<DrawObject>[][] = [];
 
   // null: not currently drawing
@@ -157,6 +158,14 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     document.addEventListener("mouseup", event => {
       const point = this.xyFromEvent(event);
       if (point === null || this.drawingImageData === null || this.readOnly) return;
+
+      /*
+      Don't leave empty splice lists to this.undoSpliceLists.
+      Note that they may start off as empty and then become non-empty because of onMouseMove method.
+      */
+      if (this.undoSpliceLists.length !== 0 && this.undoSpliceLists[this.undoSpliceLists.length - 1].length === 0) {
+        this.undoSpliceLists.pop();
+      }
 
       if (!mouseMoved && (this.tool instanceof DrawingTool)) {
         // Draw a dot instead of empty stuff.
@@ -231,7 +240,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   undo() {
     if (this.drawingImageData !== null) return;
     if (this.undoSpliceLists.length === 0) return;
-    for (const undoSplice of this.undoSpliceLists.pop()!.slice(0).reverse()) {
+    for (const undoSplice of [ ...this.undoSpliceLists.pop()! ].reverse()) {
       this.objects.splice(undoSplice.startIndex, undoSplice.deleteCount, ...undoSplice.objectsToInsert);
     }
     this.redraw();
