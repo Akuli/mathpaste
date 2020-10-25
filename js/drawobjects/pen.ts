@@ -13,9 +13,9 @@ import { Point, distance, LineMode, DrawObject } from "./drawobject";
 
 const POINT_DISTANCE_THRESHOLD: number = 2;
 
-const dotProduct = (a: Point, b: Point) => a[0]*b[0] + a[1]*b[1];
-const addVectors = (a: Point, b: Point) => [a[0] + b[0], a[1] + b[1]] as [number, number];
-const subVectors = (a: Point, b: Point) => [a[0] - b[0], a[1] - b[1]] as [number, number];
+const dotProduct = ([x1, y1]: Point, [x2, y2]: Point) => x1*x2 + y1*y2;
+const addVectors = ([x1, y1]: Point, [x2, y2]: Point) => [x1 + x2, y1 + y2] as [number, number];
+const subVectors = ([x1, y1]: Point, [x2, y2]: Point) => [x1 - x2, y1 - y2] as [number, number];
 
 /*
 The set [a1,b1] \ [a2,b2] is a union of 0, 1 or 2 intervals.
@@ -76,21 +76,13 @@ export class Pen implements DrawObject {
     this.points = [startPoint];
   }
 
-  private shouldAdd(point: Point): boolean {
-    if (this.points.length > 0) {
-      return distance(point, this.points[this.points.length - 1]) >= POINT_DISTANCE_THRESHOLD;
-    } else {
-      return true;
-    }
-  }
-
   addPoint(point: Point) {
     this.path.lineTo(...point);
     this.points.push(point);
   }
 
   onMouseMove(point: Point) {
-    if (this.shouldAdd(point)) {
+    if (distance(point, this.points[this.points.length - 1]) >= POINT_DISTANCE_THRESHOLD) {
       this.addPoint(point);
     }
   }

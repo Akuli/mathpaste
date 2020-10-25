@@ -51,7 +51,7 @@ export class Eraser implements Tool {
           object, index,
           replaceWith: object.getErasingObjects(point, this.radius),
         }))
-        .filter(({object, replaceWith}) => replaceWith.length !== 1 || replaceWith[0] !== object)
+        .filter(({object, replaceWith}) => !(replaceWith.length === 1 && replaceWith[0] === object))
     );
     if (changes.length === 0) {
       return [];
@@ -73,9 +73,9 @@ export class Eraser implements Tool {
     return this.onMouseDown(cm, point);
   }
 
-  updateIndicator(indicator: HTMLDivElement, mouseLocation: Point) {
-    indicator.style.setProperty("--mouse-x", mouseLocation[0] + "px");
-    indicator.style.setProperty("--mouse-y", mouseLocation[1] + "px");
+  updateIndicator(indicator: HTMLDivElement, [x, y]: Point) {
+    indicator.style.setProperty("--mouse-x", x + "px");
+    indicator.style.setProperty("--mouse-y", y + "px");
     indicator.style.setProperty("--radius", this.radius + "px");
   }
 }
