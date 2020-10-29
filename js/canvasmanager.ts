@@ -96,7 +96,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   The last splice list represents the drawing that happened last and the undoing that happens first.
   Each splice list should be in the order that changes happened (will be reversed when undoing).
   */
-  private undoSpliceLists: Splice[][] = [];
+  private undoStack: Splice[][] = [];
 
   // null: not currently drawing
   // something else: drawing in progress, image data was saved before drawing
@@ -144,7 +144,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
       event.preventDefault();
       mouseMoved = false;
       this.drawingImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      this.undoSpliceLists.push(this.tool.onMouseDown(this, point));
+      this.undoStack.push(this.tool.onMouseDown(this, point));
     });
 
     this.canvas.addEventListener("mousemove", event => {
@@ -157,7 +157,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
       if (this.drawingImageData === null) return;
       mouseMoved = true;
-      this.undoSpliceLists[this.undoSpliceLists.length - 1].push(...this.tool!.onMouseMove(this, point));
+      this.undoStack[this.undoStack.length - 1].push(...this.tool!.onMouseMove(this, point));
     });
 
     // document because mouse up outside canvas must also stop drawing
@@ -165,11 +165,11 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
       this.drawingImageData = null;
 
       /*
-      Don't leave empty splice lists to this.undoSpliceLists.
+      Don't leave empty splice lists to this.undoStack.
       Note that they may start off as empty and then become non-empty because of onMouseMove method.
       */
-      if (this.undoSpliceLists.length !== 0 && this.undoSpliceLists[this.undoSpliceLists.length - 1].length === 0) {
-        this.undoSpliceLists.pop();
+      if (this.undoStack.length !== 0 && this.undoStack[this.undoStack.length - 1].length === 0) {
+        this.undoStack.pop();
       }
 
       const point = this.xyFromEvent(event);
@@ -246,8 +246,8 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
   undo() {
     if (this.drawingImageData !== null) return;
-    if (this.undoSpliceLists.length === 0) return;
-    for (const undoSplice of [ ...this.undoSpliceLists.pop()! ].reverse()) {
+    if (this.undoStack.length === 0) return;
+    for (const undoSplice of [ ...this.undoStack.pop()! ].reverse()) {
       this.objects.splice(undoSplice.startIndex, undoSplice.deleteCount, ...undoSplice.objectsToInsert);
     }
     this.redraw();
@@ -256,7 +256,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
   clear() {
     if (this.drawingImageData !== null || this.objects.length === 0) return;
-    this.undoSpliceLists.push([{ startIndex: 0, deleteCount: 0, objectsToInsert: this.objects.splice(0) }]);
+    this.undoStack.push([{ startIndex: 0, deleteCount: 0, objectsToInsert: this.objects.splice(0) }]);
     this.redraw();
     this.emit("change");
   }
@@ -275,7 +275,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   setImageString(imageString: string) {
     if (imageString === "") {
       this.objects = [];
-      this.undoSpliceLists = [];
+      this.undoStack = [];
     } else {
       let color = "black";
       this.objects = imageString.split("|").map(stringPart => {
@@ -290,7 +290,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
         return Pen.fromStringPart(stringPart, color);
       }).filter(obj => obj !== null).map(obj => obj!);
-      this.undoSpliceLists = this.objects.map(() => [{ startIndex: -1, deleteCount: 1, objectsToInsert: [] }]);
+      this.undoStack = this.objects.map(() => [{ startIndex: -1, deleteCount: 1, objectsToInsert: [] }]);
     }
     this.redraw();
   }
