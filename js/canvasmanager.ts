@@ -12,7 +12,7 @@ interface CanvasManagerEvents {
   change: () => void;
 }
 
-// Represents arguments of array splice method.
+/** Represents arguments of array splice method. */
 type Splice = {
   startIndex: number;    // negative for relative to end of array
   deleteCount: number;
