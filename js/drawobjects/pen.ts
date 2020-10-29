@@ -16,6 +16,7 @@ const POINT_DISTANCE_THRESHOLD: number = 2;
 const dotProduct = ([x1, y1]: Point, [x2, y2]: Point) => x1*x2 + y1*y2;
 const addVectors = ([x1, y1]: Point, [x2, y2]: Point) => [x1 + x2, y1 + y2] as [number, number];
 const subVectors = ([x1, y1]: Point, [x2, y2]: Point) => [x1 - x2, y1 - y2] as [number, number];
+const pointsEqual = ([x1, y1]: Point, [x2, y2]: Point) => (x1 === x2 && y1 === y2);
 
 /*
 The set [a1,b1] \ [a2,b2] is a union of 0, 1 or 2 intervals.
@@ -59,7 +60,7 @@ function splitLineSegmentWithCircle(A: Point, B: Point, center: Point, radius: n
   const tMax = (-ACBA + squareRoot)/BABA;
 
   const result = intervalSetDifference([0, 1], [tMin, tMax]).map(tInterval => tInterval.map(t => f(t)) as [Point, Point]);
-  if (result + "" == [[A, B]] + "") {
+  if (result.length === 1 && pointsEqual(result[0][0], A) && pointsEqual(result[0][1], B)) {
     return null;
   }
   return result;
@@ -114,7 +115,7 @@ export class Pen implements DrawObject {
     const resultLines = [new Pen(lineSegments[0][0], this.color)];
     for (const [start, end] of lineSegments) {
       let lastLine = resultLines[resultLines.length - 1];
-      if (start + "" !== lastLine.points[lastLine.points.length - 1] + "") {
+      if (pointsEqual(start, lastLine.points[lastLine.points.length - 1])) {
         lastLine = new Pen(start, this.color);
         resultLines.push(lastLine);
       }
