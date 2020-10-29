@@ -162,8 +162,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
     // document because mouse up outside canvas must also stop drawing
     document.addEventListener("mouseup", event => {
-      const point = this.xyFromEvent(event);
-      if (point === null || this.drawingImageData === null || this.readOnly) return;
+      this.drawingImageData = null;
 
       /*
       Don't leave empty splice lists to this.undoSpliceLists.
@@ -172,6 +171,9 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
       if (this.undoSpliceLists.length !== 0 && this.undoSpliceLists[this.undoSpliceLists.length - 1].length === 0) {
         this.undoSpliceLists.pop();
       }
+
+      const point = this.xyFromEvent(event);
+      if (point === null || this.readOnly) return;
 
       if (!mouseMoved && (this.tool instanceof DrawingTool)) {
         // Draw a dot instead of empty stuff.
@@ -182,7 +184,6 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
         this.emit("change");
       }
 
-      this.drawingImageData = null;
     });
   }
 
