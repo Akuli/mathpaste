@@ -176,7 +176,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
       if (!mouseMoved && (this.tool instanceof DrawingTool)) {
         // Draw a dot instead of empty stuff.
         this.objects.pop();
-        const dot = new Circle(point!, this.color, true, 2);
+        const dot = new Circle(point, this.color, true, 2);
         this.objects.push(dot);
         this.draw(dot);
         this.emit("change");
