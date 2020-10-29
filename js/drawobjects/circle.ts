@@ -25,7 +25,7 @@ export class Circle implements DrawObject {
     return Math.abs(distance(this.center, point) - this.radius);
   }
 
-  getErasingObjects(eraserCenter: Point, eraserRadius: number): DrawObject[] {
+  getObjectsToReplaceWithWhenErasing(eraserCenter: Point, eraserRadius: number): DrawObject[] {
     return (this.distanceToPoint(eraserCenter) < eraserRadius) ? [] : [this];
   }
 

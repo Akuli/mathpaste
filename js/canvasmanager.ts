@@ -51,7 +51,7 @@ export class Eraser implements Tool {
       cm.objects
         .map((object, index) => ({
           object, index,
-          replaceWith: object.getErasingObjects(point, this.radius),
+          replaceWith: object.getObjectsToReplaceWithWhenErasing(point, this.radius),
         }))
         .filter(({object, replaceWith}) => !(replaceWith.length === 1 && replaceWith[0] === object))
     );

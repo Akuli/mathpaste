@@ -18,5 +18,5 @@ export interface DrawObject {
   toStringPart(): string;
 
   // return value is list of objects to replace this with
-  getErasingObjects(eraserCenter: Point, eraserRadius: number): DrawObject[];
+  getObjectsToReplaceWithWhenErasing(eraserCenter: Point, eraserRadius: number): DrawObject[];
 }

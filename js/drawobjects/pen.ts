@@ -88,7 +88,7 @@ export class Pen implements DrawObject {
     }
   }
 
-  getErasingObjects(eraserCenter: Point, eraserRadius: number): DrawObject[] {
+  getObjectsToReplaceWithWhenErasing(eraserCenter: Point, eraserRadius: number): DrawObject[] {
     const lineSegments: [Point, Point][] = [];
     let somethingChanged = false;
 
