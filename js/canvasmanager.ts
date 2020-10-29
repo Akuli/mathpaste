@@ -12,27 +12,29 @@ interface CanvasManagerEvents {
   change: () => void;
 }
 
-type Splice<T> = {
+// Represents arguments of array splice method.
+type Splice = {
   startIndex: number;    // negative for relative to end of array
   deleteCount: number;
-  objectsToInsert: T[];
+  objectsToInsert: DrawObject[];
 };
 
 interface Tool {
-  onMouseDown(cm: CanvasManager, point: Point): Splice<DrawObject>[];
-  onMouseMove(cm: CanvasManager, point: Point): Splice<DrawObject>[];
+  // These return the Splices that represent undoing whatever was done.
+  onMouseDown(cm: CanvasManager, point: Point): Splice[];
+  onMouseMove(cm: CanvasManager, point: Point): Splice[];
 }
 
 export class DrawingTool implements Tool {
   constructor(private createDrawObject: (point: Point, color: string) => DrawObject) { }
 
-  onMouseDown(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
+  onMouseDown(cm: CanvasManager, point: Point): Splice[] {
     cm.objects.push(this.createDrawObject(point, cm.color));
     cm.emit("change");
     return [{ startIndex: -1, deleteCount: 1, objectsToInsert: [] }];
   }
 
-  onMouseMove(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
+  onMouseMove(cm: CanvasManager, point: Point): Splice[] {
     cm.objects[cm.objects.length - 1].onMouseMove(point);
     cm.ctx.putImageData(cm.drawingImageData!, 0, 0);
     cm.draw(cm.objects[cm.objects.length - 1]);
@@ -44,7 +46,7 @@ export class DrawingTool implements Tool {
 export class Eraser implements Tool {
   constructor(private radius: number) {}
 
-  onMouseDown(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
+  onMouseDown(cm: CanvasManager, point: Point): Splice[] {
     const changes = (
       cm.objects
         .map((object, index) => ({
@@ -69,7 +71,7 @@ export class Eraser implements Tool {
     }));
   }
 
-  onMouseMove(cm: CanvasManager, point: Point): Splice<DrawObject>[] {
+  onMouseMove(cm: CanvasManager, point: Point): Splice[] {
     return this.onMouseDown(cm, point);
   }
 
@@ -89,8 +91,12 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
   objects: DrawObject[] = [];
 
-  // each splice list should be in the order that changes happened (will be reversed when undoing)
-  private undoSpliceLists: Splice<DrawObject>[][] = [];
+  /*
+  Splice lists represent what should be done when Ctrl+Z is pressed.
+  The last splice list represents the drawing that happened last and the undoing that happens first.
+  Each splice list should be in the order that changes happened (will be reversed when undoing).
+  */
+  private undoSpliceLists: Splice[][] = [];
 
   // null: not currently drawing
   // something else: drawing in progress, image data was saved before drawing
