@@ -14,8 +14,8 @@ import { Point, distance, LineMode, DrawObject } from "./drawobject";
 const POINT_DISTANCE_THRESHOLD: number = 2;
 
 const dotProduct = ([x1, y1]: Point, [x2, y2]: Point) => x1*x2 + y1*y2;
-const addVectors = ([x1, y1]: Point, [x2, y2]: Point) => [x1 + x2, y1 + y2] as [number, number];
-const subVectors = ([x1, y1]: Point, [x2, y2]: Point) => [x1 - x2, y1 - y2] as [number, number];
+const addVectors = ([x1, y1]: Point, [x2, y2]: Point) => [x1 + x2, y1 + y2] as Point;
+const subVectors = ([x1, y1]: Point, [x2, y2]: Point) => [x1 - x2, y1 - y2] as Point;
 const pointsEqual = ([x1, y1]: Point, [x2, y2]: Point) => (x1 === x2 && y1 === y2);
 
 /*
@@ -37,7 +37,7 @@ If circle does not touch line segment at all, returns null.
 function splitLineSegmentWithCircle(A: Point, B: Point, center: Point, radius: number): [Point, Point][] | null {
   // We represent the line as f(t) = A + (B-A)t, where 0 <= t <= 1
   function f(t: number): Point {
-    return addVectors(A, subVectors(B, A).map(coordinate => coordinate*t) as [number, number]);
+    return addVectors(A, subVectors(B, A).map(coordinate => coordinate*t) as Point);
   }
 
   /*
