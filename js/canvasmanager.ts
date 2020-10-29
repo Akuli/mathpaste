@@ -146,7 +146,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
       if (point === null) return;
 
       if (this.tool instanceof Eraser) {
-        (this.tool as Eraser).updateIndicator(this.eraserIndicator, point);
+        this.tool.updateIndicator(this.eraserIndicator, point);
       }
 
       if (this.drawingImageData === null) return;
