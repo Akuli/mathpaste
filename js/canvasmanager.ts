@@ -20,8 +20,10 @@ type Splice = {
 };
 
 interface Tool {
-  // These return the Splices that represent undoing whatever was done.
+  /** Returns splices to apply when undoing. */
   onMouseDown(cm: CanvasManager, point: Point): Splice[];
+
+  /** Returns splices to be added to end of the array that onMouseDown returned. */
   onMouseMove(cm: CanvasManager, point: Point): Splice[];
 }
 

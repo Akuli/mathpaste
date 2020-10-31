@@ -17,6 +17,9 @@ export interface DrawObject {
   onMouseMove(point: Point): void;
   toStringPart(): string;
 
-  // return value is list of objects to replace this with
+  /**
+  When rubbering, a draw object gets replaced with the objects returned by this method.
+  This method should `return [this];` if the rubber does not touch the draw object.
+  */
   getObjectsToReplaceWithWhenErasing(eraserCenter: Point, eraserRadius: number): DrawObject[];
 }
