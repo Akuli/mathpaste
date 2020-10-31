@@ -36,9 +36,7 @@ If circle does not touch line segment at all, returns null.
 */
 function splitLineSegmentWithCircle(A: Point, B: Point, center: Point, radius: number): [Point, Point][] | null {
   // We represent the line as f(t) = A + (B-A)t, where 0 <= t <= 1
-  function f(t: number): Point {
-    return addVectors(A, subVectors(B, A).map(coordinate => coordinate*t) as Point);
-  }
+  const f = (t: number) => addVectors(A, subVectors(B, A).map(coordinate => coordinate*t) as Point);
 
   /*
   Line and circle intersect when distance(f(t) - center) = radius
@@ -59,11 +57,11 @@ function splitLineSegmentWithCircle(A: Point, B: Point, center: Point, radius: n
   const tMin = (-ACBA - squareRoot)/BABA;
   const tMax = (-ACBA + squareRoot)/BABA;
 
-  const result = intervalSetDifference([0, 1], [tMin, tMax]).map(tInterval => tInterval.map(t => f(t)) as [Point, Point]);
-  if (result.length === 1 && pointsEqual(result[0][0], A) && pointsEqual(result[0][1], B)) {
+  if (tMax <= 0 || tMin >= 1) {
+    // Circle intersects the infinitely long line going through A and B, but not the line segment
     return null;
   }
-  return result;
+  return intervalSetDifference([0, 1], [tMin, tMax]).map(tInterval => tInterval.map(t => f(t)) as [Point, Point]);
 }
 
 export class Pen implements DrawObject {
@@ -115,7 +113,7 @@ export class Pen implements DrawObject {
     const resultLines = [new Pen(lineSegments[0][0], this.color)];
     for (const [start, end] of lineSegments) {
       let lastLine = resultLines[resultLines.length - 1];
-      if (pointsEqual(start, lastLine.points[lastLine.points.length - 1])) {
+      if (!pointsEqual(start, lastLine.points[lastLine.points.length - 1])) {
         lastLine = new Pen(start, this.color);
         resultLines.push(lastLine);
       }
