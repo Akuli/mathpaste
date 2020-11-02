@@ -9,9 +9,60 @@ that was still true after compressing with lzstring, with almost nothing drawn
 on the canvas and with lots of stuff drawn
 */
 
-import { Point, LineMode, DrawObject } from "./drawobject";
+import { Point, distance, LineMode, DrawObject } from "./drawobject";
 
 const POINT_DISTANCE_THRESHOLD: number = 2;
+
+const dotProduct = ([x1, y1]: Point, [x2, y2]: Point) => x1*x2 + y1*y2;
+const addVectors = ([x1, y1]: Point, [x2, y2]: Point) => [x1 + x2, y1 + y2] as Point;
+const subVectors = ([x1, y1]: Point, [x2, y2]: Point) => [x1 - x2, y1 - y2] as Point;
+const pointsEqual = ([x1, y1]: Point, [x2, y2]: Point) => (x1 === x2 && y1 === y2);
+
+/*
+The set [a1,b1] \ [a2,b2] is a union of 0, 1 or 2 intervals.
+This returns the end points of those intervals.
+Exported because tests.
+*/
+export function intervalSetDifference([a1, b1]: [number, number], [a2, b2]: [number, number]): [number, number][] {
+  return [
+    [a1, Math.min(a2, b1)] as [number, number],
+    [Math.max(a1, b2), b1] as [number, number],
+  ].filter(([start, end]) => start < end);
+}
+
+/*
+Return the parts of line segment between A and B that are outside a circle.
+If circle does not touch line segment at all, returns null.
+*/
+function splitLineSegmentWithCircle(A: Point, B: Point, center: Point, radius: number): [Point, Point][] | null {
+  // We represent the line as f(t) = A + (B-A)t, where 0 <= t <= 1
+  const f = (t: number) => addVectors(A, subVectors(B, A).map(coordinate => coordinate*t) as Point);
+
+  /*
+  Line and circle intersect when distance(f(t) - center) = radius
+  With dot products, we can rewrite that as dotProduct(f(t) - center, f(t) - center) = radius^2
+  After expanding, we can solve t with the quadratic formula
+  */
+  const AC = subVectors(A, center);
+  const BA = subVectors(B, A);
+  const ACBA = dotProduct(AC, BA);
+  const ACAC = dotProduct(AC, AC);
+  const BABA = dotProduct(BA, BA);
+
+  const squareRoot = Math.sqrt(ACBA*ACBA - ACAC*BABA + BABA*radius*radius);
+  if (isNaN(squareRoot)) {
+    // No intersection points of circle and line
+    return null;
+  }
+  const tMin = (-ACBA - squareRoot)/BABA;
+  const tMax = (-ACBA + squareRoot)/BABA;
+
+  if (tMax <= 0 || tMin >= 1) {
+    // Circle intersects the infinitely long line going through A and B, but not the line segment
+    return null;
+  }
+  return intervalSetDifference([0, 1], [tMin, tMax]).map(tInterval => tInterval.map(t => f(t)) as [Point, Point]);
+}
 
 export class Pen implements DrawObject {
   lineMode: LineMode = LineMode.Stroke;
@@ -24,25 +75,51 @@ export class Pen implements DrawObject {
     this.points = [startPoint];
   }
 
-  private shouldAdd([x, y]: Point): boolean {
-    if (this.points.length > 0) {
-      const [lx, ly] = this.points[this.points.length - 1];
-
-      return Math.hypot(x - lx, y - ly) >= POINT_DISTANCE_THRESHOLD;
-    } else {
-      return true;
-    }
-  }
-
   addPoint(point: Point) {
-    if (this.shouldAdd(point)) {
-      this.path.lineTo(...point);
-      this.points.push(point);
-    }
+    this.path.lineTo(...point);
+    this.points.push(point);
   }
 
   onMouseMove(point: Point) {
-    this.addPoint(point);
+    if (distance(point, this.points[this.points.length - 1]) >= POINT_DISTANCE_THRESHOLD) {
+      this.addPoint(point);
+    }
+  }
+
+  getObjectsToReplaceWithWhenErasing(eraserCenter: Point, eraserRadius: number): DrawObject[] {
+    const lineSegments: [Point, Point][] = [];
+    let somethingChanged = false;
+
+    for (let i = 1; i < this.points.length; i++) {
+      const start = this.points[i-1];
+      const end = this.points[i];
+
+      const newSegments = splitLineSegmentWithCircle(start, end, eraserCenter, eraserRadius)
+      if (newSegments === null) {
+        lineSegments.push([start, end]);
+      } else {
+        lineSegments.push(...newSegments);
+        somethingChanged = true;
+      }
+    }
+
+    if (lineSegments.length === 0) {
+      return [];
+    }
+    if (!somethingChanged) {
+      return [this];
+    }
+
+    const resultLines = [new Pen(lineSegments[0][0], this.color)];
+    for (const [start, end] of lineSegments) {
+      let lastLine = resultLines[resultLines.length - 1];
+      if (!pointsEqual(start, lastLine.points[lastLine.points.length - 1])) {
+        lastLine = new Pen(start, this.color);
+        resultLines.push(lastLine);
+      }
+      lastLine.addPoint(end);
+    }
+    return resultLines;
   }
 
   // like 'x1,y1;x2,y2;...' where xs and ys are integers

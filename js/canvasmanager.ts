@@ -12,27 +12,78 @@ interface CanvasManagerEvents {
   change: () => void;
 }
 
-interface Event {
-  undo: (cm: CanvasManager) => void;
+/** Represents arguments of array splice method. */
+type Splice = {
+  startIndex: number;    // negative for relative to end of array
+  deleteCount: number;
+  objectsToInsert: DrawObject[];
+};
+
+interface Tool {
+  /** Returns splices to apply when undoing. */
+  onMouseDown(cm: CanvasManager, point: Point): Splice[];
+
+  /** Returns splices to be added to end of the array that onMouseDown returned. */
+  onMouseMove(cm: CanvasManager, point: Point): Splice[];
 }
 
-class DrawEvent implements Event {
-  undo(cm: CanvasManager): void {
-    console.assert(cm.objects.length !== 0, "undoing draw with empty objects");
-    cm.objects.pop();
+export class DrawingTool implements Tool {
+  constructor(private createDrawObject: (point: Point, color: string) => DrawObject) { }
+
+  onMouseDown(cm: CanvasManager, point: Point): Splice[] {
+    cm.objects.push(this.createDrawObject(point, cm.color));
+    cm.emit("change");
+    return [{ startIndex: -1, deleteCount: 1, objectsToInsert: [] }];
+  }
+
+  onMouseMove(cm: CanvasManager, point: Point): Splice[] {
+    cm.objects[cm.objects.length - 1].onMouseMove(point);
+    cm.ctx.putImageData(cm.drawingImageData!, 0, 0);
+    cm.draw(cm.objects[cm.objects.length - 1]);
+    cm.emit("change");
+    return [];
   }
 }
 
-class ClearEvent implements Event {
-  constructor(private objects: DrawObject[]) { }
+export class Eraser implements Tool {
+  constructor(private radius: number) {}
 
-  undo(cm: CanvasManager): void {
-    console.assert(cm.objects.length === 0, "undoing clear without empty objects");
-    cm.objects = this.objects;
+  onMouseDown(cm: CanvasManager, point: Point): Splice[] {
+    const changes = (
+      cm.objects
+        .map((object, index) => ({
+          object, index,
+          replaceWith: object.getObjectsToReplaceWithWhenErasing(point, this.radius),
+        }))
+        .filter(({object, replaceWith}) => !(replaceWith.length === 1 && replaceWith[0] === object))
+    );
+    if (changes.length === 0) {
+      return [];
+    }
+
+    changes.reverse();
+    changes.forEach(change => cm.objects.splice(change.index, 1, ...change.replaceWith));
+    cm.redraw();
+    cm.emit("change");
+
+    return changes.map(change => ({
+      startIndex: change.index,
+      deleteCount: change.replaceWith.length,
+      objectsToInsert: [change.object],
+    }));
+  }
+
+  onMouseMove(cm: CanvasManager, point: Point): Splice[] {
+    return this.onMouseDown(cm, point);
+  }
+
+  updateIndicator(indicator: HTMLDivElement, [x, y]: Point) {
+    indicator.style.setProperty("--mouse-x", x + "px");
+    indicator.style.setProperty("--mouse-y", y + "px");
+    indicator.style.setProperty("--radius", this.radius + "px");
   }
 }
 
-type Tool = (point: Point, color: string) => DrawObject;
 type ToolButtonSpec = Record<string, Tool>;
 
 export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
@@ -42,17 +93,24 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
   objects: DrawObject[] = [];
 
-  private events: Event[] = [];
+  /*
+  Splice lists represent what should be done when Ctrl+Z is pressed.
+  The last splice list represents the drawing that happened last and the undoing that happens first.
+  Each splice list should be in the order that changes happened (will be reversed when undoing).
+  */
+  private undoStack: Splice[][] = [];
 
   // null: not currently drawing
   // something else: drawing in progress, image data was saved before drawing
   drawingImageData: null | ImageData = null;
 
-  private color: string = "black";
+  color: string = "black";
   private selectedColorManager: RadioClassManager = new RadioClassManager("selected-drawing-color");
 
   private tool: Tool | null = null;
   private selectedToolManager: RadioClassManager = new RadioClassManager("selected-drawing-tool");
+
+  private eraserIndicator: HTMLDivElement;
 
   constructor(canvasId: string) {
     super();
@@ -60,6 +118,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     this.canvas = document.getElementById(canvasId)! as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d")!;
 
+    this.eraserIndicator = document.getElementById("draw-eraser-indicator") as HTMLDivElement;
     this.registerEventHandlers();
   }
 
@@ -81,58 +140,72 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
     let mouseMoved = false;
 
     this.canvas.addEventListener("mousedown", event => {
-      const pointOrNull = this.xyFromEvent(event);
-      if (pointOrNull === null || this.tool === null || this.readOnly) return;
+      const point = this.xyFromEvent(event);
+      if (point === null || this.tool === null || this.readOnly) return;
 
       event.preventDefault();
       mouseMoved = false;
       this.drawingImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      this.objects.push(this.tool(pointOrNull!, this.color));
-      this.events.push(new DrawEvent());
+      this.undoStack.push(this.tool.onMouseDown(this, point));
     });
 
     this.canvas.addEventListener("mousemove", event => {
+      const point = this.xyFromEvent(event);
+      if (point === null) return;
+
+      if (this.tool instanceof Eraser) {
+        this.tool.updateIndicator(this.eraserIndicator, point);
+      }
+
       if (this.drawingImageData === null) return;
       mouseMoved = true;
-
-      const pointOrNull = this.xyFromEvent(event);
-      if (pointOrNull === null) return;
-      this.objects[this.objects.length - 1].onMouseMove(pointOrNull);
-      this.ctx.putImageData(this.drawingImageData, 0, 0);
-      this.draw(this.objects[this.objects.length - 1]);
-      this.emit("change");
+      this.undoStack[this.undoStack.length - 1].push(...this.tool!.onMouseMove(this, point));
     });
 
     // document because mouse up outside canvas must also stop drawing
     document.addEventListener("mouseup", event => {
-      const pointOrNull = this.xyFromEvent(event);
-      if (pointOrNull === null || this.drawingImageData === null || this.readOnly) return;
+      this.drawingImageData = null;
 
-      if (!mouseMoved) {
+      /*
+      Don't leave empty splice lists to this.undoStack.
+      Note that they may start off as empty and then become non-empty because of onMouseMove method.
+      */
+      if (this.undoStack.length !== 0 && this.undoStack[this.undoStack.length - 1].length === 0) {
+        this.undoStack.pop();
+      }
+
+      const point = this.xyFromEvent(event);
+      if (point === null || this.readOnly) return;
+
+      if (!mouseMoved && (this.tool instanceof DrawingTool)) {
         // Draw a dot instead of empty stuff.
         this.objects.pop();
-        const dot = new Circle(pointOrNull!, this.color, true, 2);
+        const dot = new Circle(point, this.color, true, 2);
         this.objects.push(dot);
         this.draw(dot);
         this.emit("change");
       }
 
-      this.drawingImageData = null;
     });
   }
 
   // TODO: the elements are actually input elements, not button elements
-  private initToolButton(element: HTMLButtonElement, factory: (point: Point, color: string) => DrawObject) {
+  private initToolButton(element: HTMLButtonElement, tool: Tool) {
     element.addEventListener("click", () => {
       this.selectedToolManager.addClass(element);
-      this.tool = factory;
+      this.tool = tool;
+      if (this.tool instanceof Eraser) {
+        this.eraserIndicator.classList.remove("hidden");
+      } else {
+        this.eraserIndicator.classList.add("hidden");
+      }
     });
   }
 
   initToolButtons<S extends ToolButtonSpec>(spec: S) {
-    for (const [id, factory] of Object.entries(spec)) {
+    for (const [id, tool] of Object.entries(spec)) {
       const button = document.getElementById(id)! as HTMLButtonElement;
-      this.initToolButton(button, factory);
+      this.initToolButton(button, tool);
     }
   }
 
@@ -175,15 +248,17 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
   undo() {
     if (this.drawingImageData !== null) return;
-    if (this.events.length === 0) return;
-    this.events.pop()?.undo(this);
+    if (this.undoStack.length === 0) return;
+    for (const undoSplice of [ ...this.undoStack.pop()! ].reverse()) {
+      this.objects.splice(undoSplice.startIndex, undoSplice.deleteCount, ...undoSplice.objectsToInsert);
+    }
     this.redraw();
     this.emit("change");
   }
 
   clear() {
     if (this.drawingImageData !== null || this.objects.length === 0) return;
-    this.events.push(new ClearEvent(this.objects.splice(0)));
+    this.undoStack.push([{ startIndex: 0, deleteCount: 0, objectsToInsert: this.objects.splice(0) }]);
     this.redraw();
     this.emit("change");
   }
@@ -202,7 +277,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
   setImageString(imageString: string) {
     if (imageString === "") {
       this.objects = [];
-      this.events = [];
+      this.undoStack = [];
     } else {
       let color = "black";
       this.objects = imageString.split("|").map(stringPart => {
@@ -217,7 +292,7 @@ export class CanvasManager extends StrictEventEmitter<CanvasManagerEvents>() {
 
         return Pen.fromStringPart(stringPart, color);
       }).filter(obj => obj !== null).map(obj => obj!);
-      this.events = this.objects.map(() => new DrawEvent());
+      this.undoStack = this.objects.map(() => [{ startIndex: -1, deleteCount: 1, objectsToInsert: [] }]);
     }
     this.redraw();
   }

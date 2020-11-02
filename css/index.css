@@ -152,6 +152,24 @@ hr.button-separator {
     display: flex;
 }
 
+#canvas-container {
+    position: relative;
+}
+
+#draw-eraser-indicator {
+    position: absolute;
+    left: calc(var(--mouse-x) - var(--radius));
+    top: calc(var(--mouse-y) - var(--radius));
+    width: calc(2*var(--radius));
+    height: calc(2*var(--radius));
+    border-radius: 50%;
+    border: 1px dashed black;
+    z-index: -1;
+}
+
+#draw-eraser-indicator.hidden {
+    display: none;
+}
 
 table {
     border: 1px solid #666;

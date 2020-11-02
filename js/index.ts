@@ -1,4 +1,4 @@
-import { CanvasManager } from "./canvasmanager";
+import { CanvasManager, DrawingTool, Eraser } from "./canvasmanager";
 import { Editor, ChangeType } from "./editor";
 import Renderer from "./renderer";
 import PasteManager from "./pasteManager";
@@ -15,6 +15,8 @@ import "../pics/circle.png";
 import "../pics/filled-circle.png";
 import "../pics/line.png";
 import "../pics/pen.png";
+import "../pics/eraser-big.png";
+import "../pics/eraser-small.png";
 import "../pics/trash.png";
 import "../pics/1x1-transparent.png";
 
@@ -37,10 +39,12 @@ if (query.has("vim")) {
 }
 
 cm.initToolButtons({
-  "draw-pen-button": (point, color) => new Pen(point, color),
-  "draw-circle-button": (point, color) => new Circle(point, color),
-  "draw-filled-circle-button": (point, color) => new Circle(point, color, true),
-  "draw-line-button": (point, color) => new StraightLine(point, color),
+  "draw-pen-button": new DrawingTool((point, color) => new Pen(point, color)),
+  "draw-circle-button": new DrawingTool((point, color) => new Circle(point, color)),
+  "draw-filled-circle-button": new DrawingTool((point, color) => new Circle(point, color, true)),
+  "draw-line-button": new DrawingTool((point, color) => new StraightLine(point, color)),
+  "draw-eraser-button-big": new Eraser(45),
+  "draw-eraser-button-small": new Eraser(20),
 });
 cm.initColorButtons(
   Array.from(document.getElementsByClassName("color-button")).map(b => b as HTMLButtonElement));
