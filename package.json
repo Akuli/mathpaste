@@ -23,7 +23,7 @@
   "homepage": "https://github.com/Akuli/mathpaste#readme",
   "devDependencies": {
     "@babel/core": "^7.11.4",
-    "@babel/preset-env": "^7.11.0",
+    "@babel/preset-env": "^7.12.1",
     "@babel/preset-typescript": "^7.10.4",
     "@typescript-eslint/eslint-plugin": "^3.10.1",
     "@typescript-eslint/parser": "^3.10.1",
