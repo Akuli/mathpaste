@@ -83,14 +83,7 @@ Avoid pushing new commits directly to `master`.
 Instead, first push your changes in some other branch so that CI runs.
 Then you can merge the changes to master.
 
-Run these commands to publish from `master` to github.io:
-
-    $ git checkout master
-    $ git merge my-feature-branch
-    $ git push origin master
-    $ npm install
-    $ npm run build
-    $ ./deploy.sh
+Pushing to `master` will automatically build and publish to github.io.
 
 [mathb.in]: http://mathb.in/
 [asciimath]: http://asciimath.org/
