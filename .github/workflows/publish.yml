@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      dev
+      master
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -14,6 +14,6 @@ jobs:
       - uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: akuli-deploy-test
+          BRANCH: gh-pages
           FOLDER: dist
           CLEAN: true
