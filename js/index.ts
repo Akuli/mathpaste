@@ -74,7 +74,7 @@ editor.on("change", (newMath, changeType) => {
   pm.saveMath(newMath);
 });
 
-const render = new Renderer("renderedLines", () => editor.contents, () => editor.getRenderedLineIndex());
+const render = new Renderer("rendered-lines", () => editor.contents, () => editor.getRenderedLineIndex());
 editor.on("change", () => render.render());
 editor.on("cursorMoved", () => render.highlightLine());
 

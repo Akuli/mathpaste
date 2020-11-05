@@ -201,23 +201,23 @@ code {
     font-size: 1.2em;
 }
 
-#renderedLines {
+#rendered-lines {
     background-color: #ddd;
     text-align: left;
     overflow: auto;
 }
 
-#renderedLines > .line {
+#rendered-lines > .line {
     padding: 0.5em;
 
     transition-property: background-color;
     transition-duration: 250ms;   /* shorter is unnoticable, longer is annoying */
 }
 
-#renderedLines > .line > p {
+#rendered-lines > .line > p {
     margin: 0px;
 }
 
-#renderedLines > .line.selected {
+#rendered-lines > .line.selected {
     background-color: #ccf;
 }
