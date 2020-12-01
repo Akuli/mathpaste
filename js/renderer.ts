@@ -78,7 +78,7 @@ export default class Renderer {
       lineElement.textContent = "`" + line + "`";
     }
 
-    return new Promise(resolve => MathJax.Hub.Queue(["Typeset", MathJax.Hub, lineElement, () => resolve()]));
+    return new Promise((resolve: ((value: void) => void)) => MathJax.Hub.Queue(["Typeset", MathJax.Hub, lineElement, () => resolve()]));
   }
 
   // this function breaks if more than one instance of it runs in parallel
